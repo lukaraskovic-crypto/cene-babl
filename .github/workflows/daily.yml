@@ -1,6 +1,6 @@
 name: Daily price check
-# 04:00 Belgrade: full run (all stores in parallel + pametno.rs + Google Sheets + notification)
-# 10:40 / 14:40 / 18:40: quick refresh (stores in parallel, website + price history only)
+# 04:00 Belgrade: full run (every store's whole catalogue in parallel + pametno.rs + database + notification)
+# 10:40 / 14:40 / 18:40: light refresh (first pages of every category, laid over the morning catalogue)
 on:
   schedule:
     - cron: "0 3 * * *"         # 04:00 Belgrade (winter time; 05:00 in summer) – full
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "full = Sheets + pametno + notification; refresh = new prices, website only; site = no crawl, just re-publish the website design"
+        description: "full = whole catalogues + pametno + notification; refresh = light update of prices; site = no crawl, just re-publish the website design"
         type: choice
         options: [full, refresh, site]
         default: full
@@ -19,7 +19,7 @@ on:
         type: boolean
         default: false
       dry_run:
-        description: "Don't write Google Sheets"
+        description: "Don't write the online database"
         type: boolean
         default: false
 permissions:
@@ -43,7 +43,7 @@ jobs:
       matrix:
         store: [gigatron, winwin, bigbang, ananas, pcpractic, eurotehna, pametno]   # dotmarket, bazzar: Cloudflare blocks GitHub's servers
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Decide
         id: go
         run: |
@@ -53,7 +53,7 @@ jobs:
             if [ "$MODE" != "full" ] || [ "${{ inputs.no_pametno }}" = "true" ]; then RUN=no; fi
           fi
           echo "run=$RUN" >> $GITHUB_OUTPUT; echo "mode=$MODE run=$RUN"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         if: steps.go.outputs.run == 'yes'
         with: { python-version: "3.12", cache: pip }
       - name: Install
@@ -61,19 +61,21 @@ jobs:
         run: |
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
-      - name: Restore state (cached 30-day lows, pametno results)
+      - name: Restore state (cached 30-day lows, specs, pametno results)
         if: steps.go.outputs.run == 'yes'
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with: { path: state, key: "state-${{ github.run_id }}", restore-keys: "state-" }
       - name: Seed state on the very first run
         if: steps.go.outputs.run == 'yes'
         run: mkdir -p state && cp -n seed/state/* state/ 2>/dev/null || true
       - name: Crawl
         if: steps.go.outputs.run == 'yes'
-        run: python bf_watch.py --only ${{ matrix.store }}
+        run: |
+          LIGHT=""; if [ "$MODE" = "refresh" ]; then LIGHT="--light"; fi
+          python bf_watch.py --only ${{ matrix.store }} $LIGHT
       - name: Hand results to the combine job
         if: always() && steps.go.outputs.run == 'yes'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with: { name: "part-${{ matrix.store }}", path: runs/, retention-days: 3, if-no-files-found: ignore }
 
   combine:
@@ -83,25 +85,27 @@ jobs:
     timeout-minutes: 60
     environment: { name: github-pages, url: "${{ steps.deploy.outputs.page_url }}" }
     env:
-      GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}     # only for the one-time import of the old Google Sheets
       NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       SITE_URL: ${{ vars.SITE_URL }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
       - name: Restore price history
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with: { path: history.sqlite, key: "history-${{ github.run_id }}", restore-keys: "history-" }
       - name: Restore state
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with: { path: state, key: "state-${{ github.run_id }}", restore-keys: "state-" }
-      - name: First run – seed history and state
+      - name: History missing – rebuild it from the database (or the seed on the very first run)
         run: |
+          if [ ! -f history.sqlite ] && [ -n "$SUPABASE_SERVICE_KEY" ]; then python db.py restore history.sqlite || rm -f history.sqlite; fi
           if [ ! -f history.sqlite ] && ls seed/history.part* >/dev/null 2>&1; then cat seed/history.part* | gunzip -c > history.sqlite; echo "seeded history"; fi
           mkdir -p state && cp -n seed/state/* state/ 2>/dev/null || true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { pattern: "part-*", path: parts }
       - name: Website only – reuse the data that is already live
         if: env.MODE == 'site'
@@ -110,7 +114,7 @@ jobs:
           curl -fsS "$SITE_URL/data.js" -o data.js && curl -fsS "$SITE_URL/cats.js" -o cats.js || echo "window.CATS={found:{},exclude:{}};" > cats.js
           n=0; while curl -fsS "$SITE_URL/data-$n.js" -o "data-$n.js"; do n=$((n+1)); done; rm -f "data-$n.js"
           cd .. && python watch_patch.py site && python -c "import sys,pathlib; n=int(sys.argv[1]); t=pathlib.Path('site_template.html').read_text(encoding='utf-8'); tags='<script src=\"data.js\"></script>'+''.join(f'<script src=\"data-{k}.js\"></script>' for k in range(n))+'<script src=\"cats.js\"></script>'; pathlib.Path('site/index.html').write_text(t.replace('<!--DATA-->',tags),encoding='utf-8'); print('index.html with',n,'data files')" $n
-      - name: Combine, analyse, write Sheets, build website
+      - name: Combine, analyse, save to the database, build website
         if: env.MODE != 'site'
         run: |
           ARGS=""
@@ -120,32 +124,29 @@ jobs:
           python bf_watch.py --combine parts/* $ARGS
       - name: Save price history
         if: always() && env.MODE != 'site'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with: { path: history.sqlite, key: "history-${{ github.run_id }}" }
       - name: Save state
         if: always() && env.MODE != 'site'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with: { path: state, key: "state-${{ github.run_id }}" }
-      - name: Back up price history (90 days)
-        if: always() && env.MODE == 'full'
-        uses: actions/upload-artifact@v4
-        with: { name: history, path: history.sqlite, retention-days: 90, if-no-files-found: ignore }
-      - name: Prepare website
+      - name: Check the website before publishing
+        id: sitecheck
         if: always()
         run: |
           mkdir -p site
           if [ -n "${{ vars.SITE_DOMAIN }}" ]; then echo "${{ vars.SITE_DOMAIN }}" > site/CNAME; fi
           touch site/.nojekyll
-          ls -la site | head
-      - uses: actions/upload-pages-artifact@v3
-        if: always() && hashFiles('site/index.html') != ''
+          python site_check.py site
+      - uses: actions/upload-pages-artifact@v5
+        if: always() && steps.sitecheck.outcome == 'success'
         with: { path: site }
       - id: deploy
-        if: always() && hashFiles('site/index.html') != ''
-        uses: actions/deploy-pages@v4
+        if: always() && steps.sitecheck.outcome == 'success'
+        uses: actions/deploy-pages@v5
       - name: Keep run files
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: run-files
           retention-days: 14
