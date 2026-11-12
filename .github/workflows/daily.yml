@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        store: [gigatron, winwin, bigbang, ananas, pametno]
+        store: [gigatron, winwin, bigbang, ananas, dotmarket, bazzar, pcpractic, eurotehna, pametno]
     steps:
       - uses: actions/checkout@v4
       - name: Decide
