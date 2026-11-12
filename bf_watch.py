@@ -450,6 +450,9 @@ def sheets():
     return gc.open_by_key(CFG["daily_report_id"]), gc.open_by_key(CFG["price_history_id"])
 
 def write_chunks(ws, start_row, rows, ncols):
+    need_r, need_c = start_row + len(rows) - 1, ncols
+    if ws.row_count < need_r or ws.col_count < need_c:   # grow the tab instead of failing on "exceeds grid limits"
+        ws.resize(rows=max(ws.row_count, need_r + 50), cols=max(ws.col_count, need_c))
     for k in range(0, len(rows), 110):
         part = rows[k:k + 110]
         a1 = f"A{start_row + k}"
@@ -629,7 +632,13 @@ def main():
     for w in watch:
         r = pm.get(w["term"]); w["r"] = r if (r and not r.get("e")) else None
     save("items.json", items)
-    report = write_outputs(items, watch, raw, pm, fails, dry=a.dry_run, all_items=all_items, drops=drops)
+    sheets_error = None
+    try:
+        report = write_outputs(items, watch, raw, pm, fails, dry=a.dry_run, all_items=all_items, drops=drops)
+    except Exception as e:   # still build the website and notify, even if Google Sheets fails
+        import traceback; log("Google Sheets write failed:\n" + traceback.format_exc())
+        sheets_error = f"{type(e).__name__}: {str(e)[:300]}"
+        report = write_outputs(items, watch, raw, pm, fails, dry=True, all_items=all_items, drops=drops) + f"\n\nGoogle Sheets write FAILED: {sheets_error}"
     (OUT / "report.txt").write_text(report, encoding="utf-8")
     try:
         import importlib.util
@@ -640,6 +649,7 @@ def main():
         log("website build failed:", e)
     notify(f"Store promotions – {TODAY}", report)
     log("done")
+    if sheets_error: sys.exit(1)
 
 def build_watch_candidates(raw):
     W = []
