@@ -28,6 +28,7 @@ jobs:
       NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       SITE_URL: ${{ vars.SITE_URL }}
       TZ: Europe/Belgrade
+      PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
