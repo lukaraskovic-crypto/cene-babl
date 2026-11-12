@@ -1,0 +1,18 @@
+{
+  "daily_report_id": "1ZLYVTdQuwyEZmSy1zcHKAm4zUVBahYbUhkWvy47OByc",
+  "price_history_id": "1TT-g9QVCZxFNW22KUXaSuuuaSu39TZv40A4hWk1eFt0",
+  "service_account_json": "service_account.json",
+  "ntfy_topic": "",
+  "stop_after": "",
+  "mode": "full",
+  "min_price": 15000,
+  "pametno_scope": "promos",
+  "pametno_max_terms": 400,
+  "min_history_days": 7,
+  "drops_min_price": 15000,
+  "write_full_catalogue_sheet": false,
+  "open_site": false,
+  "skip_stores": [
+    "Tehnomanija"
+  ]
+}
