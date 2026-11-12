@@ -13,6 +13,8 @@
   "write_full_catalogue_sheet": false,
   "open_site": false,
   "skip_stores": [
-    "Tehnomanija"
+    "Tehnomanija",
+    "DOTmarket",
+    "Bazzar"
   ]
 }

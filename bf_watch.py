@@ -783,7 +783,8 @@ def combine_parts(dirs, fails):
     for k in ["gigatron", "winwin", "tehnomanija", "bigbang", "ananas_all", "full_gigatron", "full_winwin", "full_tehnomanija", "full_bigbang", "full_ananas"] + FULL_ONLY:
         if k not in raw:
             raw[k] = []
-            if not k.startswith(("full_tehnomanija", "tehnomanija")): fails.append(f"{k}: no data from its job")
+            skipped = [x.lower().replace(" ", "") for x in CFG.get("skip_stores", [])]
+            if k.replace("full_", "").replace("_all", "") not in skipped: fails.append(f"{k}: no data from its job")
     for k in ["gigatron_search", "winwin_search", "tehnomanija_search", "bigbang_search", "ananas_search"]: raw.setdefault(k, {})
     raw.setdefault("emmezeta", "")
     save("raw.json", raw)

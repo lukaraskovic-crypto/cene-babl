@@ -2,7 +2,7 @@
 
 Website: **https://cene.babl.cc** (Serbian by default, English toggle, works on phones).
 
-GitHub Actions crawls Gigatron, WinWin, Big Bang, Ananas, Bazzar, DOTmarket, PC Practic and Eurotehna (+ Emmezeta status), checks every discount against the
+GitHub Actions crawls Gigatron, WinWin, Big Bang, Ananas, PC Practic and Eurotehna (+ Emmezeta status), checks every discount against the
 store's own legally required 30-day lowest price, compares promos with all sellers on pametno.rs, and publishes the site.
 
 | When (Belgrade) | What |
@@ -30,4 +30,4 @@ price history), `pw_site.py` + `site_template.html` (website), `categories.json`
 Pages source GitHub Actions; secret `GOOGLE_SA_JSON`; optional secret `NTFY_TOPIC`; variables `SITE_DOMAIN`, `SITE_URL`;
 DNS CNAME `cene` → `lukaraskovic-crypto.github.io`.
 
-Tehnomanija blocks automated browsers and is skipped.
+Tehnomanija, DOTmarket and Bazzar show GitHub's servers a Cloudflare bot check, so they are skipped (crawlers kept in catalog.py; their prices still appear in the pametno.rs market comparison).
