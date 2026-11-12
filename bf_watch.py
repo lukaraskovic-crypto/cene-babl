@@ -56,8 +56,11 @@ def load(name):
 # --------------------------------------------------------------------------------------
 STATE = HERE / "state"; STATE.mkdir(exist_ok=True)
 STORE_KEYS = {"gigatron": ["gigatron", "full_gigatron", "emmezeta"], "winwin": ["winwin", "full_winwin"],
-              "tehnomanija": ["tehnomanija", "full_tehnomanija"], "bigbang": ["bigbang", "full_bigbang"], "ananas": ["ananas", "full_ananas"]}
-STORE_NAME = {"gigatron": "Gigatron", "winwin": "WinWin", "tehnomanija": "Tehnomanija", "bigbang": "Big Bang", "ananas": "Ananas"}
+              "tehnomanija": ["tehnomanija", "full_tehnomanija"], "bigbang": ["bigbang", "full_bigbang"], "ananas": ["ananas", "full_ananas"],
+              "dotmarket": ["full_dotmarket"], "bazzar": ["full_bazzar"], "pcpractic": ["full_pcpractic"], "eurotehna": ["full_eurotehna"]}
+STORE_NAME = {"gigatron": "Gigatron", "winwin": "WinWin", "tehnomanija": "Tehnomanija", "bigbang": "Big Bang", "ananas": "Ananas",
+              "dotmarket": "DOTmarket", "bazzar": "Bazzar", "pcpractic": "PC Practic", "eurotehna": "Eurotehna"}
+FULL_ONLY = ["full_dotmarket", "full_bazzar", "full_pcpractic", "full_eurotehna"]   # shops crawled only as full catalogues
 LOW_DAYS = CFG.get("low30_cache_days", 5)       # re-read a product page's 30-day low at least this often
 PM_DAYS = CFG.get("pametno_cache_days", 4)      # pametno.rs results are reused for this many days
 
@@ -137,6 +140,19 @@ window.parseMag = function(html){ const d=new DOMParser().parseFromString(html,'
   let p=fp?+fp.getAttribute('data-price-amount'):null, o=op?+op.getAttribute('data-price-amount'):null;
   if(p&&o&&p>o){const t=p;p=o;o=t;} if(o&&o<=p) o=null;
   return {n:a?a.textContent.trim().replace(/\s+/g,' '):'', u:a?new URL(a.getAttribute('href'),location.origin).href:'', p, o}; }); };
+window.pN = s => { s=String(s||'').replace(/[^\d.,]/g,''); if(!s) return null;
+  if(/,\d{2}$/.test(s)) s=s.replace(/\./g,'').replace(',','.'); else if(/\.\d{2}$/.test(s)) s=s.replace(/,/g,''); else s=s.replace(/[.,]/g,'');
+  const v=Math.round(parseFloat(s)); return isFinite(v)&&v>0?v:null; };
+// OpenCart (Journal theme): DOTmarket, Eurotehna
+window.parseOC = html => { const d=new DOMParser().parseFromString(html,'text/html');
+  return [...d.querySelectorAll('.product-thumb')].map(c=>{ const a=c.querySelector('.name a'); const nw=c.querySelector('.price-new'), od=c.querySelector('.price-old'), nm=c.querySelector('.price-normal')||c.querySelector('.price');
+    let p=pN((nw||nm||{}).textContent), o=od?pN(od.textContent):null; if(o&&p&&o<=p) o=null;
+    return {n:a?a.textContent.trim().replace(/\s+/g,' '):'', u:a?new URL(a.getAttribute('href'),location.origin).href.split('?')[0]:'', p, o}; }).filter(x=>x.u&&x.p); };
+// Bazzar marketplace cards
+window.parseBZ = html => { const d=new DOMParser().parseFromString(html,'text/html');
+  return [...d.querySelectorAll('a.card-product')].map(a=>{ const h=a.querySelector('h3'), pr=a.querySelector('p.lead span')||a.querySelector('p.lead'), od=a.querySelector('del'), sl=a.querySelector('p.small .text-muted');
+    let p=pr?pN(pr.textContent):null, o=od?pN(od.textContent):null; if(o&&p&&o<=p) o=null;
+    return {n:h?h.textContent.trim().replace(/\s+/g,' '):'', u:new URL(a.getAttribute('href'),location.origin).href.split('?')[0], p, o, s:sl?sl.textContent.trim():''}; }).filter(x=>x.u&&x.p&&x.n); };
 window.parseBB = t => { const out=[]; const parts=t.split(/\{\s*\\?"?item_id\\?"?\s*:/);
  for(let i=1;i<parts.length;i++){ const b=parts[i].slice(0,1500);
   const g=k=>{ const m=b.match(new RegExp('\\\\?"?'+k+'\\\\?"?\\s*:\\s*\\\\?["\']?([^"\',}\\\\]*)')); return m?m[1].trim():null; };
@@ -622,7 +638,7 @@ def main():
             finally: br.close()
         if a.only:
             st = STORE_NAME.get(a.only, a.only)
-            if a.only in ("gigatron", "winwin", "tehnomanija"):
+            if a.only in ("gigatron", "winwin", "tehnomanija", "dotmarket", "bazzar", "pcpractic", "eurotehna"):
                 lows_its = list(raw.get("full_" + a.only, [])) + [x for x in raw.get(a.only, []) if isinstance(x, dict)]
                 (OUT / f"lows_{a.only}.json").write_text(json.dumps(updated_lows(a.only, lows_its), separators=(",", ":")), encoding="utf-8")
             save("fails.json", fails)
@@ -731,7 +747,11 @@ def crawl(br, raw, fails, only=None):
                             ("full_winwin", "WinWin", lambda ex, kn: catalog.full_magento(br, "WinWin", "https://www.winwin.rs", log, exclude=ex, known=kn)),
                             ("full_tehnomanija", "Tehnomanija", lambda ex, kn: catalog.full_magento(br, "Tehnomanija", "https://www.tehnomanija.rs", log, exclude=ex, known=kn)),
                             ("full_bigbang", "Big Bang", lambda ex, kn: catalog.full_bigbang(br, log, exclude=ex)),
-                            ("full_ananas", "Ananas", lambda ex, kn: catalog.full_ananas(br, log, exclude=ex))]:
+                            ("full_ananas", "Ananas", lambda ex, kn: catalog.full_ananas(br, log, exclude=ex)),
+                            ("full_dotmarket", "DOTmarket", lambda ex, kn: catalog.full_opencart(br, "DOTmarket", "https://www.dotmarket.rs", log, exclude=ex, known=kn)),
+                            ("full_eurotehna", "Eurotehna", lambda ex, kn: catalog.full_opencart(br, "Eurotehna", "https://eurotehna.rs", log, exclude=ex, known=kn)),
+                            ("full_bazzar", "Bazzar", lambda ex, kn: catalog.full_bazzar(br, log, exclude=ex, known=kn)),
+                            ("full_pcpractic", "PC Practic", lambda ex, kn: catalog.full_magento(br, "PC Practic", "https://pcpractic.rs", log, exclude=ex, known=kn, top=catalog.PCP_TOP))]:
             if not want(raw, key, only): continue
             sk = key.replace("full_", "")
             if sk in skip:
@@ -760,7 +780,7 @@ def combine_parts(dirs, fails):
         for f_ in d.rglob("run.log"):
             with open(OUT / "run.log", "a", encoding="utf-8") as out: out.write(f"\n---- {f_.parent} ----\n" + f_.read_text(encoding="utf-8"))
     # a store whose job failed completely: empty placeholders so the rest still works
-    for k in ["gigatron", "winwin", "tehnomanija", "bigbang", "ananas_all", "full_gigatron", "full_winwin", "full_tehnomanija", "full_bigbang", "full_ananas"]:
+    for k in ["gigatron", "winwin", "tehnomanija", "bigbang", "ananas_all", "full_gigatron", "full_winwin", "full_tehnomanija", "full_bigbang", "full_ananas"] + FULL_ONLY:
         if k not in raw:
             raw[k] = []
             if not k.startswith(("full_tehnomanija", "tehnomanija")): fails.append(f"{k}: no data from its job")
@@ -790,7 +810,7 @@ def assemble(raw):
     items = uniq
     # ---- merge full catalogue
     all_items = []
-    for key in ["full_gigatron", "full_winwin", "full_tehnomanija", "full_bigbang", "full_ananas"]:
+    for key in ["full_gigatron", "full_winwin", "full_tehnomanija", "full_bigbang", "full_ananas"] + FULL_ONLY:
         for x in raw.get(key, []):
             if not x.get("p") or x["p"] >= 3_000_000: continue
             all_items.append(dict(store=x["store"], cat=x.get("cat", ""), cp=x.get("cp", ""), name=x["n"], p=int(x["p"]), o=x.get("o"), l=x.get("l"), u=x.get("u", "")))
@@ -906,17 +926,17 @@ def build_watch_candidates(raw, all_items=()):
     # G4: laptops for an architecture student (≥32 GB RAM, ≥12 GB graphics memory), from the full catalogues
     for x in all_items:
         if x["p"] >= 80000 and laptop_g4(x["name"], x.get("cat", "")):
-            st = x["store"] if x["store"] != "Ananas" else f"Ananas ({x.get('cat', '').split('seller ')[-1]})"
+            st = f"{x['store']} ({x.get('cat', '').split('seller ')[-1]})" if 'seller ' in x.get('cat', '') else x["store"]
             add("G4", st, x["name"], x["p"], x.get("o"), x.get("l"), x.get("u", ""))
     # G3: every tablet in the full catalogues (all stores) with SIM and ≥ 8 GB RAM
     for x in all_items:
         if x["p"] >= 15000 and tablet_info(x["name"]):
-            st = x["store"] if x["store"] != "Ananas" else f"Ananas ({x.get('cat', '').split('seller ')[-1]})"
+            st = f"{x['store']} ({x.get('cat', '').split('seller ')[-1]})" if 'seller ' in x.get('cat', '') else x["store"]
             add("G3", st, x["name"], x["p"], x.get("o"), x.get("l"), x.get("u", ""))
     return W
 
 def write_outputs(items, watch, raw, pm, fails, dry, all_items=(), drops=()):
-    STORES = ["Gigatron", "WinWin", "Tehnomanija", "Big Bang", "Ananas", "Emmezeta"]
+    STORES = ["Gigatron", "WinWin", "Tehnomanija", "Big Bang", "Ananas", "DOTmarket", "Bazzar", "PC Practic", "Eurotehna", "Emmezeta"]
     def r12(i):
         r = i.get("r")
         return [i["v"], i["store"], i["cat"], i["name"], i["p"], i["o"], i["claimed"], (i.get("l_used") or "") if i.get("own_src") != "our record" else f'{i["l_used"]} (our record)', "" if i["real"] is None else i["real"],

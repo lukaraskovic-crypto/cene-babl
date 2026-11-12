@@ -11,7 +11,8 @@ from zoneinfo import ZoneInfo
 HERE = Path(__file__).resolve().parent
 SITE = Path(os.environ.get("SITE_DIR", HERE / "site"))
 REPO = os.environ.get("GITHUB_REPOSITORY", "lukaraskovic-crypto/cene-babl")
-STORE_OF = {"gigatron": "Gigatron", "winwin": "WinWin", "tehnomanija": "Tehnomanija", "bigbang": "Big Bang", "ananas": "Ananas"}
+STORE_OF = {"gigatron": "Gigatron", "winwin": "WinWin", "tehnomanija": "Tehnomanija", "bigbang": "Big Bang", "ananas": "Ananas",
+            "dotmarket": "DOTmarket", "bazzar": "Bazzar", "pcpractic": "PC Practic", "eurotehna": "Eurotehna"}
 
 def _history(db_path, days=120):
     if not db_path.exists(): return {}, {}

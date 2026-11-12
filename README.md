@@ -2,7 +2,7 @@
 
 Website: **https://cene.babl.cc** (Serbian by default, English toggle, works on phones).
 
-GitHub Actions crawls Gigatron, WinWin, Big Bang and Ananas (+ Emmezeta status), checks every discount against the
+GitHub Actions crawls Gigatron, WinWin, Big Bang, Ananas, Bazzar, DOTmarket, PC Practic and Eurotehna (+ Emmezeta status), checks every discount against the
 store's own legally required 30-day lowest price, compares promos with all sellers on pametno.rs, and publishes the site.
 
 | When (Belgrade) | What |

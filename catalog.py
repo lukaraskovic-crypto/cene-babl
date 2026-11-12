@@ -102,7 +102,9 @@ def full_gigatron(br, log, max_pages=60, exclude=(), known=None):
 # ------------------------------------------------------------------ Magento (WinWin, Tehnomanija)
 MAG_TOP = r"^/(bela-tehnika|it-gaming|klime-grejanje-i-kvalitet-vazduha|mali-kucni-aparati|telefoni-smart-satovi-i-tableti|tv-foto-audio-i-video|sudomasine)(/[a-z0-9-]+){0,3}$"
 
-def full_magento(br, store, home, log, max_pages=80, exclude=(), known=None):
+PCP_TOP = r"^/(laptop-i-tablet-racunari|racunari-monitori-komponente|bela-tehnika|gaming|tv-audio-video|mobilni-telefoni-i-oprema|mali-kucni-aparati|grejanje-i-klimatizacija|fotoaparati-kamere-dronovi)(/[a-z0-9-]+){0,3}\.html$"
+
+def full_magento(br, store, home, log, max_pages=80, exclude=(), known=None, top=None):
     br.go(home)
     res = _run(br, r"""async ([top,maxPages,ex,known])=>{
       const re=new RegExp(top); const fails=[];
@@ -122,10 +124,69 @@ def full_magento(br, store, home, log, max_pages=80, exclude=(), known=None):
           let added=0; arr.forEach(x=>{ if(x.u && x.p && !items[x.u]){ x.cat=c.split('/').pop(); x.cp=c; items[x.u]=x; added++; } });
           if(!added) break; await sleep(200);} visited.push(c); },300);
       const disc=Object.values(items).filter(x=>x.o && x.o>x.p).sort((a,b)=>((b.p>=15000)-(a.p>=15000)) || ((1-b.p/b.o)-(1-a.p/a.o)));  // most relevant first, in case the time limit cuts in
-      await lowsWithCache(disc, known, /Najni[žz]a web cena u prethodnih 30 dana\s*:?\s*([\d.]+)/i);
-      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [MAG_TOP, max_pages, list(exclude), known or {}])
+      await lowsWithCache(disc, known, /Najni[žz]a (?:web )?cena u (?:prethodnih|poslednjih) 30 dana\s*:?\s*([\d.]+)/i);
+      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [top or MAG_TOP, max_pages, list(exclude), known or {}])
     log(f"{store} full: {len(res['items'])} articles from {res['cats']} categories")
     return [dict(store=store, **x) for x in res["items"]], [f"{store} {f}" for f in res["fails"]], _catinfo(res)
+
+# ------------------------------------------------------------------ OpenCart / Journal theme (DOTmarket, Eurotehna)
+OC_SKIP = r"(^/(contact|nacini|kontakt|o-nama|blog|akcij|outlet|izdvojeni|dotmarket-outlet|index\.php|account|login|cart|checkout|wishlist|compare|information)|alat|basta|bastensk|trimer|sve-za-kucu|kancelarij|fitnes|sport|baby|bebi|bazen|igrack|namestaj|nameštaj|auto-moto|Auto-moto|sudoper|slavin|peci-na-cvrsta|kozmetik|odec|obuc|hrana|garden)"
+
+OC_KEEP = r"(televiz|tv|audio|video|laptop|tablet|telefon|mobiln|bela tehnika|bela-tehnika|tesla bela|monitor|ra[čc]unar|periferij|[šs]tampa[čc]|ku[ćc]ni aparat|kucni-aparati|usisiva|klima|projektor|dron|foto|kamer|grejanj|gaming|konzol|server|rashladn|frizider|fri[žz]ider|aparati za kuvanje|aparati-za-kuvanje|ma[šs]ine za pranje|masine-za-pranje|bojler|hla[dđ]enje|ugradn|mali ku[ćc]ni|sporet|[šs]poret)"
+
+def full_opencart(br, store, home, log, max_pages=40, exclude=(), known=None):
+    br.go(home)
+    res = _run(br, r"""async ([skip,keep,maxPages,ex,known])=>{
+      const sk=new RegExp(skip,'i'); const fails=[];
+      const h=await ft2('/'); const d=h?new DOMParser().parseFromString(h,'text/html'):null;
+      // categories = links in the main menu, kept per menu branch (a branch = top-level category with all its sub-links)
+      const kp=new RegExp(keep,'i');
+      const menu=d?[...d.querySelectorAll('.main-menu a[href], .desktop-main-menu-wrapper a[href], .j-menu a[href]')]:[];
+      const path=a=>{ const u=sameOrigin(a.getAttribute('href')); return u?decodeURIComponent(u.pathname).replace(/\/$/,''):null; };
+      const branchOf=a=>{ let li=a.closest('li'), top=li; while(li){ const up=li.parentElement&&li.parentElement.closest('li'); if(!up) break;
+          if(up.querySelectorAll('a').length>120) break;   // the big "Kategorije" wrapper is not a branch
+          top=up; li=up; } const ta=top&&top.querySelector('a'); return ta?(ta.textContent+' '+(path(ta)||'')):a.textContent; };
+      let cats=[...new Set(menu.filter(a=>kp.test(branchOf(a))).map(path).filter(p=>p&&p.length>1&&!sk.test(p)&&!/-\d{5,}$/.test(p)&&!/\.html$/.test(p)))];
+      if(!cats.length) fails.push('no categories in menu');
+      const allCats=cats.slice();
+      cats=cats.filter(p=>notExcluded(p,ex) && !ex.some(e=>e.startsWith(p+'/'))).sort((a,b)=>b.split('/').length-a.split('/').length);
+      const items={}; const cnt={};
+      await pool(cats,4,async c=>{ for(let p=1;p<=maxPages;p++){ if(window.__deadline && Date.now()>window.__deadline) break;
+          const t=await ft2(encodeURI(c)+'?limit=100&page='+p); if(!t){ fails.push(c+' p'+p); break; }
+          const arr=parseOC(t); if(!arr.length) break; cnt[c]=(cnt[c]||0)+arr.length;
+          let added=0; arr.forEach(x=>{ if(!items[x.u]){ x.cat=c.split('/').pop(); x.cp=c; items[x.u]=x; added++; } });
+          if(!added) break; await sleep(200);} },300);
+      const disc=Object.values(items).filter(x=>x.o && x.o>x.p && x.p>=15000);
+      await lowsWithCache(disc, known, /Najni[žz]a (?:web )?cena u (?:prethodnih|poslednjih) 30 dana\s*:?\s*([\d.,]+)/i);
+      disc.forEach(x=>{ if(x.l&&x.l<1000) x.l=null; });
+      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [OC_SKIP, OC_KEEP, max_pages, list(exclude), known or {}])
+    log(f"{store} full: {len(res['items'])} articles from {res['cats']} categories")
+    return [dict(store=store, **x) for x in res["items"]], [f"{store} {f}" for f in res["fails"]], _catinfo(res)
+
+# ------------------------------------------------------------------ Bazzar (marketplace)
+BZ_KEEP = r"(televiz|tv-|audio|zvucn|slusalic|soundbar|projektor|laptop|tablet|racunar|monitor|stampac|skener|pc-komponent|graficke|procesor|maticne|ssd|hard-disk|ruter|mrezn|telefon|mobiln|pametni-sat|satovi|gaming|konzol|igrice|fotoaparat|kamer|dron|bela-tehnika|frizider|zamrziv|ves-mas|masine-za|susil|sudomas|sporet|rern|ploce|aspirator|mikrotalas|bojler|klima|grejal|radijator|kucni-aparat|mali-kucni|usisiv|robot|aparati-za-kafu|espresso|blender|mikser|frite|pegl|parocist|preciscivac|ovlazivac|odvlazivac|ventilator|kuhinjski-aparat|toster|sokovnik|multipraktik|brijac|fen|epilator)"
+BZ_SKIP = r"(novogod|jelk|ukras|girland|venci|kugle|patuljc|maske|futrol|torb|zastitn|kabl|adapter|punjac|nosac|stalak|oprema-za-|dodatna-oprema|delovi|filter|kese|cetke|program|softver|garancij|toner|kertridz|papir)"
+
+def full_bazzar(br, log, max_pages=60, exclude=(), known=None):
+    br.go("https://bazzar.rs")
+    res = _run(br, r"""async ([keep,skip,maxPages,ex,known])=>{
+      const kp=new RegExp(keep,'i'), sk=new RegExp(skip,'i'); const fails=[];
+      const h=await ft2('/'); let cats=h?linksOf(h,/^\/c\/[a-z0-9-]+$/):[];
+      cats=[...new Set(cats.filter(p=>kp.test(p)&&!sk.test(p)))];
+      if(!cats.length) fails.push('no categories');
+      const allCats=cats.slice(); cats=cats.filter(p=>notExcluded(p,ex));
+      const items={}; const cnt={};
+      await pool(cats,3,async c=>{ for(let p=1;p<=maxPages;p++){ if(window.__deadline && Date.now()>window.__deadline) break;
+          const t=await ft2(c+'?page='+p); if(!t){ fails.push(c+' p'+p); break; }
+          const arr=parseBZ(t); if(!arr.length) break; cnt[c]=(cnt[c]||0)+arr.length;
+          let added=0; arr.forEach(x=>{ if(!items[x.u]){ x.cp=c; x.cat=c.split('/').pop()+(x.s?' · seller '+x.s:''); items[x.u]=x; added++; } });
+          if(!added) break; await sleep(250);} },300);
+      const disc=Object.values(items).filter(x=>x.o && x.o>x.p && x.p>=15000).sort((a,b)=>(1-b.p/b.o)-(1-a.p/a.o));
+      await lowsWithCache(disc, known, /Najni[žz]a cena u (?:prethodnih|poslednjih) 30 dana\s*:?\s*([\d.]+)/i);
+      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [BZ_KEEP, BZ_SKIP, max_pages, list(exclude), known or {}])
+    log(f"Bazzar full: {len(res['items'])} listings from {res['cats']} categories")
+    return [dict(store="Bazzar", cat=x["cat"], cp=x.get("cp", ""), n=x["n"], u=x["u"], p=x["p"], o=x.get("o"), l=x.get("l")) for x in res["items"]], \
+           [f"Bazzar {f}" for f in res["fails"]], _catinfo(res)
 
 # ------------------------------------------------------------------ Big Bang
 BB_SKIP = r"^/(prijava|signup|kontakt|poslovnice|textovi|outlet|promocije|proizvodi-|korpa|cart|lista-zelja|search|pretraga|nalog|blog|brend|brands)"
