@@ -126,7 +126,7 @@ def full_magento(br, store, home, log, max_pages=80, exclude=(), known=None, top
       const disc=Object.values(items).filter(x=>x.o && x.o>x.p).sort((a,b)=>((b.p>=15000)-(a.p>=15000)) || ((1-b.p/b.o)-(1-a.p/a.o)));  // most relevant first, in case the time limit cuts in
       await lowsWithCache(disc, known, /Najni[žz]a (?:web )?cena u (?:prethodnih|poslednjih) 30 dana\s*:?\s*([\d.]+)/i);
       return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [top or MAG_TOP, max_pages, list(exclude), known or {}])
-    log(f"{store} full: {len(res['items'])} articles from {res['cats']} categories")
+    log(f"{store} full: {len(res['items'])} articles from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if not res['items'] and res["fails"] else ""))
     return [dict(store=store, **x) for x in res["items"]], [f"{store} {f}" for f in res["fails"]], _catinfo(res)
 
 # ------------------------------------------------------------------ OpenCart / Journal theme (DOTmarket, Eurotehna)
@@ -147,7 +147,7 @@ def full_opencart(br, store, home, log, max_pages=40, exclude=(), known=None):
           if(up.querySelectorAll('a').length>120) break;   // the big "Kategorije" wrapper is not a branch
           top=up; li=up; } const ta=top&&top.querySelector('a'); return ta?(ta.textContent+' '+(path(ta)||'')):a.textContent; };
       let cats=[...new Set(menu.filter(a=>kp.test(branchOf(a))).map(path).filter(p=>p&&p.length>1&&!sk.test(p)&&!/-\d{5,}$/.test(p)&&!/\.html$/.test(p)))];
-      if(!cats.length) fails.push('no categories in menu');
+      if(!cats.length) fails.push('no categories in menu – homepage: status '+window.__st+', '+(h?h.length:0)+' bytes, title: '+((h||'').match(/<title>([^<]{0,80})/i)||['',''])[1]+', url '+window.__lastUrl+', menu links '+menu.length);
       const allCats=cats.slice();
       cats=cats.filter(p=>notExcluded(p,ex) && !ex.some(e=>e.startsWith(p+'/'))).sort((a,b)=>b.split('/').length-a.split('/').length);
       const items={}; const cnt={};
@@ -160,7 +160,7 @@ def full_opencart(br, store, home, log, max_pages=40, exclude=(), known=None):
       await lowsWithCache(disc, known, /Najni[žz]a (?:web )?cena u (?:prethodnih|poslednjih) 30 dana\s*:?\s*([\d.,]+)/i);
       disc.forEach(x=>{ if(x.l&&x.l<1000) x.l=null; });
       return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [OC_SKIP, OC_KEEP, max_pages, list(exclude), known or {}])
-    log(f"{store} full: {len(res['items'])} articles from {res['cats']} categories")
+    log(f"{store} full: {len(res['items'])} articles from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))
     return [dict(store=store, **x) for x in res["items"]], [f"{store} {f}" for f in res["fails"]], _catinfo(res)
 
 # ------------------------------------------------------------------ Bazzar (marketplace)
@@ -173,7 +173,7 @@ def full_bazzar(br, log, max_pages=60, exclude=(), known=None):
       const kp=new RegExp(keep,'i'), sk=new RegExp(skip,'i'); const fails=[];
       const h=await ft2('/'); let cats=h?linksOf(h,/^\/c\/[a-z0-9-]+$/):[];
       cats=[...new Set(cats.filter(p=>kp.test(p)&&!sk.test(p)))];
-      if(!cats.length) fails.push('no categories');
+      if(!cats.length) fails.push('no categories – homepage: status '+window.__st+', '+(h?h.length:0)+' bytes, title: '+((h||'').match(/<title>([^<]{0,80})/i)||['',''])[1]+', url '+window.__lastUrl);
       const allCats=cats.slice(); cats=cats.filter(p=>notExcluded(p,ex));
       const items={}; const cnt={};
       await pool(cats,3,async c=>{ for(let p=1;p<=maxPages;p++){ if(window.__deadline && Date.now()>window.__deadline) break;
@@ -184,7 +184,7 @@ def full_bazzar(br, log, max_pages=60, exclude=(), known=None):
       const disc=Object.values(items).filter(x=>x.o && x.o>x.p && x.p>=15000).sort((a,b)=>(1-b.p/b.o)-(1-a.p/a.o));
       await lowsWithCache(disc, known, /Najni[žz]a cena u (?:prethodnih|poslednjih) 30 dana\s*:?\s*([\d.]+)/i);
       return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [BZ_KEEP, BZ_SKIP, max_pages, list(exclude), known or {}])
-    log(f"Bazzar full: {len(res['items'])} listings from {res['cats']} categories")
+    log(f"Bazzar full: {len(res['items'])} listings from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))
     return [dict(store="Bazzar", cat=x["cat"], cp=x.get("cp", ""), n=x["n"], u=x["u"], p=x["p"], o=x.get("o"), l=x.get("l")) for x in res["items"]], \
            [f"Bazzar {f}" for f in res["fails"]], _catinfo(res)
 
