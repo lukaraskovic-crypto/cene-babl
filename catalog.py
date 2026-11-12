@@ -111,7 +111,10 @@ def full_magento(br, store, home, log, max_pages=80, exclude=(), known=None):
       const tops=[...new Set(cats.map(p=>'/'+p.split('/')[1]))];
       for(const t of tops){ const x=await ft2(t); if(x) linksOf(x,re).forEach(p=>cats.push(p)); await sleep(200); }
       cats=[...new Set(cats)];
-      const allCats=cats.slice(); cats=leavesOf(cats).filter(p=>notExcluded(p,ex));   // leaves only: no page is fetched twice, and excluding a subcategory really excludes it
+      // every category, deepest first (so articles get their most specific category); a parent page is skipped when one of its
+      // subcategories is excluded (otherwise it would list the excluded articles again)
+      const allCats=cats.slice();
+      cats=cats.filter(p=>notExcluded(p,ex) && !ex.some(e=>e.startsWith(p+'/'))).sort((a,b)=>b.split('/').length-a.split('/').length);
       const items={}; const visited=[]; const cnt={};
       await pool(cats,4,async c=>{ for(let p=1;p<=maxPages;p++){ const t=await ft2(c+'?product_list_limit=60&p='+p);
           if(!t){ fails.push(c+' p'+p); break; } const arr=parseMag(t); if(!arr.length) break;

@@ -330,7 +330,7 @@ function setEx(store,p,exclude){ let ex=(AD.ex[store]||[]).filter(e=>!(e===p||e.
   AD.ex[store]=[...new Set(ex)].sort(); }
 function admin(){ const stores=Object.keys(CATS.found);
   if(!stores.length){ main.innerHTML=`<div class="card"><h2>${t('adm.title')}</h2><p class="mut">${t('adm.noData')}</p></div>`; return; }
-  const rt=tree(AD.store); const q=AD.q.toLowerCase();
+  let rt=tree(AD.store); while(Object.keys(rt.kids).length===1&&!rt.own){ const k=Object.values(rt.kids)[0]; if(!Object.keys(k.kids).length) break; rt=k; } const q=AD.q.toLowerCase();
   const match=n=>!q||n.p.toLowerCase().includes(q)||Object.values(n.kids).some(match);
   const rowsH=(n,d)=>Object.values(n.kids).sort((a,b)=>b.tot-a.tot).filter(match).map(k=>{ const ex=isEx(AD.store,k.p); const hasK=Object.keys(k.kids).length;
     const partial=!ex&&hasK&&(AD.ex[AD.store]||[]).some(e=>e.startsWith(k.p+'/')); const op=AD.open[k.p]||!!q;
