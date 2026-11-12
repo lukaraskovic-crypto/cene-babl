@@ -93,6 +93,20 @@ footer .cols{display:grid;grid-template-columns:2fr 1fr;gap:32px}footer h4{color
 .tree label{display:flex;gap:9px;align-items:center;cursor:pointer;flex:1}.tree .tw{width:18px;border:0;background:none;cursor:pointer;color:var(--muted);padding:0}
 .tree .c{font-size:13px;color:var(--muted)}input[type=checkbox]{accent-color:var(--primary);width:16px;height:16px}
 textarea{width:100%;min-height:130px;border:1px solid var(--border);border-radius:var(--r);padding:12px;background:var(--surface);font:12px ui-monospace,monospace;color:var(--text)}
+.ms{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:150px}
+#pop{position:absolute;z-index:45;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(8,19,13,.16);width:300px;padding:10px}
+.msq{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--bg);outline:none;font-size:14px}
+.msl{max-height:300px;overflow:auto}
+.msl label{display:flex;gap:9px;align-items:center;padding:6px 6px;cursor:pointer;font-size:14px;border-radius:6px}.msl label:hover{background:var(--alt)}.msl span{flex:1}.msl em{font-style:normal;color:var(--muted);font-size:12px}
+#pop .pf{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);margin-top:8px;padding-top:8px}
+#fs .msbox .msl{max-height:230px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px 8px}#fs .msq{background:var(--surface)}
+.spx{border:0;background:none;color:var(--primary);font-weight:700;font-size:13px;cursor:pointer;padding:5px 2px;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}.spx.on{background:var(--accent);border-radius:6px;padding:2px 6px;text-decoration:none}
+.specp{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-top:14px}
+.specg{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px 28px}
+.sd h4{margin:0 0 6px;font-size:14px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.svh,.sv{display:grid;grid-template-columns:1fr 44px 78px 78px;gap:0 8px;align-items:center;font-size:13px}.svh{font-size:11px;color:var(--muted);font-weight:700;padding:0 6px 3px}.svh span,.sv span{text-align:right}
+.sv{padding:5px 6px 7px;border-radius:6px;cursor:pointer;position:relative}.sv:hover{background:var(--alt)}.sv.on{background:var(--accent)}
+.sv i{position:absolute;left:6px;bottom:2px;height:2px;background:var(--primary);opacity:.35;border-radius:1px;max-width:calc(100% - 12px)}
 .mbar{display:none}
 #fs{position:fixed;inset:0;background:var(--bg);z-index:60;display:none;flex-direction:column}
 #fs .fh{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface)}
@@ -105,6 +119,7 @@ textarea{width:100%;min-height:130px;border:1px solid var(--border);border-radiu
  .wrap{padding:0 16px}.hd .row{height:54px}.fresh{display:none}main.wrap{padding-top:18px;padding-bottom:90px}.list td:nth-child(2){min-width:0}
  nav.tabs{gap:18px}.lede{font-size:18px}
  main .tool#tool{display:none}
+ .specg{grid-template-columns:1fr}.specp{padding:14px}
  .mbar{display:flex;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:40;background:var(--text);border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,.25);overflow:hidden}
  .mbar button{flex:1;border:0;background:none;color:var(--bg);padding:13px;font-weight:700;font-size:15px}.mbar button+button{border-left:1px solid rgba(255,255,255,.18)}
  .resbar label{display:none}.list{border-radius:10px}
@@ -140,6 +155,12 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',watch:'Pratim',st
  found:n=>`${n} artikala`,sortBy:'Poređaj po',page:(a,b)=>`${a} od ${b}`,prev:'Prethodna',next:'Sledeća',none:'Ništa ne odgovara ovoj pretrazi.',
  c:{store:'Radnja',name:'Proizvod',price:'Cena',claimed:'Navedeni popust',low:'Najniža u 30 dana',save:'Ušteda',verdict:'Ocena',xs:'Drugde',trend:'Kretanje',since:'Cena od'},
  sorts:{save:'Najveća ušteda',claimed:'Najveći navedeni popust',price:'Cena',since:'Najnovija promena',xs:'Jeftinije drugde',name:'Naziv'},
+ find:'Pronađi…',specBtn:'Analiza po specifikacijama',specHide:'Sakrij analizu',specT:'Specifikacije u izabranim kategorijama',
+ specS:(a,b)=>`${a} od ${b} artikala ima prepoznate specifikacije. Čitamo ih iz naziva artikla, pa mogu biti nepotpune. Klik na vrednost filtrira rezultate.`,
+ specNone:'U ovim artiklima nismo prepoznali dovoljno specifikacija.',cnt:'kom.',fromP:'od',median:'medijana',
+ ppuBtn:u=>`cena po ${u}`,ppuSort:u=>`Najviše za novac (din/${u})`,
+ PU:{inch:'inču',ram:'GB RAM',sto:'GB',hz:'Hz',kg:'kg',rpm:'o/min',lit:'litru',btu:'BTU',watt:'W'},
+ SPN:{inch:'Dijagonala',ram:'RAM',sto:'Memorija',hz:'Osvežavanje',res:'Rezolucija',panel:'Panel / ekran',cpu:'Procesor',gpu:'Grafika',kg:'Kapacitet',rpm:'Centrifuga',lit:'Zapremina',btu:'Snaga hlađenja',watt:'Snaga',net:'Mreža',energy:'Energetska klasa'},
  V:{real:'Pravi popust',raised:'Cena podignuta',fake:'Lažni popust',nochange:'Bez promene',below:'Ispod tržišta',at:'Na tržišnom minimumu',above:'Skuplje od tržišta',unverified:'Neprovereno',none:'Redovna cena'},
  why:{real:(p,l)=>`Cena je ${p} niža od najniže cene ove prodavnice u poslednjih 30 dana (${l}).`,
       raised:(c,p,l)=>`Prodavnica navodi popust od ${c}, ali je cena ${p} viša od njene najniže cene u poslednjih 30 dana (${l}).`,
@@ -173,6 +194,12 @@ en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',watch:'Watching',sto
  found:n=>`${n} products`,sortBy:'Sort by',page:(a,b)=>`${a} of ${b}`,prev:'Previous',next:'Next',none:'Nothing matches this search.',
  c:{store:'Store',name:'Product',price:'Price',claimed:'Claimed discount',low:'30-day low',save:'Saving',verdict:'Verdict',xs:'Elsewhere',trend:'Trend',since:'Price since'},
  sorts:{save:'Biggest saving',claimed:'Biggest claimed discount',price:'Price',since:'Latest change',xs:'Cheaper elsewhere',name:'Name'},
+ find:'Find…',specBtn:'Analyse by specs',specHide:'Hide analysis',specT:'Specs in the chosen categories',
+ specS:(a,b)=>`${a} of ${b} products have recognised specs. They are read from the product name, so they can be incomplete. Click a value to filter.`,
+ specNone:"We couldn't recognise enough specs in these products.",cnt:'pcs',fromP:'from',median:'median',
+ ppuBtn:u=>`price per ${u}`,ppuSort:u=>`Best value (RSD/${u})`,
+ PU:{inch:'inch',ram:'GB RAM',sto:'GB',hz:'Hz',kg:'kg',rpm:'rpm',lit:'litre',btu:'BTU',watt:'W'},
+ SPN:{inch:'Screen size',ram:'RAM',sto:'Storage',hz:'Refresh rate',res:'Resolution',panel:'Panel / screen',cpu:'Processor',gpu:'Graphics',kg:'Capacity',rpm:'Spin speed',lit:'Volume',btu:'Cooling power',watt:'Power',net:'Network',energy:'Energy class'},
  V:{real:'Real discount',raised:'Price raised',fake:'Fake discount',nochange:'No change',below:'Below market',at:'At market low',above:'Above market',unverified:'Unverified',none:'Regular price'},
  why:{real:(p,l)=>`The price is ${p} below this store's lowest price of the last 30 days (${l}).`,
       raised:(c,p,l)=>`The store claims ${c} off, but the price is ${p} above its own lowest price of the last 30 days (${l}).`,
@@ -227,9 +254,10 @@ const kc={}; function keyset(n){ if(kc[n]) return kc[n]; return kc[n]=(n.match(/
 const isM=()=>window.matchMedia('(max-width:760px)').matches;
 const uniq=a=>[...new Set(a)].filter(Boolean).sort((x,y)=>x.localeCompare(y,'sr'));
 const opt=(vals,sel,all,lab)=>`<option value="">${all}</option>`+vals.map(v=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(lab?lab(v):v)}</option>`).join('');
+const catN=c=>{ c=String(c||'').replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase(); return c?c.charAt(0).toUpperCase()+c.slice(1):''; };
 const X=R.map((r,i)=>{ const h=r[C.hist]||[]; return {i,r,brand:(r[2].split(/\s+/)[0]||'').toUpperCase().replace(/[^A-Z0-9-]/g,''),
   claimed:r[4]>r[3]?1-r[3]/r[4]:0, real:r[5]?1-r[3]/r[5]:null, vg:VG(r[6]), xs:(r[10]&&r[10]<r[3])?r[10]:0,
-  save:r[5]&&r[5]>r[3]?r[5]-r[3]:0, trend:h.length>1?h[h.length-1][1]/h[0][1]-1:null, since:r[C.since]||'', low:(r[0]+' '+r[1]+' '+r[2]).toLowerCase(), cat:r[1].split(' · seller')[0]}; });
+  save:r[5]&&r[5]>r[3]?r[5]-r[3]:0, trend:h.length>1?h[h.length-1][1]/h[0][1]-1:null, since:r[C.since]||'', low:(r[0]+' '+r[1]+' '+r[2]).toLowerCase(), cat:catN(r[1].split(' · seller')[0])}; });
 function why(x){ const r=x.r, g=x.vg, l=r[5]?nf(r[5])+' din':'';
   const s=g==='real'?t('why.real')(pct(x.real),l):g==='raised'?t('why.raised')(pct(x.claimed),pct(-x.real),l):g==='fake'?t('why.fake')(pct(x.claimed),l):g==='nochange'?t('why.nochange')(l):(r[6]&&!r[5])?t('why.nolow'):'';
   return s?`<div class="why"><b>${t('why.title')}</b>${esc(s)}</div>`:''; }
@@ -256,32 +284,96 @@ const SC=[{k:'store',t:'store',v:x=>x.r[0]},{k:'name',t:'name',v:x=>x.r[2]},{k:'
  {k:'claimed',t:'claimed',n:1,z:1,v:x=>x.claimed},{k:'low',t:'low',n:1,hm:1,v:x=>x.r[5]||null},{k:'save',t:'save',n:1,z:1,v:x=>x.save},
  {k:'verdict',t:'verdict',v:x=>x.r[6]?t('V.'+x.vg):null},{k:'xs',t:'xs',n:1,z:1,v:x=>x.xs},{k:'trend',t:'trend',n:1,hm:1,v:x=>x.trend},{k:'since',t:'since',n:1,v:x=>x.since||null}];
 const SDEF={save:-1,claimed:-1,price:1,since:-1,xs:1,name:1};
-const S0={q:'',store:'',cat:'',brand:'',vg:'',min:'',max:'',onlyReal:false,onlyDisc:false,onlyXs:false,onlyNew:false,sort:'save',dir:-1,page:0,per:50};
-const S=Object.assign({},S0);
+// ------------------------------------------------------------------ specs read from product names
+const SPECS=[
+ {k:'inch',n:1,u:'"',f:s=>{const m=s.match(/(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:"|''|”|″|-?\s?inch|in[čc]a|\s?in\b)/i);
+   if(m){ const v=parseFloat(m[1].replace(',','.')); if(v>=5&&v<=120) return v; }
+   // TVs: the size is part of the model code (OLED65C6, UE43U8072, 55T69C, K65XR55B)
+   if(/televizor|\bTV\b|Ultra\s*HD|\bUHD\b|OLED|QLED|QNED|NanoCell|Mini-?LED|\bD?LED\b|Bravia/i.test(s)&&!/monitor|nosa[čc]|projektor|zidni|stalak|daljinsk|kabl/i.test(s)){
+     const c=s.match(/\b[A-Z]{0,5}(24|32|40|42|43|48|50|55|58|65|70|75|77|83|85|86|98|100|115|116)(?=[A-Z.][A-Z0-9.]*\d)/); if(c) return +c[1]; }
+   return null;}},
+ {k:'ram',n:1,u:'GB',f:s=>{const m=s.match(/\b(\d{1,2})\s*(?:GB)?\s*[\/+]\s*(?:64|128|256|512|1|2)\s*(?:GB|TB)?\b/i)||s.match(/\b(\d{1,3})\s*GB\s*(?:RAM|DDR\d?|LPDDR\d?x?)/i)||s.match(/RAM[:\s]*(\d{1,3})\s*GB/i); if(m&&+m[1]>=2&&+m[1]<=128) return +m[1];
+   // laptops: "16GB, SSD 1TB" – a small GB value next to a larger storage value
+   if(/\b(?:128|256|512)\s*GB\b|\b[124]\s*TB\b/i.test(s)){ for(const z of s.matchAll(/\b(4|6|8|12|16|18|24|32|36|48|64)\s*GB\b(?!\s*(?:SSD|HDD|eMMC|UFS|memorij|storage))/gi)){ const pre=s.slice(Math.max(0,z.index-5),z.index); if(!/SSD\s*$|HDD\s*$/i.test(pre)) return +z[1]; } }
+   return null;}},
+ {k:'sto',n:1,u:'GB',f:s=>{ let b=0; for(const m of s.matchAll(/\b(\d{2,4})\s*(GB|TB)\b(?!\s*(?:RAM|DDR|LPDDR))/gi)){ const g=+m[1]*(m[2].toUpperCase()==='TB'?1024:1); if(g>=32&&g<=8192) b=Math.max(b,g);} for(const m of s.matchAll(/\b([1248])\s*TB\b/gi)) b=Math.max(b,+m[1]*1024); return b||null; }, fmt:v=>v>=1024?(v/1024)+' TB':v+' GB'},
+ {k:'hz',n:1,u:'Hz',f:s=>{const m=s.match(/\b(\d{2,3})\s*Hz\b/i); return m&&+m[1]>=50&&+m[1]<=600?+m[1]:null;}},
+ {k:'res',f:s=>/\b8K\b/i.test(s)?'8K':/\b(4K|UHD|2160p)\b/i.test(s)?'4K UHD':/\b(QHD|WQHD|1440p|2K)\b/i.test(s)?'QHD':/\b(FHD|Full\s*HD|1080p)\b/i.test(s)?'Full HD':/\bHD\s*Ready\b|\b720p\b/i.test(s)?'HD':null},
+ {k:'panel',f:s=>/QD-?OLED/i.test(s)?'QD-OLED':/\bOLED\b/i.test(s)?'OLED':/Neo\s*QLED/i.test(s)?'Neo QLED':/\bQLED\b/i.test(s)?'QLED':/Mini\s*-?LED/i.test(s)?'Mini LED':/Nano\s*Cell/i.test(s)?'NanoCell':/\bAMOLED\b/i.test(s)?'AMOLED':/\bIPS\b/i.test(s)?'IPS':/\bVA\b/.test(s)?'VA':/\bLED\b/i.test(s)?'LED':null},
+ {k:'cpu',f:s=>{ let m=s.match(/\b(?:Core\s*)?Ultra\s*([579])\b/i); if(m) return 'Intel Core Ultra '+m[1];
+   m=s.match(/\b(?:Core\s*)?i([3579])(?:[-\s]\d{4,5}|\b)/i); if(m) return 'Intel Core i'+m[1];
+   m=s.match(/Ryzen\s*(?:AI\s*)?([3579])/i); if(m) return 'AMD Ryzen '+m[1];
+   m=s.match(/\b(?:Apple\s*)?M([1-5])\s*(Pro|Max)?\b/); if(m&&/MacBook|iPad|iMac|Mac\b/i.test(s)) return 'Apple M'+m[1]+(m[2]?' '+m[2]:'');
+   m=s.match(/Snapdragon\s*(X\s*(?:Elite|Plus)|8\s*(?:Gen\s*\d|Elite)|\d{3,4})/i); if(m) return 'Snapdragon '+m[1];
+   m=s.match(/\b(Celeron|Pentium|Athlon|Dimensity\s*\d{3,4}|Helio\s*\w+|Exynos\s*\d{3,4})\b/i); return m?m[1]:null; }},
+ {k:'gpu',f:s=>{ const m=s.match(/\b(RTX|GTX)\s*-?\s*(PRO\s*)?(\d{3,4})\s*(Ti)?/i); if(m) return `${m[1].toUpperCase()} ${m[2]?'PRO ':''}${m[3]}${m[4]?' Ti':''}`; const n=s.match(/\/(50[5-9]0|40[5-9]0)\b/); return n?'RTX '+n[1]:null; }},
+ {k:'kg',n:1,u:'kg',f:s=>{const m=s.match(/\b(\d{1,2}(?:[.,]\d)?)\s*kg\b/i); if(!m) return null; const v=parseFloat(m[1].replace(',','.')); return v>=1&&v<=30?v:null;}},
+ {k:'rpm',n:1,u:'o/min',f:s=>{const m=s.match(/\b(\d{3,4})\s*(?:obr|rpm|o\/min)/i); return m&&+m[1]>=400&&+m[1]<=2000?+m[1]:null;}},
+ {k:'lit',n:1,u:'L',f:s=>{const t2=s.match(/\b(\d{2,3})\s*\/\s*(\d{2,3})\s*(?:l|L|lit)\b/); if(t2) return +t2[1]+ +t2[2];
+   const m=s.match(/\b(\d{2,4})\s*(?:l|L|lit|litara)\b/); return m&&+m[1]>=10&&+m[1]<=1500?+m[1]:null;}},
+ {k:'btu',n:1,u:'BTU',f:s=>{let m=s.match(/\b(\d{1,2}[.,]?\d{3})\s*BTU/i); if(m) return +m[1].replace(/[.,]/g,'');
+   m=s.match(/\b(7|9|12|18|24)\s*K(?:\s*BTU)?\b/i); if(m&&/klima|BTU/i.test(s)) return +m[1]*1000;
+   if(/klima/i.test(s)&&!/nosa[čc]|usmeriva|ventilator|daljinsk|filter/i.test(s)){ m=s.match(/(?:^|[\s-])[A-Z]{0,7}-?(07|09|12|18|24)(?=[A-Z-]|\b)/); if(m) return +m[1]*1000; }
+   return null;}},
+ {k:'watt',n:1,u:'W',f:s=>{const m=s.match(/\b(\d{3,4})\s*W\b/); return m?+m[1]:null;}},
+ {k:'net',f:s=>/\b5G\b/.test(s)?'5G':/\b(LTE|4G|Cellular)\b/i.test(s)?'LTE/4G':null},
+ {k:'energy',f:s=>{const m=s.match(/\b(?:energetska\s*)?(?:klasa|class)\s*([A-G](?:\+{1,3})?)(?![a-z])/i)||s.match(/\b(A\+{1,3})(?![\w+])/); return m?m[1].toUpperCase():null;}}];
+const SPK=Object.fromEntries(SPECS.map(d=>[d.k,d]));
+function specs(x){ if(x.sp) return x.sp; const o={}; for(const d of SPECS){ const v=d.f(x.r[2]); if(v!=null) o[d.k]=v; } return x.sp=o; }
+const spFmt=(k,v)=>{ const d=SPK[k]; return d.fmt?d.fmt(v):d.n?`${String(v).replace('.',',')}${d.u==='"'?'"':' '+d.u}`:String(v); };
+const SP={open:false};
+// ------------------------------------------------------------------ search state + multi-select filters
+const S0={q:'',store:[],cat:[],brand:[],vg:[],min:'',max:'',onlyReal:false,onlyDisc:false,onlyXs:false,onlyNew:false,spec:{},ppu:'',sort:'save',dir:-1,page:0,per:50};
+const fresh0=()=>JSON.parse(JSON.stringify(S0));
+const S=fresh0();
 const VGS=['real','fake','raised','nochange','below','at','above','unverified','none'];
 const TOG=[['onlyReal','tReal'],['onlyDisc','tDisc'],['onlyXs','tXs'],['onlyNew','tNew']];
-function filterControls(){ const pool=X.filter(x=>!S.store||x.r[0]===S.store);
-  return `<select class="sel ${S.store?'set':''}" id="f_store" aria-label="${t('store')}">${opt(uniq(X.map(x=>x.r[0])),S.store,t('allStores'))}</select>
-  <select class="sel ${S.cat?'set':''}" id="f_cat" aria-label="${t('cat')}">${opt(uniq(pool.map(x=>x.cat)),S.cat,t('allCats'))}</select>
-  <select class="sel ${S.brand?'set':''}" id="f_brand" aria-label="${t('brand')}">${opt(uniq(pool.map(x=>x.brand)),S.brand,t('allBrands'))}</select>
-  <select class="sel ${S.vg?'set':''}" id="f_vg" aria-label="${t('verdict')}">${opt(VGS,S.vg,t('anyVerdict'),v=>t('V.'+v))}</select>
-  <span class="rng">${t('price')} <input id="f_min" type="number" inputmode="numeric" placeholder="${t('from')}" value="${S.min}"> – <input id="f_max" type="number" inputmode="numeric" placeholder="${t('to')}" value="${S.max}"></span>
+const MS={store:{l:'store',all:'allStores',g:x=>x.r[0]},cat:{l:'cat',all:'allCats',g:x=>x.cat},brand:{l:'brand',all:'allBrands',g:x=>x.brand},vg:{l:'verdict',all:'anyVerdict',g:x=>x.vg}};
+SC.push({k:'ppu',t:'price',n:1,v:x=>{ const v=S.ppu&&specs(x)[S.ppu]; return v?x.r[3]/v:null; }}); SDEF.ppu=1;
+const msLab=(k,v)=>k==='vg'?t('V.'+v):v;
+function msVals(k){ const base=k==='store'?X:X.filter(x=>!S.store.length||S.store.includes(x.r[0]));
+  const c={}; base.forEach(x=>{ const v=MS[k].g(x); if(v) c[v]=(c[v]||0)+1; });
+  let vals=k==='vg'?VGS.filter(v=>c[v]).map(v=>[v,c[v]]):Object.entries(c).sort(k==='store'?(a,b)=>b[1]-a[1]:(a,b)=>a[0].localeCompare(b[0],'sr'));
+  return vals.sort((a,b)=>(S[k].includes(b[0])?1:0)-(S[k].includes(a[0])?1:0)); }
+function msText(k){ const s=S[k]; if(!s.length) return t(MS[k].all); if(s.length<=2) return s.map(v=>msLab(k,v)).join(', '); return `${t(MS[k].l)}: ${s.length}`; }
+function msListHTML(k){ const vals=msVals(k);
+  return `${vals.length>8?`<input class="msq" placeholder="${esc(t('find'))}" autocomplete="off">`:''}<div class="msl">${vals.map(([v,n])=>`<label data-v="${esc(String(msLab(k,v)).toLowerCase())}"><input type="checkbox" value="${esc(v)}" ${S[k].includes(v)?'checked':''}><span>${esc(msLab(k,v))}</span><em class="num">${nf(n)}</em></label>`).join('')}</div>`; }
+function bindMsList(box,k){ box.querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=()=>{ const v=c.value; S[k]=c.checked?[...S[k],v]:S[k].filter(z=>z!==v); S.page=0; afterChange(k); });
+  const q=box.querySelector('.msq'); if(q){ q.oninput=()=>{ const s=q.value.toLowerCase(); box.querySelectorAll('.msl label').forEach(l=>l.style.display=l.dataset.v.includes(s)?'':'none'); }; } }
+let popK=null;
+function openPop(btn,k){ closePop(); popK=k; const p=document.createElement('div'); p.id='pop';
+  p.innerHTML=msListHTML(k)+`<div class="pf"><button class="clr" data-c="1">${t('clear')}</button><button class="btn pri" style="padding:6px 14px" data-d="1">${t('done')}</button></div>`;
+  document.body.appendChild(p); const r=btn.getBoundingClientRect(); p.style.top=(r.bottom+window.scrollY+6)+'px'; p.style.left=Math.min(r.left+window.scrollX, window.scrollX+document.documentElement.clientWidth-p.offsetWidth-12)+'px';
+  bindMsList(p,k); p.querySelector('[data-c]').onclick=()=>{ S[k]=[]; S.page=0; afterChange(k); closePop(); }; p.querySelector('[data-d]').onclick=closePop;
+  const q=p.querySelector('.msq'); if(q) q.focus(); }
+function closePop(){ const p=document.getElementById('pop'); if(p){ p.remove(); popK=null; refreshTool(); } }
+document.addEventListener('mousedown',e=>{ const p=document.getElementById('pop'); if(p&&!p.contains(e.target)&&!e.target.closest('[data-ms]')) closePop(); });
+function afterChange(k){ if(!S.cat.length){ S.spec={}; if(S.ppu){ S.ppu=''; if(S.sort==='ppu'){ S.sort='save'; S.dir=-1; } } SP.open=false; }
+  document.querySelectorAll('[data-ms]').forEach(b=>{ b.textContent=msText(b.dataset.ms); b.classList.toggle('set',S[b.dataset.ms].length>0); });
+  const a=document.getElementById('ap'); if(a){ a.innerHTML=appliedHTML(); bindApplied(); }
+  if(fs.style.display==='flex'){ fs.querySelectorAll('.msbox').forEach(b=>{ if(b.dataset.k!==k){ b.innerHTML=msListHTML(b.dataset.k); bindMsList(b,b.dataset.k); } }); const g=document.getElementById('fgo'); if(g) g.textContent=t('show')(filtered().length.toLocaleString(loc())); }
+  results(); }
+function filterControls(){
+  return Object.keys(MS).map(k=>`<button class="sel ms ${S[k].length?'set':''}" data-ms="${k}">${esc(msText(k))}</button>`).join('')+
+  `<span class="rng">${t('price')} <input id="f_min" type="number" inputmode="numeric" placeholder="${t('from')}" value="${S.min}"> – <input id="f_max" type="number" inputmode="numeric" placeholder="${t('to')}" value="${S.max}"></span>
   ${TOG.map(([k,l])=>`<button class="tg ${S[k]?'on':''}" data-k="${k}">${t(l)}</button>`).join('')}`; }
-function bindFilters(root,onChange){ const g=id=>root.querySelector('#'+id);
-  ['store','cat','brand','vg'].forEach(k=>g('f_'+k).addEventListener('change',e=>{ S[k]=e.target.value; if(k==='store'){ S.cat=''; S.brand=''; } S.page=0; onChange(); }));
-  ['min','max'].forEach(k=>g('f_'+k).addEventListener('change',e=>{ S[k]=e.target.value; S.page=0; onChange(); }));
+function bindFilters(root,onChange){
+  root.querySelectorAll('[data-ms]').forEach(b=>b.onclick=()=>{ if(popK===b.dataset.ms) closePop(); else openPop(b,b.dataset.ms); });
+  ['min','max'].forEach(k=>{ const e=root.querySelector('#f_'+k); if(e) e.addEventListener('change',()=>{ S[k]=e.value; S.page=0; onChange(); }); });
   root.querySelectorAll('.tg[data-k]').forEach(b=>b.onclick=()=>{ S[b.dataset.k]=!S[b.dataset.k]; S.page=0; onChange(); }); }
 function appliedHTML(){ const a=[];
-  if(S.store) a.push(['store',S.store]); if(S.cat) a.push(['cat',S.cat]); if(S.brand) a.push(['brand',S.brand]); if(S.vg) a.push(['vg',t('V.'+S.vg)]);
+  for(const k of Object.keys(MS)) for(const v of S[k]) a.push([k+'|'+v,msLab(k,v)]);
   if(S.min||S.max) a.push(['minmax',`${S.min?nf(S.min):'0'} – ${S.max?nf(S.max):'∞'} din`]); TOG.forEach(([k,l])=>{ if(S[k]) a.push([k,t(l)]); });
-  return a.length?`<div class="applied">${a.map(([k,v])=>`<button class="ch" data-k="${k}">${esc(v)} <i>×</i></button>`).join('')}<button class="clr" id="clr">${t('clear')}</button></div>`:''; }
-function nF(){ return ['store','cat','brand','vg'].filter(k=>S[k]).length+(S.min||S.max?1:0)+TOG.filter(([k])=>S[k]).length; }
+  for(const [k,vs] of Object.entries(S.spec)) for(const v of vs) a.push(['spec|'+k+'|'+v,`${t('SPN')[k]}: ${spFmt(k,SPK[k].n?+v:v)}`]);
+  const spx=S.cat.length?`<button class="spx" id="spx">${SP.open?t('specHide'):t('specBtn')}</button>`:'';
+  return (a.length||spx)?`<div class="applied">${a.map(([k,v])=>`<button class="ch" data-k="${esc(k)}">${esc(v)} <i>×</i></button>`).join('')}${a.length?`<button class="clr" id="clr">${t('clear')}</button>`:''}${spx}</div>`:''; }
+function nF(){ return Object.keys(MS).reduce((n,k)=>n+S[k].length,0)+(S.min||S.max?1:0)+TOG.filter(([k])=>S[k]).length+Object.values(S.spec).reduce((n,v)=>n+v.length,0); }
 function search(){ const real=X.filter(x=>x.vg==='real').length, fake=X.filter(x=>x.vg==='fake'||x.vg==='raised').length, stores=uniq(R.map(r=>r[0])).length;
   main.innerHTML=`<p class="lede">${t('lede')(nf(R.length),stores,nf(real),nf(fake))}</p>
   <div class="q"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
    <input type="search" id="q" placeholder="${esc(t('ph'))}" value="${esc(S.q)}" autocomplete="off" enterkeyhint="search"></div>
-  <div class="tool" id="tool"></div><div id="ap"></div>
-  <div class="resbar"><span class="cnt" id="cnt"></span><span class="sp"></span><label>${t('sortBy')} <select class="sel" id="so">${Object.keys(SDEF).map(k=>`<option value="${k}" ${S.sort===k?'selected':''}>${t('sorts')[k]}</option>`).join('')}</select></label></div>
+  <div class="tool" id="tool"></div><div id="ap"></div><div id="specp"></div>
+  <div class="resbar"><span class="cnt" id="cnt"></span><span class="sp"></span><label>${t('sortBy')} <select class="sel" id="so"></select></label></div>
   <div id="res"></div><div class="pager" id="pg"></div>`;
   main.querySelector('.lede a').onclick=e=>{ e.preventDefault(); go('deals'); };
   let tm; q.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ S.q=q.value; S.page=0; results(); },180); });
@@ -290,39 +382,67 @@ function search(){ const real=X.filter(x=>x.vg==='real').length, fake=X.filter(x
 function refreshTool(){ const tl=document.getElementById('tool'); if(tl){ tl.innerHTML=filterControls(); bindFilters(tl,onTool); }
   const a=document.getElementById('ap'); if(a){ a.innerHTML=appliedHTML(); bindApplied(); } }
 function onTool(){ refreshTool(); results(); }
-function bindApplied(){ ap.querySelectorAll('.ch').forEach(b=>b.onclick=()=>{ const k=b.dataset.k; if(k==='minmax'){ S.min=''; S.max=''; } else if(TOG.some(([x])=>x===k)) S[k]=false; else { S[k]=''; if(k==='store'){ S.cat=''; S.brand=''; } } S.page=0; refreshTool(); results(); });
-  const c=document.getElementById('clr'); if(c) c.onclick=()=>{ Object.assign(S,S0,{q:S.q,sort:S.sort,dir:S.dir}); refreshTool(); results(); }; }
-function filtered(){ const w=S.q.toLowerCase().split(/\s+/).filter(Boolean);
-  return X.filter(x=>(!S.store||x.r[0]===S.store)&&(!S.cat||x.cat===S.cat)&&(!S.brand||x.brand===S.brand)&&(!S.vg||x.vg===S.vg)
+function bindApplied(){ ap.querySelectorAll('.ch').forEach(b=>b.onclick=()=>{ const k=b.dataset.k;
+    if(k==='minmax'){ S.min=''; S.max=''; } else if(TOG.some(([x])=>x===k)) S[k]=false;
+    else if(k.startsWith('spec|')){ const [,sk,v]=k.split('|'); S.spec[sk]=(S.spec[sk]||[]).filter(z=>z!==v); if(!S.spec[sk].length) delete S.spec[sk]; }
+    else { const i=k.indexOf('|'); const f=k.slice(0,i), v=k.slice(i+1); S[f]=S[f].filter(z=>z!==v); }
+    S.page=0; afterChange(); refreshTool(); });
+  const c=document.getElementById('clr'); if(c) c.onclick=()=>{ Object.assign(S,fresh0(),{q:S.q,sort:S.sort==='ppu'?'save':S.sort,dir:S.sort==='ppu'?-1:S.dir}); afterChange(); refreshTool(); };
+  const x=document.getElementById('spx'); if(x) x.onclick=()=>{ SP.open=!SP.open; x.textContent=SP.open?t('specHide'):t('specBtn'); specPanel(); }; }
+function filtered(noSpec){ const w=S.q.toLowerCase().split(/\s+/).filter(Boolean); const sp=noSpec?[]:Object.entries(S.spec).filter(e=>e[1].length);
+  return X.filter(x=>(!S.store.length||S.store.includes(x.r[0]))&&(!S.cat.length||S.cat.includes(x.cat))&&(!S.brand.length||S.brand.includes(x.brand))&&(!S.vg.length||S.vg.includes(x.vg))
     &&(!S.min||x.r[3]>=+S.min)&&(!S.max||x.r[3]<=+S.max)&&(!S.onlyDisc||x.claimed>0)&&(!S.onlyReal||(x.real!=null&&x.real>0))
-    &&(!S.onlyXs||x.xs>0)&&(!S.onlyNew||x.since===TODAY)&&w.every(z=>x.low.includes(z))); }
-function results(){ if(!document.getElementById('res')) return; let rs=sortRows(filtered(),SC,S); const pages=Math.max(1,Math.ceil(rs.length/S.per)); if(S.page>=pages) S.page=pages-1;
+    &&(!S.onlyXs||x.xs>0)&&(!S.onlyNew||x.since===TODAY)&&w.every(z=>x.low.includes(z))
+    &&(!sp.length||sp.every(([k,vs])=>{ const v=specs(x)[k]; return v!=null&&vs.includes(String(v)); }))); }
+// ---- the analysis panel (appears only when a category is chosen)
+function specPanel(){ const el=document.getElementById('specp'); if(!el) return; if(!SP.open||!S.cat.length){ el.innerHTML=''; return; }
+  const base=filtered(true); const med=a=>{ const s=a.slice().sort((p,q)=>p-q); const m=s.length>>1; return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+  let withAny=0; const dims=[];
+  for(const d of SPECS){ const g={}; let n=0; for(const x of base){ const v=specs(x)[d.k]; if(v==null) continue; n++; (g[v]=g[v]||[]).push(x.r[3]); }
+    if(n<Math.max(4,base.length*0.12)) continue;
+    let vals=Object.entries(g).map(([v,ps])=>({v,c:ps.length,lo:Math.min(...ps),md:med(ps)})).filter(z=>z.c>=1);
+    vals.sort(d.n?(a,b)=>parseFloat(a.v)-parseFloat(b.v):(a,b)=>b.c-a.c); if(vals.length>18) vals=d.n?vals.filter(z=>z.c>1).slice(0,18):vals.slice(0,18);
+    dims.push({d,n,vals}); }
+  base.forEach(x=>{ if(Object.keys(specs(x)).length) withAny++; });
+  if(!dims.length){ el.innerHTML=`<div class="specp"><p class="sub" style="margin:0">${t('specNone')}</p></div>`; return; }
+  el.innerHTML=`<div class="specp"><h2>${t('specT')}</h2><p class="sub">${t('specS')(nf(withAny),nf(base.length))}</p><div class="specg">${dims.map(({d,n,vals})=>{ const mx=Math.max(...vals.map(z=>z.md));
+    return `<div class="sd"><h4><span>${t('SPN')[d.k]} <span class="mut num">· ${nf(n)}</span></span>${d.n?`<button class="spx ${S.ppu===d.k?'on':''}" data-ppu="${d.k}">${t('ppuBtn')(t('PU')[d.k]||d.u)}</button>`:''}</h4>
+     <div class="svh"><span></span><span>${t('cnt')}</span><span>${t('fromP')}</span><span>${t('median')}</span></div>
+     ${vals.map(z=>`<div class="sv ${(S.spec[d.k]||[]).includes(String(z.v))?'on':''}" data-k="${d.k}" data-v="${esc(z.v)}"><b>${esc(spFmt(d.k,d.n?+z.v:z.v))}</b><span class="num mut">${z.c}</span><span class="num">${nf(z.lo)}</span><span class="num">${nf(Math.round(z.md))}</span><i style="width:${(z.md/mx*100).toFixed(0)}%"></i></div>`).join('')}</div>`; }).join('')}</div></div>`;
+  el.querySelectorAll('.sv').forEach(r=>r.onclick=()=>{ const k=r.dataset.k, v=r.dataset.v; const cur_=S.spec[k]||[]; S.spec[k]=cur_.includes(v)?cur_.filter(z=>z!==v):[...cur_,v]; if(!S.spec[k].length) delete S.spec[k]; S.page=0; afterChange(); });
+  el.querySelectorAll('[data-ppu]').forEach(b=>b.onclick=()=>{ const k=b.dataset.ppu; if(S.ppu===k){ S.ppu=''; S.sort='save'; S.dir=-1; } else { S.ppu=k; S.sort='ppu'; S.dir=1; } S.page=0; afterChange(); }); }
+function sortOptions(){ const s=document.getElementById('so'); if(!s) return;
+  s.innerHTML=Object.keys(SDEF).filter(k=>k!=='ppu'||S.ppu).map(k=>`<option value="${k}" ${S.sort===k?'selected':''}>${k==='ppu'?t('ppuSort')(t('PU')[S.ppu]||SPK[S.ppu].u):t('sorts')[k]}</option>`).join(''); }
+const ppuTxt=x=>{ if(cur!=='search'||!S.ppu) return ''; const v=specs(x)[S.ppu]; return v?`<div class="meta num">${nf(Math.round(x.r[3]/v))} din/${t('PU')[S.ppu]||SPK[S.ppu].u}</div>`:''; };
+function results(){ if(!document.getElementById('res')) return; sortOptions(); specPanel();
+  let rs=sortRows(filtered(),SC,S); const pages=Math.max(1,Math.ceil(rs.length/S.per)); if(S.page>=pages) S.page=pages-1;
   cnt.textContent=t('found')(rs.length.toLocaleString(loc())); mbf.textContent=t('filters')+(nF()?` (${nF()})`:''); mbs.textContent=t('sort');
   const pg_=rs.slice(S.page*S.per,(S.page+1)*S.per);
-  res.innerHTML=!rs.length?`<div class="list empty">${t('none')}</div>`:isM()?`<div class="list m">${pg_.map(row).join('')}</div>`:tableHTML(pg_,SC,S,'srt');
+  res.innerHTML=!rs.length?`<div class="list empty">${t('none')}</div>`:isM()?`<div class="list m">${pg_.map(row).join('')}</div>`:tableHTML(pg_,SC.filter(c=>c.k!=='ppu'),S,'srt');
   pg.innerHTML=pages>1?`<button class="btn" ${S.page?'':'disabled'} onclick="S.page--;results();scrollTo({top:0})">${t('prev')}</button><span class="num">${t('page')(S.page+1,pages)}</span><button class="btn" ${S.page<pages-1?'':'disabled'} onclick="S.page++;results();scrollTo({top:0})">${t('next')}</button>`:''; }
 function tableHTML(rows,cols,s,fn){ return `<div class="list"><table>${thead(cols,s,fn)}<tbody>${rows.map(x=>{ const r=x.r; return `<tr onclick="openItem(${x.i})">
   <td>${st(r[0])}</td><td><div class="nm">${esc(r[2])}</div><div class="meta">${esc(x.cat)}</div></td>
-  <td class="r"><div class="pr num">${money(r[3])}</div>${r[4]?`<div class="was num">${nf(r[4])}</div>`:''}</td>
+  <td class="r"><div class="pr num">${money(r[3])}</div>${r[4]?`<div class="was num">${nf(r[4])}</div>`:''}${ppuTxt(x)}</td>
   <td class="r">${x.claimed?`<span class="pct bad num">−${pct(x.claimed)}</span>`:''}</td><td class="r hm num">${f(r[5])}</td>
   <td class="r num">${x.save?`<span class="save">−${nf(x.save)}</span>`:''}</td><td>${vtag(r[6])}</td>
   <td class="r">${x.xs?`<div class="pr num" style="font-size:14px">${money(x.xs)}</div><div class="meta">${esc(r[11])}</div>`:''}</td>
   <td class="r hm">${spark(r[C.hist])}</td><td class="r"><span class="dt ${x.since===TODAY?'new':''}">${dm(x.since)}</span></td></tr>`; }).join('')}</tbody></table></div>`; }
 function row(x){ const r=x.r; return `<div class="it" onclick="openItem(${x.i})"><div class="top"><div><div class="nm">${esc(r[2])}</div><div class="meta">${st(r[0])}</div></div>
-  <div class="r"><div class="pr num">${money(r[3])}</div>${r[4]?`<div class="was num">${nf(r[4])}</div>`:''}</div></div>
+  <div class="r"><div class="pr num">${money(r[3])}</div>${r[4]?`<div class="was num">${nf(r[4])}</div>`:''}${ppuTxt(x)}</div></div>
   <div class="bot">${vtag(r[6])}${x.save?`<span class="save num" style="font-size:13px">−${nf(x.save)} din</span>`:x.claimed?`<span class="pct bad num" style="font-size:13px">−${pct(x.claimed)}</span>`:''}${x.xs?`<span class="meta" style="margin:0">${esc(r[11])}: ${nf(x.xs)}</span>`:''}<span class="sp"></span><span class="dt ${x.since===TODAY?'new':''}">${dm(x.since)}</span></div></div>`; }
 function srt(k){ setSort(S,k,SDEF[k]||(['store','name','price'].includes(k)?1:-1)); results(); }
-function openF(mode){ fs.style.display='flex'; document.body.style.overflow='hidden';
+function openF(mode){ closePop(); fs.style.display='flex'; document.body.style.overflow='hidden';
   fs.innerHTML=`<div class="fh"><b>${mode==='sort'?t('sort'):t('filters')}</b><button class="x" onclick="closeF()">✕</button></div><div class="fb" id="fb"></div>
    <div class="ff"><button class="btn pri" style="width:100%" onclick="closeF()" id="fgo"></button></div>`;
-  if(mode==='sort'){ fb.innerHTML=`<div class="tgs">${Object.keys(SDEF).map(k=>`<button class="tg ${S.sort===k?'on':''}" data-s="${k}">${t('sorts')[k]}</button>`).join('')}</div>`;
+  if(mode==='sort'){ fb.innerHTML=`<div class="tgs">${Object.keys(SDEF).filter(k=>k!=='ppu'||S.ppu).map(k=>`<button class="tg ${S.sort===k?'on':''}" data-s="${k}">${k==='ppu'?t('ppuSort')(t('PU')[S.ppu]||''):t('sorts')[k]}</button>`).join('')}</div>`;
     fb.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{ S.sort=b.dataset.s; S.dir=SDEF[S.sort]; S.page=0; results(); closeF(); }); fgo.textContent=t('done'); return; }
-  const draw=()=>{ fb.innerHTML=`<div class="fsel">${filterControls()}</div>`; const box=fb.querySelector('.fsel');
-    box.querySelectorAll('.sel').forEach((s,i)=>{ const l=document.createElement('label'); l.className='f'; l.textContent=[t('store'),t('cat'),t('brand'),t('verdict')][i]; s.before(l); });
-    const rg=box.querySelector('.rng'); const l=document.createElement('label'); l.className='f'; l.textContent=t('price'); rg.before(l);
-    const tg=document.createElement('div'); tg.className='tgs'; box.querySelectorAll('.tg').forEach(b=>tg.appendChild(b)); box.appendChild(tg);
-    bindFilters(box,()=>{ draw(); results(); }); fgo.textContent=t('show')(filtered().length.toLocaleString(loc())); };
-  draw(); }
+  fb.innerHTML=Object.keys(MS).map(k=>`<label class="f">${t(MS[k].l)}</label><div class="msbox" data-k="${k}">${msListHTML(k)}</div>`).join('')+
+   `<label class="f">${t('price')}</label><span class="rng"><input id="f_min" type="number" inputmode="numeric" placeholder="${t('from')}" value="${S.min}"> – <input id="f_max" type="number" inputmode="numeric" placeholder="${t('to')}" value="${S.max}"></span>
+   <div class="tgs">${TOG.map(([k,l])=>`<button class="tg ${S[k]?'on':''}" data-k="${k}">${t(l)}</button>`).join('')}</div>`;
+  fb.querySelectorAll('.msbox').forEach(b=>bindMsList(b,b.dataset.k));
+  ['min','max'].forEach(k=>fb.querySelector('#f_'+k).addEventListener('change',e=>{ S[k]=e.target.value; S.page=0; afterChange(); }));
+  fb.querySelectorAll('.tg[data-k]').forEach(b=>b.onclick=()=>{ S[b.dataset.k]=!S[b.dataset.k]; b.classList.toggle('on',S[b.dataset.k]); S.page=0; afterChange(); });
+  fgo.textContent=t('show')(filtered().length.toLocaleString(loc())); }
 function closeF(){ if(fs.style.display!=='flex') return; fs.style.display='none'; document.body.style.overflow=''; if(cur==='search') refreshTool(); }
 mbf.onclick=()=>openF('filters'); mbs.onclick=()=>openF('sort');
 const DS={tab:'both',store:''}; const DL={both:{sort:'save',dir:-1},real:{sort:'save',dir:-1},raised:{sort:'claimed',dir:-1},fake:{sort:'claimed',dir:-1}};
