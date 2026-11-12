@@ -1,9 +1,9 @@
 name: Daily price check
-# 06:40 Belgrade: full run (all stores in parallel + pametno.rs + Google Sheets + notification)
+# 04:00 Belgrade: full run (all stores in parallel + pametno.rs + Google Sheets + notification)
 # 10:40 / 14:40 / 18:40: quick refresh (stores in parallel, website + price history only)
 on:
   schedule:
-    - cron: "40 5 * * *"        # 06:40 Belgrade (winter time) – full
+    - cron: "0 3 * * *"         # 04:00 Belgrade (winter time; 05:00 in summer) – full
     - cron: "40 9 * * *"        # 10:40 – refresh
     - cron: "40 13 * * *"       # 14:40 – refresh
     - cron: "40 17 * * *"       # 18:40 – refresh
@@ -29,7 +29,7 @@ permissions:
   actions: read
 concurrency: { group: daily, cancel-in-progress: false }
 env:
-  MODE: ${{ github.event_name == 'schedule' && (github.event.schedule == '40 5 * * *' && 'full' || 'refresh') || inputs.mode || 'full' }}
+  MODE: ${{ github.event_name == 'schedule' && (github.event.schedule == '0 3 * * *' && 'full' || 'refresh') || inputs.mode || 'full' }}
   TZ: Europe/Belgrade
   PYTHONUNBUFFERED: "1"
 
