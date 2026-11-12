@@ -145,7 +145,7 @@ const DOT={'Gigatron':'#C2410C','WinWin':'#2563EB','Big Bang':'#B7791F','Ananas'
 const MON={sr:['jan','feb','mar','apr','maj','jun','jul','avg','sep','okt','nov','dec'],en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']};
 const L={
 sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',watch:'Pratim',stores:'Prodavnice',report:'Izveštaj',admin:'Kategorije'},
- fresh:(d,h)=>`osveženo ${d} u ${h}`,
+ fresh:(d,h)=>`osveženo ${d} u ${h}`, nl:n=>`${n} oglasa`, prob:n=>`⚠ ${n} problem(a) u poslednjem preuzimanju`,
  lede:(n,s,real,fake)=>`Pratimo <em>${n}</em> artikala u ${s} ${s%10>=2&&s%10<=4&&(s<12||s>14)?'prodavnice':'prodavnica'}. Danas je <a href="#" data-go="deals">${real} popusta stvarno</a>, a <span class="bad">${fake}</span> samo deluje kao popust.`,
  ph:'Model, brend ili naziv – npr. OLED65C61LA, G20 Max, iPad Air',
  store:'Prodavnica',cat:'Kategorija',brand:'Brend',verdict:'Ocena',price:'Cena',from:'od',to:'do',
@@ -159,8 +159,8 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',watch:'Pratim',st
  specS:(a,b)=>`${a} od ${b} artikala ima prepoznate specifikacije. Čitamo ih iz naziva artikla, pa mogu biti nepotpune. Klik na vrednost filtrira rezultate.`,
  specNone:'U ovim artiklima nismo prepoznali dovoljno specifikacija.',cnt:'kom.',fromP:'od',median:'medijana',
  ppuBtn:u=>`cena po ${u}`,ppuSort:u=>`Najviše za novac (din/${u})`,
- PU:{inch:'inču',ram:'GB RAM',sto:'GB',hz:'Hz',kg:'kg',rpm:'o/min',lit:'litru',btu:'BTU',watt:'W'},
- SPN:{inch:'Dijagonala',ram:'RAM',sto:'Memorija',hz:'Osvežavanje',res:'Rezolucija',panel:'Panel / ekran',cpu:'Procesor',gpu:'Grafika',kg:'Kapacitet',rpm:'Centrifuga',lit:'Zapremina',btu:'Snaga hlađenja',watt:'Snaga',net:'Mreža',energy:'Energetska klasa'},
+ PU:{inch:'inču',ram:'GB RAM',vram:'GB VRAM',sto:'GB',hz:'Hz',kg:'kg',rpm:'o/min',lit:'litru',btu:'BTU',watt:'W'},
+ SPN:{inch:'Dijagonala',ram:'RAM',vram:'Grafička memorija',sto:'Memorija',hz:'Osvežavanje',res:'Rezolucija',panel:'Panel / ekran',cpu:'Procesor',gpu:'Grafika',kg:'Kapacitet',rpm:'Centrifuga',lit:'Zapremina',btu:'Snaga hlađenja',watt:'Snaga',net:'Mreža',energy:'Energetska klasa'},
  V:{real:'Pravi popust',raised:'Cena podignuta',fake:'Lažni popust',nochange:'Bez promene',below:'Ispod tržišta',at:'Na tržišnom minimumu',above:'Skuplje od tržišta',unverified:'Neprovereno',none:'Redovna cena'},
  why:{real:(p,l)=>`Cena je ${p} niža od najniže cene ove prodavnice u poslednjih 30 dana (${l}).`,
       raised:(c,p,l)=>`Prodavnica navodi popust od ${c}, ali je cena ${p} viša od njene najniže cene u poslednjih 30 dana (${l}).`,
@@ -184,7 +184,7 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',watch:'Pratim',st
   filter:'Pronađi kategoriju',all:'Uključi sve',none:'Isključi sve',save:'Kopiraj i otvori GitHub',copied:'Kopirano. Nalepi u GitHub editor i klikni „Commit changes".',excluded:n=>`${n} isključeno`,
   noData:'Lista se pojavljuje posle prvog punog pokretanja.',json:'Novi sadržaj categories.json',notCrawled:'nije pretraživano'}},
 en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',watch:'Watching',stores:'Stores',report:'Report',admin:'Categories'},
- fresh:(d,h)=>`updated ${d} at ${h}`,
+ fresh:(d,h)=>`updated ${d} at ${h}`, nl:n=>`${n} listings`, prob:n=>`⚠ ${n} problem(s) in the last crawl`,
  lede:(n,s,real,fake)=>`We track <em>${n}</em> products across ${s} stores. Today <a href="#" data-go="deals">${real} discounts are real</a> and <span class="bad">${fake}</span> only look like one.`,
  ph:'Model, brand or name – e.g. OLED65C61LA, G20 Max, iPad Air',
  store:'Store',cat:'Category',brand:'Brand',verdict:'Verdict',price:'Price',from:'from',to:'to',
@@ -198,8 +198,8 @@ en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',watch:'Watching',sto
  specS:(a,b)=>`${a} of ${b} products have recognised specs. They are read from the product name, so they can be incomplete. Click a value to filter.`,
  specNone:"We couldn't recognise enough specs in these products.",cnt:'pcs',fromP:'from',median:'median',
  ppuBtn:u=>`price per ${u}`,ppuSort:u=>`Best value (RSD/${u})`,
- PU:{inch:'inch',ram:'GB RAM',sto:'GB',hz:'Hz',kg:'kg',rpm:'rpm',lit:'litre',btu:'BTU',watt:'W'},
- SPN:{inch:'Screen size',ram:'RAM',sto:'Storage',hz:'Refresh rate',res:'Resolution',panel:'Panel / screen',cpu:'Processor',gpu:'Graphics',kg:'Capacity',rpm:'Spin speed',lit:'Volume',btu:'Cooling power',watt:'Power',net:'Network',energy:'Energy class'},
+ PU:{inch:'inch',ram:'GB RAM',vram:'GB VRAM',sto:'GB',hz:'Hz',kg:'kg',rpm:'rpm',lit:'litre',btu:'BTU',watt:'W'},
+ SPN:{inch:'Screen size',ram:'RAM',vram:'Graphics memory',sto:'Storage',hz:'Refresh rate',res:'Resolution',panel:'Panel / screen',cpu:'Processor',gpu:'Graphics',kg:'Capacity',rpm:'Spin speed',lit:'Volume',btu:'Cooling power',watt:'Power',net:'Network',energy:'Energy class'},
  V:{real:'Real discount',raised:'Price raised',fake:'Fake discount',nochange:'No change',below:'Below market',at:'At market low',above:'Above market',unverified:'Unverified',none:'Regular price'},
  why:{real:(p,l)=>`The price is ${p} below this store's lowest price of the last 30 days (${l}).`,
       raised:(c,p,l)=>`The store claims ${c} off, but the price is ${p} above its own lowest price of the last 30 days (${l}).`,
@@ -297,6 +297,7 @@ const SPECS=[
    if(/\b(?:128|256|512)\s*GB\b|\b[124]\s*TB\b/i.test(s)){ for(const z of s.matchAll(/\b(4|6|8|12|16|18|24|32|36|48|64)\s*GB\b(?!\s*(?:SSD|HDD|eMMC|UFS|memorij|storage))/gi)){ const pre=s.slice(Math.max(0,z.index-5),z.index); if(!/SSD\s*$|HDD\s*$/i.test(pre)) return +z[1]; } }
    return null;}},
  {k:'sto',n:1,u:'GB',f:s=>{ let b=0; for(const m of s.matchAll(/\b(\d{2,4})\s*(GB|TB)\b(?!\s*(?:RAM|DDR|LPDDR))/gi)){ const g=+m[1]*(m[2].toUpperCase()==='TB'?1024:1); if(g>=32&&g<=8192) b=Math.max(b,g);} for(const m of s.matchAll(/\b([1248])\s*TB\b/gi)) b=Math.max(b,+m[1]*1024); return b||null; }, fmt:v=>v>=1024?(v/1024)+' TB':v+' GB'},
+ {k:'vram',n:1,u:'GB',f:s=>{const m=s.match(/\b(\d{1,2})\s*GB\s*(?:GDDR\d|VRAM)/i); return m&&+m[1]>=2&&+m[1]<=48?+m[1]:null;}},
  {k:'hz',n:1,u:'Hz',f:s=>{const m=s.match(/\b(\d{2,3})\s*Hz\b/i); return m&&+m[1]>=50&&+m[1]<=600?+m[1]:null;}},
  {k:'res',f:s=>/\b8K\b/i.test(s)?'8K':/\b(4K|UHD|2160p)\b/i.test(s)?'4K UHD':/\b(QHD|WQHD|1440p|2K)\b/i.test(s)?'QHD':/\b(FHD|Full\s*HD|1080p)\b/i.test(s)?'Full HD':/\bHD\s*Ready\b|\b720p\b/i.test(s)?'HD':null},
  {k:'panel',f:s=>/QD-?OLED/i.test(s)?'QD-OLED':/\bOLED\b/i.test(s)?'OLED':/Neo\s*QLED/i.test(s)?'Neo QLED':/\bQLED\b/i.test(s)?'QLED':/Mini\s*-?LED/i.test(s)?'Mini LED':/Nano\s*Cell/i.test(s)?'NanoCell':/\bAMOLED\b/i.test(s)?'AMOLED':/\bIPS\b/i.test(s)?'IPS':/\bVA\b/.test(s)?'VA':/\bLED\b/i.test(s)?'LED':null},
@@ -319,7 +320,10 @@ const SPECS=[
  {k:'net',f:s=>/\b5G\b/.test(s)?'5G':/\b(LTE|4G|Cellular)\b/i.test(s)?'LTE/4G':null},
  {k:'energy',f:s=>{const m=s.match(/\b(?:energetska\s*)?(?:klasa|class)\s*([A-G](?:\+{1,3})?)(?![a-z])/i)||s.match(/\b(A\+{1,3})(?![\w+])/); return m?m[1].toUpperCase():null;}}];
 const SPK=Object.fromEntries(SPECS.map(d=>[d.k,d]));
-function specs(x){ if(x.sp) return x.sp; const o={}; for(const d of SPECS){ const v=d.f(x.r[2]); if(v!=null) o[d.k]=v; } return x.sp=o; }
+// name-based values, overridden by the specifications read from the product page (when the crawler has them)
+function specs(x){ if(x.sp) return x.sp; const o={}; for(const d of SPECS){ const v=d.f(x.r[2]); if(v!=null) o[d.k]=v; }
+  const ps=C.specs!=null&&x.r[C.specs]; if(ps) for(const k in ps) if(SPK[k]&&ps[k]!=null) o[k]=ps[k]; return x.sp=o; }
+const nlTxt=r=>{ const n=C.listings!=null&&r[C.listings]; return n>1?` · ${t('nl')(n)}`:''; };
 const spFmt=(k,v)=>{ const d=SPK[k]; return d.fmt?d.fmt(v):d.n?`${String(v).replace('.',',')}${d.u==='"'?'"':' '+d.u}`:String(v); };
 const SP={open:false};
 // ------------------------------------------------------------------ search state + multi-select filters
@@ -421,13 +425,13 @@ function results(){ if(!document.getElementById('res')) return; sortOptions(); s
   res.innerHTML=!rs.length?`<div class="list empty">${t('none')}</div>`:isM()?`<div class="list m">${pg_.map(row).join('')}</div>`:tableHTML(pg_,SC.filter(c=>c.k!=='ppu'),S,'srt');
   pg.innerHTML=pages>1?`<button class="btn" ${S.page?'':'disabled'} onclick="S.page--;results();scrollTo({top:0})">${t('prev')}</button><span class="num">${t('page')(S.page+1,pages)}</span><button class="btn" ${S.page<pages-1?'':'disabled'} onclick="S.page++;results();scrollTo({top:0})">${t('next')}</button>`:''; }
 function tableHTML(rows,cols,s,fn){ return `<div class="list"><table>${thead(cols,s,fn)}<tbody>${rows.map(x=>{ const r=x.r; return `<tr onclick="openItem(${x.i})">
-  <td>${st(r[0])}</td><td><div class="nm">${esc(r[2])}</div><div class="meta">${esc(x.cat)}</div></td>
+  <td>${st(r[0])}</td><td><div class="nm">${esc(r[2])}</div><div class="meta">${esc(x.cat)}${nlTxt(r)}</div></td>
   <td class="r"><div class="pr num">${money(r[3])}</div>${r[4]?`<div class="was num">${nf(r[4])}</div>`:''}${ppuTxt(x)}</td>
   <td class="r">${x.claimed?`<span class="pct bad num">−${pct(x.claimed)}</span>`:''}</td><td class="r hm num">${f(r[5])}</td>
   <td class="r num">${x.save?`<span class="save">−${nf(x.save)}</span>`:''}</td><td>${vtag(r[6])}</td>
   <td class="r">${x.xs?`<div class="pr num" style="font-size:14px">${money(x.xs)}</div><div class="meta">${esc(r[11])}</div>`:''}</td>
   <td class="r hm">${spark(r[C.hist])}</td><td class="r"><span class="dt ${x.since===TODAY?'new':''}">${dm(x.since)}</span></td></tr>`; }).join('')}</tbody></table></div>`; }
-function row(x){ const r=x.r; return `<div class="it" onclick="openItem(${x.i})"><div class="top"><div><div class="nm">${esc(r[2])}</div><div class="meta">${st(r[0])}</div></div>
+function row(x){ const r=x.r; return `<div class="it" onclick="openItem(${x.i})"><div class="top"><div><div class="nm">${esc(r[2])}</div><div class="meta">${st(r[0])}${nlTxt(r)}</div></div>
   <div class="r"><div class="pr num">${money(r[3])}</div>${r[4]?`<div class="was num">${nf(r[4])}</div>`:''}${ppuTxt(x)}</div></div>
   <div class="bot">${vtag(r[6])}${x.save?`<span class="save num" style="font-size:13px">−${nf(x.save)} din</span>`:x.claimed?`<span class="pct bad num" style="font-size:13px">−${pct(x.claimed)}</span>`:''}${x.xs?`<span class="meta" style="margin:0">${esc(r[11])}: ${nf(x.xs)}</span>`:''}<span class="sp"></span><span class="dt ${x.since===TODAY?'new':''}">${dm(x.since)}</span></div></div>`; }
 function srt(k){ setSort(S,k,SDEF[k]||(['store','name','price'].includes(k)?1:-1)); results(); }
@@ -525,7 +529,7 @@ function tabs(){ const list=TABS.concat(location.hash==='#admin'?['admin']:[]);
   document.getElementById('tabs').innerHTML=list.map(k=>`<button data-t="${k}" class="${k===cur?'on':''}">${t('tabs.'+k)}</button>`).join(''); }
 function go(k){ cur=k; tabs(); FN[k](); scrollTo({top:0}); }
 function chrome(){ document.documentElement.lang=lang; const [d,h]=D.updated.split(' '); const [,m,dd]=d.split('-'); const ds=`${+dd}. ${MON[lang][+m-1]}`;
-  fresh.textContent=t('fresh')(ds,h);
+  fresh.textContent=t('fresh')(ds,h)+((D.problems||[]).length?' · '+t('prob')(D.problems.length):''); fresh.title=(D.problems||[]).join('\n');
   foot.innerHTML=`<div><h4>${t('foot.h')}</h4><p>${t('foot.p1')}</p><p>${t('foot.p2')}</p></div><div><h4>${t('foot.h2')}</h4><p>${t('foot.p3')}</p><p>babl · ${t('fresh')(ds,h)}</p></div>`;
   document.querySelectorAll('.lng button').forEach(b=>b.classList.toggle('on',b.dataset.l===lang)); }
 document.getElementById('tabs').onclick=e=>{ const k=e.target.closest('button')?.dataset.t; if(k) go(k); };

@@ -43,14 +43,20 @@ window.vtexProducts = (root) => { const out=[]; const seen=new Set();
 """
 
 FULL_MINUTES = 60   # time limit for one store's full-catalogue crawl (config: full_store_minutes)
+LIGHT = False       # light intraday refresh: first PAGES pages of every category, no product pages
+PAGES = None        # overrides max_pages (light refresh)
+LOW_MIN = 15000     # 30-day lows are read from product pages only for articles at least this expensive
+SPECS_JS = (Path(__file__).resolve().parent / "specs_js.js").read_text(encoding="utf-8") if (Path(__file__).resolve().parent / "specs_js.js").exists() else "true;"
 JS_SEL = r'''
 // category selection (categories.json "exclude": path prefixes) + leaves-only + cached 30-day lows
 window.notExcluded = (p, ex) => !ex.some(e => p === e || p.startsWith(e + '/'));
 window.leavesOf = cats => cats.filter(c => !cats.some(d => d !== c && d.startsWith(c + '/')));
+// product pages are read only for articles >= window.__lowMin whose price changed (cache hit = same price); none in light refreshes
 window.lowsWithCache = async (disc, known, re) => {
-  const todo = [];
-  for (const x of disc) { const k = known[x.u]; if (k && k[0] === x.p) { x.l = k[1]; x.lc = 1; } else todo.push(x); }
-  console.log('PROG ' + location.host + ' 30-day lows: ' + (disc.length - todo.length) + ' from cache, ' + todo.length + ' to fetch');
+  const todo = []; let cached = 0, skipped = 0;
+  for (const x of disc) { const k = known[x.u]; if (k && k[0] === x.p) { x.l = k[1]; x.lc = 1; cached++; }
+    else if (window.__light || x.p < (window.__lowMin || 0)) skipped++; else todo.push(x); }
+  console.log('PROG ' + location.host + ' 30-day lows: ' + cached + ' from cache, ' + todo.length + ' to fetch, ' + skipped + ' skipped (cheap or light run)');
   await pool(todo, 4, async x => { const t = await ft2(x.u); x.l = t ? lowFrom(t, re) : null; x.lf = 1; }, 150);
 };
 true;   // (Playwright would call a function left as the last value)
@@ -58,7 +64,8 @@ true;   // (Playwright would call a function left as the last value)
 
 def _run(br, code, arg=None):
     br.page.evaluate(JS_CAT); br.page.evaluate(JS_SEL)
-    br.page.evaluate("m => { window.__deadline = Date.now() + m*60000; window.__dlHit = 0; }", FULL_MINUTES)
+    br.page.evaluate("([m, light, lowMin]) => { window.__deadline = Date.now() + m*60000; window.__dlHit = 0; window.__light = light; window.__lowMin = lowMin; }",
+                     [FULL_MINUTES, 1 if LIGHT else 0, LOW_MIN])
     return br.js(code, arg)
 
 def _catinfo(res):
@@ -68,6 +75,7 @@ def _catinfo(res):
 
 # ------------------------------------------------------------------ Gigatron (VTEX headless, Next.js)
 def full_gigatron(br, log, max_pages=60, exclude=(), known=None):
+    max_pages = PAGES or max_pages
     br.go("https://gigatron.rs")
     res = _run(br, r"""async ([maxPages, ex, known])=>{
       const fails=[]; let cats=[];
@@ -104,9 +112,10 @@ MAG_TOP = r"^/(bela-tehnika|it-gaming|klime-grejanje-i-kvalitet-vazduha|mali-kuc
 
 PCP_TOP = r"^/(laptop-i-tablet-racunari|racunari-monitori-komponente|bela-tehnika|gaming|tv-audio-video|mobilni-telefoni-i-oprema|mali-kucni-aparati|grejanje-i-klimatizacija|fotoaparati-kamere-dronovi)(/[a-z0-9-]+){0,3}\.html$"
 
-def full_magento(br, store, home, log, max_pages=80, exclude=(), known=None, top=None):
+def full_magento(br, store, home, log, max_pages=80, exclude=(), known=None, top=None, conc=4):
+    max_pages = PAGES or max_pages
     br.go(home)
-    res = _run(br, r"""async ([top,maxPages,ex,known])=>{
+    res = _run(br, r"""async ([top,maxPages,ex,known,conc])=>{
       const re=new RegExp(top); const fails=[];
       const h=await ft2('/'); let cats=h?linksOf(h,re):[];
       // second level discovery from each top category page
@@ -118,14 +127,14 @@ def full_magento(br, store, home, log, max_pages=80, exclude=(), known=None, top
       const allCats=cats.slice();
       cats=cats.filter(p=>notExcluded(p,ex) && !ex.some(e=>e.startsWith(p+'/'))).sort((a,b)=>b.split('/').length-a.split('/').length);
       const items={}; const visited=[]; const cnt={};
-      await pool(cats,4,async c=>{ for(let p=1;p<=maxPages;p++){ const t=await ft2(c+'?product_list_limit=60&p='+p);
+      await pool(cats,conc,async c=>{ for(let p=1;p<=maxPages;p++){ if(window.__deadline && Date.now()>window.__deadline) break; const t=await ft2(c+'?product_list_limit=60&p='+p);
           if(!t){ fails.push(c+' p'+p); break; } const arr=parseMag(t); if(!arr.length) break;
           cnt[c]=(cnt[c]||0)+arr.length;
           let added=0; arr.forEach(x=>{ if(x.u && x.p && !items[x.u]){ x.cat=c.split('/').pop(); x.cp=c; items[x.u]=x; added++; } });
           if(!added) break; await sleep(200);} visited.push(c); },300);
       const disc=Object.values(items).filter(x=>x.o && x.o>x.p).sort((a,b)=>((b.p>=15000)-(a.p>=15000)) || ((1-b.p/b.o)-(1-a.p/a.o)));  // most relevant first, in case the time limit cuts in
       await lowsWithCache(disc, known, /Najni[žz]a (?:web )?cena u (?:prethodnih|poslednjih) 30 dana\s*:?\s*([\d.]+)/i);
-      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [top or MAG_TOP, max_pages, list(exclude), known or {}])
+      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [top or MAG_TOP, max_pages, list(exclude), known or {}, conc])
     log(f"{store} full: {len(res['items'])} articles from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if not res['items'] and res["fails"] else ""))
     return [dict(store=store, **x) for x in res["items"]], [f"{store} {f}" for f in res["fails"]], _catinfo(res)
 
@@ -135,6 +144,7 @@ OC_SKIP = r"(^/(contact|nacini|kontakt|o-nama|blog|akcij|outlet|izdvojeni|dotmar
 OC_KEEP = r"(televiz|tv|audio|video|laptop|tablet|telefon|mobiln|bela tehnika|bela-tehnika|tesla bela|monitor|ra[čc]unar|periferij|[šs]tampa[čc]|ku[ćc]ni aparat|kucni-aparati|usisiva|klima|projektor|dron|foto|kamer|grejanj|gaming|konzol|server|rashladn|frizider|fri[žz]ider|aparati za kuvanje|aparati-za-kuvanje|ma[šs]ine za pranje|masine-za-pranje|bojler|hla[dđ]enje|ugradn|mali ku[ćc]ni|sporet|[šs]poret)"
 
 def full_opencart(br, store, home, log, max_pages=40, exclude=(), known=None):
+    max_pages = PAGES or max_pages
     br.go(home)
     res = _run(br, r"""async ([skip,keep,maxPages,ex,known])=>{
       const sk=new RegExp(skip,'i'); const fails=[];
@@ -168,6 +178,7 @@ BZ_KEEP = r"(televiz|tv-|audio|zvucn|slusalic|soundbar|projektor|laptop|tablet|r
 BZ_SKIP = r"(novogod|jelk|ukras|girland|venci|kugle|patuljc|maske|futrol|torb|zastitn|kabl|adapter|punjac|nosac|stalak|oprema-za-|dodatna-oprema|delovi|filter|kese|cetke|program|softver|garancij|toner|kertridz|papir)"
 
 def full_bazzar(br, log, max_pages=60, exclude=(), known=None):
+    max_pages = PAGES or max_pages
     br.go("https://bazzar.rs")
     res = _run(br, r"""async ([keep,skip,maxPages,ex,known])=>{
       const kp=new RegExp(keep,'i'), sk=new RegExp(skip,'i'); const fails=[];
@@ -193,6 +204,7 @@ BB_SKIP = r"^/(prijava|signup|kontakt|poslovnice|textovi|outlet|promocije|proizv
 BB_ELECTRO = r"(televiz|projekt|audio|zvucn|video|tv-|laptop|tablet|racunar|monitor|bela-tehnika|frizider|ves-mas|sporet|sudov|susenje|zamrziv|aspirat|bojler|ugradn|mikrotalas|vitrin|klima|grejan|radijator|usisiv|aparati-za-kafu|kafe|mobilni|telefon|satov|gaming|konzol|kamer|foto|dron|stampac|mali-kucni|kuhinjsk|friteze|preciscivac|ovlazivac|odvlazivac|pegl|blender|mikser|soundbar|slusalic)"
 
 def full_bigbang(br, log, max_pages=40, exclude=(), known=None):
+    max_pages = PAGES or max_pages
     br.go("https://www.bigbang.rs")
     res = _run(br, r"""async ([skip,electro,maxPages,ex])=>{
       const sk=new RegExp(skip), el=new RegExp(electro); const fails=[];
@@ -217,6 +229,7 @@ def full_bigbang(br, log, max_pages=40, exclude=(), known=None):
 AN_TOP = ["tv-audio-i-video", "it-shop", "telefoni-i-foto", "bela-tehnika", "mali-kucni-aparati", "gaming"]
 
 def full_ananas(br, log, max_pages=30, exclude=(), known=None):
+    max_pages = PAGES or max_pages
     br.go("https://ananas.rs")
     res = _run(br, r"""async ([tops,maxPages,ex])=>{
       const fails=[]; let cats=[];
@@ -234,6 +247,25 @@ def full_ananas(br, log, max_pages=30, exclude=(), known=None):
     log(f"Ananas full: {len(res['items'])} listings from {res['cats']} leaf categories")
     return [dict(store="Ananas", cat=x["cat"], cp=x.get("cp", ""), n=x["n"], u=x["u"], p=x["p"], o=x.get("o"), l=x.get("l")) for x in res["items"] if x.get("p")], \
            [f"Ananas {f}" for f in res["fails"]], _catinfo(res)
+
+# ------------------------------------------------------------------ specifications from product pages (new articles only)
+SPEC_CATS = re.compile(r"laptop|notebook|tablet|telefon|mobiln|smartphone|televiz|\btv\b|monitor|fri[žz]ider|frizider|zamrziv|ve[šs]|vesa|su[šs]il|susil|sudoma|sudov|klima|"
+                       r"usisiv|ra[čc]unar|racunar|desktop|konzol|projektor|bojler|sporet|[šs]poret|rern|mikrotalas|sat|kamer|foto|dron|slu[šs]al|zvu[čc]n|soundbar", re.I)
+
+def fetch_specs(br, store, items, known, log, budget=1500, minutes=12, min_price=10000):
+    """Read specifications for articles not seen before (known = {url: specs}); returns {url: specs} for the new ones ({} = page had none)."""
+    todo = [x for x in items if x.get("u") and x["u"] not in known and (x.get("p") or 0) >= min_price
+            and SPEC_CATS.search(" ".join([x.get("cat", ""), x.get("cp", ""), x.get("n", "")]))]
+    todo.sort(key=lambda x: -(x.get("p") or 0))
+    todo = todo[:budget]
+    if not todo: log(f"{store} specs: nothing new"); return {}
+    br.page.evaluate(SPECS_JS)
+    br.page.evaluate("m => { window.__deadline = Date.now() + m*60000; window.__dlHit = 0; }", minutes)
+    res = br.js(r"""async (urls)=>{ const out={};
+      await pool(urls,4,async u=>{ const t=await ft2(u); if(t==null) return; try{ out[u]=specFromKV(specKV(t)); }catch(e){ out[u]={}; } },150);
+      return out; }""", [x["u"] for x in todo])
+    log(f"{store} specs: read {len(res)} of {len(todo)} new product pages, {sum(1 for v in res.values() if v)} with specifications")
+    return res
 
 # ------------------------------------------------------------------ local price history (SQLite)
 class History:

@@ -28,8 +28,6 @@ from zoneinfo import ZoneInfo
 HERE = Path(__file__).resolve().parent
 CFG = json.loads((HERE / "config.json").read_text(encoding="utf-8"))
 # cloud (GitHub Actions) overrides – secrets arrive as environment variables
-if os.environ.get("GOOGLE_SA_JSON"):
-    (HERE / "service_account.json").write_text(os.environ["GOOGLE_SA_JSON"], encoding="utf-8"); CFG["service_account_json"] = "service_account.json"
 if os.environ.get("NTFY_TOPIC"): CFG["ntfy_topic"] = os.environ["NTFY_TOPIC"]
 if os.environ.get("SITE_URL"): CFG["site_url"] = os.environ["SITE_URL"]
 TZ = ZoneInfo("Europe/Belgrade")
@@ -62,7 +60,8 @@ STORE_NAME = {"gigatron": "Gigatron", "winwin": "WinWin", "tehnomanija": "Tehnom
               "dotmarket": "DOTmarket", "bazzar": "Bazzar", "pcpractic": "PC Practic", "eurotehna": "Eurotehna"}
 FULL_ONLY = ["full_dotmarket", "full_bazzar", "full_pcpractic", "full_eurotehna"]   # shops crawled only as full catalogues
 LOW_DAYS = CFG.get("low30_cache_days", 5)       # re-read a product page's 30-day low at least this often
-PM_DAYS = CFG.get("pametno_cache_days", 4)      # pametno.rs results are reused for this many days
+PM_DAYS = CFG.get("pametno_cache_days", 8)      # pametno.rs results are reused for this many days
+PM_RECHECK = CFG.get("pametno_recheck_days", 7)  # …and looked up again after this many days, or sooner when our price moved >3%
 
 def sload(name, default=None):
     p = STATE / name
@@ -242,16 +241,16 @@ def crawl_gigatron(br):
 def search_gigatron(br, terms):
     return br.js("""async (terms)=>{ const r=await pool(terms,4,async q=>{ const t=await ft2('/pretraga?q='+encodeURIComponent(q)); return t?parseGiga(t):null; }); return r; }""", terms)
 
-def crawl_magento(br, home, bases, known=None):
+def crawl_magento(br, home, bases, known=None, light=False):
     br.go(home)
-    return br.js(r"""async ([bases,keep,known])=>{ const items={}; const fails=[];
+    return br.js(r"""async ([bases,keep,known,light])=>{ const items={}; const fails=[];
       for(const base of bases){ for(let p=1;p<=80;p++){ const t=await ft2(base+(base.includes('?')?'&':'?')+'product_list_limit=60&p='+p);
          if(!t){fails.push(base+' p'+p); break;} let added=0; for(const x of parseMag(t)){ if(x.u&&!items[x.u]){items[x.u]=x; added++;} }
          if(!added) break; await sleep(250);} }
       const kre=new RegExp(keep); const kept=Object.values(items).filter(x=>{ let path=''; try{path=new URL(x.u).pathname}catch(e){} x.cat=path.split('/').slice(-2,-1)[0]; return kre.test(path)&&x.p>=15000&&x.o; });
-      const todo=kept.filter(x=>{ const k=known[x.u]; if(k&&k[0]===x.p){ x.l=k[1]; return false; } return true; });
+      const todo=kept.filter(x=>{ const k=known[x.u]; if(k&&k[0]===x.p){ x.l=k[1]; return false; } return !light; });
       await pool(todo,4,async x=>{ const t=await ft2(x.u); x.l=t?lowFrom(t,/Najni[žz]a web cena u prethodnih 30 dana\s*:?\s*([\d.]+)/i):null; x.lf=1; },200);
-      return {items:kept, fails, total:Object.keys(items).length, cached:kept.length-todo.length}; }""", [bases, MAG_KEEP, known or {}])
+      return {items:kept, fails, total:Object.keys(items).length, cached:kept.length-todo.length}; }""", [bases, MAG_KEEP, known or {}, light])
 
 def search_magento(br, terms):
     return br.js(r"""async (terms)=>{ const out={}; for(const q of terms){ try{ const t=await ft('/catalogsearch/result/?q='+encodeURIComponent(q)+'&product_list_limit=60');
@@ -574,24 +573,6 @@ def tablet_spec(name):
     return f"{sim.group(1) if sim else '?'} / {ram.group(1) + 'GB RAM' if ram else '?'} / {', '.join(sorted(sto)) or '?'}"
 
 # --------------------------------------------------------------------------------------
-# Google Sheets
-# --------------------------------------------------------------------------------------
-def sheets():
-    import gspread
-    from gspread.http_client import BackOffHTTPClient   # waits and retries on "quota exceeded" (60 writes/min)
-    gc = gspread.service_account(filename=str(HERE / CFG["service_account_json"]), http_client=BackOffHTTPClient)
-    return gc.open_by_key(CFG["daily_report_id"]), gc.open_by_key(CFG["price_history_id"])
-
-def write_chunks(ws, start_row, rows, ncols):
-    need_r, need_c = start_row + len(rows) - 1, ncols
-    if ws.row_count < need_r or ws.col_count < need_c:   # grow the tab instead of failing on "exceeds grid limits"
-        ws.resize(rows=max(ws.row_count, need_r + 50), cols=max(ws.col_count, need_c))
-    for k in range(0, len(rows), 500):
-        part = rows[k:k + 500]
-        a1 = f"A{start_row + k}"
-        ws.update(values=[[("" if v is None else v) for v in r] + [""] * (ncols - len(r)) for r in part], range_name=a1, value_input_option="RAW")
-
-# --------------------------------------------------------------------------------------
 # Notification
 # --------------------------------------------------------------------------------------
 def notify(title, body):
@@ -614,27 +595,29 @@ def notify(title, body):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-pametno", action="store_true")
-    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--dry-run", action="store_true", help="don't write the online database")
     ap.add_argument("--show", action="store_true", help="show the browser window")
-    ap.add_argument("--only", help="crawl just one store (gigatron|winwin|bigbang|ananas) or 'pametno', then stop")
+    ap.add_argument("--only", help="crawl just one store (gigatron|winwin|bigbang|ananas|pcpractic|eurotehna) or 'pametno', then stop")
+    ap.add_argument("--light", action="store_true", help="light intraday crawl: first pages of every category, no product pages")
     ap.add_argument("--combine", nargs="+", help="folders with the parallel jobs' results to merge and analyse")
-    ap.add_argument("--refresh", action="store_true", help="intraday update: site + history only")
+    ap.add_argument("--refresh", action="store_true", help="intraday update: merge light crawls into the morning catalogue; website + history")
     a = ap.parse_args()
-    if a.refresh: a.dry_run = True; a.no_pametno = True
+    if a.refresh: a.no_pametno = True
     if CFG.get("stop_after") and TODAY > CFG["stop_after"]:
         notify("Store promotions", "Black Friday checker: season is over – you can remove the scheduled job."); return
-    fails = []
+    fails, problems = [], []
     t_start = time.time()
     if a.only == "pametno":
         return pametno_job(a)
+    light_counts = None
     if a.combine:
-        raw, pm_fresh = combine_parts(a.combine, fails)
+        raw, pm_fresh, light_counts = combine_parts(a.combine, fails, refresh=a.refresh)
     else:
         raw = load("raw.json") or {}
         from playwright.sync_api import sync_playwright
         with sync_playwright() as pw:
             br = Browser(pw, headless=not a.show)
-            try: crawl(br, raw, fails, only=a.only)
+            try: crawl(br, raw, fails, only=a.only, light=a.light)
             finally: br.close()
         if a.only:
             st = STORE_NAME.get(a.only, a.only)
@@ -643,11 +626,21 @@ def main():
                 (OUT / f"lows_{a.only}.json").write_text(json.dumps(updated_lows(a.only, lows_its), separators=(",", ":")), encoding="utf-8")
             save("fails.json", fails)
             log(f"{st}: done in {(time.time() - t_start) / 60:.0f} min"); return
-    items, all_items, drops = assemble(raw)
+    # the price history lives in the database too – rebuild the local copy if the GitHub cache was lost
+    import db
+    if db.enabled() and not (HERE / "history.sqlite").exists():
+        try: db.restore_history(HERE / "history.sqlite", log=log)
+        except Exception as e: problems.append(f"history restore from the database failed: {e}")
+    items, all_items, drops, counts, all_full = assemble(raw)
+    problems += health_check(counts, light_counts, fails, refresh=a.refresh)
     watch = build_watch_candidates(raw, all_items)
     # ---- pametno (market comparison)
     terms = pametno_terms(items, all_items, watch)
     ssave("pametno_terms.json", terms)            # tomorrow's parallel pametno job works on this list
+    tp = {}
+    for x in list(items) + list(watch):
+        t_ = x.get("term") or term_for(x["name"]); tp[t_] = min(tp.get(t_, x["p"]), x["p"])
+    ssave("pametno_tp.json", tp)                  # our price per term – a lookup is repeated when it moves >3%
     cache = sload("pametno_cache.json", {}) or {}
     if a.combine:
         cache.update(pm_fresh)
@@ -657,7 +650,7 @@ def main():
             br = Browser(pw, headless=not a.show)
             try:
                 for t_, r_ in run_pametno(br, terms).items():
-                    if r_ is not None: cache[t_] = dict(r_, d=TODAY)
+                    if r_ is not None: cache[t_] = dict(r_, d=TODAY, pp=tp.get(t_))
             finally: br.close()
     cache = {t_: r_ for t_, r_ in cache.items() if r_ and age_days(r_.get("d", TODAY)) <= 30}
     ssave("pametno_cache.json", cache)
@@ -666,24 +659,61 @@ def main():
     for w in watch:
         r = pm.get(w["term"]); w["r"] = r if (r and not r.get("e")) else None
     save("items.json", items)
-    sheets_error = None
-    try:
-        report = write_outputs(items, watch, raw, pm, fails, dry=a.dry_run, all_items=all_items, drops=drops)
-    except Exception as e:   # still build the website and notify, even if Google Sheets fails
-        import traceback; log("Google Sheets write failed:\n" + traceback.format_exc())
-        sheets_error = f"{type(e).__name__}: {str(e)[:300]}"
-        report = write_outputs(items, watch, raw, pm, fails, dry=True, all_items=all_items, drops=drops) + f"\n\nGoogle Sheets write FAILED: {sheets_error}"
+    prev = set()
+    if db.enabled():
+        try: prev = db.previous_real_cuts(TODAY)
+        except Exception as e: log("database read failed:", e)
+    report, ctx = write_outputs(items, watch, raw, pm, fails, all_items=all_items, drops=drops, prev=prev)
+    # ---- online database (replaces Google Sheets)
+    if a.dry_run:
+        log("database: dry run – nothing written")
+    elif not db.enabled():
+        log("database: SUPABASE_SERVICE_KEY not set – skipped"); report += "\n\nDatabase: not connected yet (secret SUPABASE_SERVICE_KEY missing)."
+    else:
+        try:
+            db.push_history(HERE / "history.sqlite", log=log)
+            db.push_articles(all_full, TODAY, full=not a.refresh, hist_sqlite=HERE / "history.sqlite", specs=sload("specs.json", {}), log=log)
+            db.push_run(TODAY, "refresh" if a.refresh else "full", items, ctx["wrows"], ctx["drop_rows"], ctx["summ"], ctx["cat_counts"], report, problems, log=log)
+        except Exception as e:
+            import traceback; log("database write failed:\n" + traceback.format_exc()); problems.append(f"database write failed: {str(e)[:300]}")
+        if not a.refresh:
+            try: db.import_sheets(log=log)      # one-time copy of the old Google Sheets; does nothing once done
+            except Exception as e: log("Google Sheets import failed:", e)
+    if problems:
+        report = "⚠ PROBLEMS – check the run log:\n" + "\n".join("• " + x for x in problems) + "\n\n" + report
     (OUT / "report.txt").write_text(report, encoding="utf-8")
+    extra = load("site_extra.json") or {}; extra["problems"] = problems; save("site_extra.json", extra)
     try:
         import importlib.util
         spec = importlib.util.spec_from_file_location("pw_site", HERE / "pw_site.py"); pw_site = importlib.util.module_from_spec(spec); spec.loader.exec_module(pw_site)
         page = pw_site.build(OUT, TODAY); log("website:", page)
         if CFG.get("open_site"): subprocess.run(["open", str(page)])
     except Exception as e:
-        import traceback; log("website build failed:", traceback.format_exc())
+        import traceback; log("website build failed:", traceback.format_exc()); problems.append("website build failed")
     if not a.refresh: notify(f"Store promotions – {TODAY}", report)
-    log("done")
-    if sheets_error: sys.exit(1)
+    elif problems: notify(f"Price watch problem – {TODAY}", report[:1500])
+    log("done" + (f" with {len(problems)} problem(s): " + "; ".join(problems) if problems else ""))
+    if problems: sys.exit(1)      # a failed GitHub run → GitHub e-mails the owner
+
+def health_check(counts, light_counts, fails, refresh=False):
+    """Problems worth an alert: a store with no articles, a big drop in a store's article count, a crashed job."""
+    skip = [x.lower().replace(" ", "") for x in CFG.get("skip_stores", [])]
+    active = {k: st for k, st in STORE_NAME.items() if k not in skip and k in STORE_KEYS}
+    out = []
+    if refresh and light_counts is not None:
+        for k, st in active.items():
+            if not light_counts.get("full_" + k): out.append(f"{st}: the refresh crawl returned no articles (showing the morning prices)")
+    elif not refresh:
+        prev = sload("counts.json", {}) or {}
+        drop = CFG.get("health_max_drop", 0.4)
+        for k, st in active.items():
+            n = counts.get(st, 0)
+            if n == 0: out.append(f"{st}: 0 articles crawled")
+            elif prev.get(st) and n < prev[st] * (1 - drop): out.append(f"{st}: {n:,} articles, {prev[st]:,} last time (−{(1 - n / prev[st]) * 100:.0f}%)")
+        ssave("counts.json", {st: (counts.get(st) or prev.get(st) or 0) for st in active.values()})
+    out += [f for f in fails if re.search(r"crashed|no data from its job|failed", f)]
+    for x in out: log("PROBLEM:", x)
+    return out
 
 def want(raw, key, only):
     """Should this run crawl `key`? (not done yet today, and belongs to the store this job crawls)"""
@@ -691,7 +721,7 @@ def want(raw, key, only):
     if only and key not in STORE_KEYS.get(only, []): return False
     return True
 
-def crawl(br, raw, fails, only=None):
+def crawl(br, raw, fails, only=None, light=False):
     skip = [x.lower().replace(" ", "") for x in CFG.get("skip_stores", [])]
     excl = categories_cfg()
     # ---- Gigatron
@@ -711,7 +741,7 @@ def crawl(br, raw, fails, only=None):
             raw[key] = []; raw[key + "_search"] = {}; log(f"{key}: skipped (config skip_stores)"); continue
         log(f"{key}: crawling promo pages…")
         try:
-            r = crawl_magento(br, home, bases, known=known_lows(key))
+            r = crawl_magento(br, home, bases, known=known_lows(key), light=light)
             log(f"{key}: {len(r['items'])} promo items ({r.get('cached', 0)} 30-day lows from cache), running site searches…")
             fails += [f"{key} {x}" for x in r["fails"]]
             s = search_magento(br, (WATCH_TERMS if key == "winwin" else []) + ["G20 Max", "Xiaomi G20", "tablet LTE", "tablet 5G", "iPad Cellular", "Galaxy Tab 5G"])
@@ -743,6 +773,8 @@ def crawl(br, raw, fails, only=None):
     # ---- FULL CATALOGUE (every article in the chosen categories)
     if CFG.get("mode", "full") == "full":
         import catalog; catalog.FULL_MINUTES = CFG.get("full_store_minutes", 60)
+        catalog.LIGHT = light; catalog.PAGES = CFG.get("light_pages", 2) if light else None; catalog.LOW_MIN = CFG.get("low30_min_price", MIN_PRICE)
+        if light: catalog.FULL_MINUTES = CFG.get("light_store_minutes", 15)
         for key, st, fn in [("full_gigatron", "Gigatron", lambda ex, kn: catalog.full_gigatron(br, log, exclude=ex, known=kn)),
                             ("full_winwin", "WinWin", lambda ex, kn: catalog.full_magento(br, "WinWin", "https://www.winwin.rs", log, exclude=ex, known=kn)),
                             ("full_tehnomanija", "Tehnomanija", lambda ex, kn: catalog.full_magento(br, "Tehnomanija", "https://www.tehnomanija.rs", log, exclude=ex, known=kn)),
@@ -751,7 +783,7 @@ def crawl(br, raw, fails, only=None):
                             ("full_dotmarket", "DOTmarket", lambda ex, kn: catalog.full_opencart(br, "DOTmarket", "https://www.dotmarket.rs", log, exclude=ex, known=kn)),
                             ("full_eurotehna", "Eurotehna", lambda ex, kn: catalog.full_opencart(br, "Eurotehna", "https://eurotehna.rs", log, exclude=ex, known=kn)),
                             ("full_bazzar", "Bazzar", lambda ex, kn: catalog.full_bazzar(br, log, exclude=ex, known=kn)),
-                            ("full_pcpractic", "PC Practic", lambda ex, kn: catalog.full_magento(br, "PC Practic", "https://pcpractic.rs", log, exclude=ex, known=kn, top=catalog.PCP_TOP))]:
+                            ("full_pcpractic", "PC Practic", lambda ex, kn: catalog.full_magento(br, "PC Practic", "https://pcpractic.rs", log, exclude=ex, known=kn, top=catalog.PCP_TOP, conc=6))]:
             if not want(raw, key, only): continue
             sk = key.replace("full_", "")
             if sk in skip:
@@ -763,22 +795,36 @@ def crawl(br, raw, fails, only=None):
             except Exception as e:
                 its = []; fails.append(f"{key} crashed: {e}"); log(key, "crashed:", e)
             raw[key] = its; save("raw.json", raw)
+            # specifications from product pages – only for articles not read before (kept permanently in state/specs.json)
+            if not light and sk in CFG.get("spec_stores", ["gigatron", "winwin", "ananas", "eurotehna"]) and its:
+                try:
+                    new = catalog.fetch_specs(br, st, its, sload("specs.json", {}) or {}, log, budget=CFG.get("spec_budget", 1500), minutes=CFG.get("spec_minutes", 12))
+                    (OUT / f"specs_new_{sk}.json").write_text(json.dumps(new, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+                except Exception as e:
+                    log(f"{st} specs failed:", str(e).splitlines()[0])
 
-def combine_parts(dirs, fails):
+FULL_KEYS = ["full_gigatron", "full_winwin", "full_tehnomanija", "full_bigbang", "full_ananas"] + FULL_ONLY
+
+def combine_parts(dirs, fails, refresh=False):
     """Merge the parallel crawl jobs (each folder holds raw.json, lows_*.json, pametno_new.json, fails.json, run.log)."""
     raw, pm_fresh = {}, {}
+    specs = sload("specs.json", {}) or {}; n_specs = len(specs)
     for d in dirs:
         d = Path(d)
         for f_ in d.rglob("raw.json"):
             part = json.loads(f_.read_text(encoding="utf-8")); raw.update(part); log(f"merged {f_.parent.name}: {', '.join(sorted(part))}")
         for f_ in d.rglob("lows_*.json"):
             (STATE / f_.name).write_text(f_.read_text(encoding="utf-8"), encoding="utf-8")
+        for f_ in d.rglob("specs_new_*.json"):
+            specs.update(json.loads(f_.read_text(encoding="utf-8")))
         for f_ in d.rglob("pametno_new.json"):
             pm_fresh.update(json.loads(f_.read_text(encoding="utf-8")))
         for f_ in d.rglob("fails.json"):
             fails += json.loads(f_.read_text(encoding="utf-8"))
         for f_ in d.rglob("run.log"):
             with open(OUT / "run.log", "a", encoding="utf-8") as out: out.write(f"\n---- {f_.parent} ----\n" + f_.read_text(encoding="utf-8"))
+    if len(specs) != n_specs: ssave("specs.json", specs); log(f"specifications: {len(specs) - n_specs} new product pages read ({len(specs)} kept)")
+    light_counts = {k: len(raw.get(k) or []) for k in FULL_KEYS}
     # a store whose job failed completely: empty placeholders so the rest still works
     for k in ["gigatron", "winwin", "tehnomanija", "bigbang", "ananas_all", "full_gigatron", "full_winwin", "full_tehnomanija", "full_bigbang", "full_ananas"] + FULL_ONLY:
         if k not in raw:
@@ -787,8 +833,35 @@ def combine_parts(dirs, fails):
             if k.replace("full_", "").replace("_all", "") not in skipped: fails.append(f"{k}: no data from its job")
     for k in ["gigatron_search", "winwin_search", "tehnomanija_search", "bigbang_search", "ananas_search"]: raw.setdefault(k, {})
     raw.setdefault("emmezeta", "")
+    catalog_state(raw, refresh)
     save("raw.json", raw)
-    return raw, pm_fresh
+    return raw, pm_fresh, light_counts
+
+def catalog_state(raw, refresh):
+    """Full run: keep the whole catalogue in state/catalog.json.gz. Refresh: the light crawls (first pages of every category)
+    are laid over that morning catalogue, so the website still lists every article, with today's newest prices."""
+    import gzip
+    p = STATE / "catalog.json.gz"
+    try: base = json.loads(gzip.decompress(p.read_bytes()).decode("utf-8")) if p.exists() else {}
+    except Exception: base = {}
+    if not refresh:
+        for k in FULL_KEYS:
+            if raw.get(k): base[k] = raw[k]
+        base["date"] = TODAY
+        p.write_bytes(gzip.compress(json.dumps(base, ensure_ascii=False, separators=(",", ":")).encode("utf-8"), 6)); return
+    for k in FULL_KEYS:
+        old = base.get(k) or []
+        if not old: continue
+        new = {(x.get("u", ""), x.get("n")): x for x in raw.get(k) or []}
+        merged = []
+        for x in old:
+            y = new.pop((x.get("u", ""), x.get("n")), None)
+            if y is None: merged.append(x); continue
+            if not y.get("l") and x.get("l") and y.get("p") == x.get("p"): y["l"] = x["l"]
+            if not y.get("cat"): y["cat"] = x.get("cat", "")
+            merged.append(y)
+        raw[k] = merged + list(new.values())
+        log(f"refresh {k}: {len(raw[k]) - len(old)} new + updates over {len(old)} articles from the morning ({base.get('date', '?')})")
 
 def assemble(raw):
     items = []
@@ -835,11 +908,35 @@ def assemble(raw):
     for it in items:
         it["l_obs"], it["obs_days"] = obs.get((it["store"], it["name"]), (None, 0))
         if not it.get("term"): it["term"] = term_for(it["name"])
-    hist_db.save(TODAY, all_items)
+    hist_db.save(TODAY, all_items)          # history is kept per listing (URL), before duplicates are merged
+    for a_ in all_items:
+        lst = hist_db._last.get((a_["store"], a_.get("u", ""), a_["name"])); a_["since"] = lst[0] if lst else TODAY
+    counts = Counter(a_["store"] for a_ in all_items)
+    all_full = all_items
+    # ---- duplicates: the same article listed several times by one store (other URL / EAN / colour code) → one row, cheapest listing
+    all_items = dedupe(all_items); items = dedupe(items); drops = dedupe(drops)
     cross_store(all_items, items)
     save("all_items.json", all_items)
-    log("all articles:", len(all_items), "| promo items >=15k:", len(items), "| price drops vs last run:", len(drops))
-    return items, all_items, drops
+    log("all articles:", len(all_items), f"({len(all_full) - len(all_items)} duplicate listings merged)", "| promo items >=15k:", len(items), "| price drops vs last run:", len(drops))
+    return items, all_items, drops, counts, all_full
+
+def dup_key(x):
+    cat = x.get("cat", "")
+    seller = cat.split("seller ")[-1].strip().lower() if "seller " in cat else ""
+    return (x["store"], re.sub(r"[^0-9a-zа-яčćžšđ]+", "", x["name"].lower()), seller)
+
+def dedupe(rows):
+    """One row per (store, name, seller): the cheapest listing wins (one with a 30-day low preferred on a tie); nl = listings merged."""
+    best, n = {}, Counter()
+    for x in rows:
+        k = dup_key(x); n[k] += 1
+        b = best.get(k)
+        if b is None or x["p"] < b["p"] or (x["p"] == b["p"] and x.get("l") and not b.get("l")): best[k] = x
+    out = []
+    for k, x in best.items():
+        if n[k] > 1: x = dict(x, nl=n[k])
+        out.append(x)
+    return out
 
 def pametno_terms(items, all_items, watch):
     def prio(i):
@@ -860,7 +957,13 @@ def pametno_job(a):
     """Parallel job: refresh pametno.rs results for yesterday's term list (stale or missing ones first), within a time limit."""
     terms = sload("pametno_terms.json") or (["G20 Max"] + WATCH_TERMS)
     cache = sload("pametno_cache.json", {}) or {}
-    todo = [t for t in terms if t not in cache or cache[t].get("e") == "ERR" or age_days(cache[t].get("d", "2000-01-01")) >= PM_DAYS - 1]
+    tp = sload("pametno_tp.json", {}) or {}
+    def due(t):   # new term, failed lookup, older than PM_RECHECK days, or our price moved more than 3% since the lookup
+        c = cache.get(t)
+        if not c or c.get("e") == "ERR" or age_days(c.get("d", "2000-01-01")) >= PM_RECHECK: return True
+        pp, p = c.get("pp"), tp.get(t)
+        return bool(pp and p and abs(p / pp - 1) > 0.03)
+    todo = [t for t in terms if due(t)]
     todo.sort(key=lambda t: 0 if t not in cache else 1)
     limit = time.time() + CFG.get("pametno_minutes", 75) * 60
     log(f"pametno job: {len(terms)} terms, {len(todo)} need a fresh lookup (limit {CFG.get('pametno_minutes', 75)} min)")
@@ -877,7 +980,7 @@ def pametno_job(a):
                 except Exception as e:
                     log("pametno chunk failed:", e); br.go("https://www.pametno.rs"); continue
                 for t_, r_ in zip(part, res):
-                    if r_ is not None: new[t_] = dict(r_, d=TODAY)
+                    if r_ is not None: new[t_] = dict(r_, d=TODAY, pp=tp.get(t_))
                 save("pametno_new.json", new); log(f"pametno {min(k + 20, len(todo))}/{len(todo)}")
         finally: br.close()
     save("pametno_new.json", new)
@@ -936,7 +1039,7 @@ def build_watch_candidates(raw, all_items=()):
             add("G3", st, x["name"], x["p"], x.get("o"), x.get("l"), x.get("u", ""))
     return W
 
-def write_outputs(items, watch, raw, pm, fails, dry, all_items=(), drops=()):
+def write_outputs(items, watch, raw, pm, fails, all_items=(), drops=(), prev=frozenset()):
     STORES = ["Gigatron", "WinWin", "Tehnomanija", "Big Bang", "Ananas", "DOTmarket", "Bazzar", "PC Practic", "Eurotehna", "Emmezeta"]
     def r12(i):
         r = i.get("r")
@@ -1007,16 +1110,7 @@ def write_outputs(items, watch, raw, pm, fails, dry, all_items=(), drops=()):
              [f"pametno.rs lookups: {pm_done}/{len(set(i['term'] for i in items))}"], ["Failures: " + ("; ".join(fails) if fails else "none")]]
     # ---- text report
     def fmt(n): return f"{int(n):,}".replace(",", ".")
-    prev = set()
     lines = [f"Store promotions – {TODAY}", "", "Biggest real cuts:"]
-    gc_hist = None
-    if not dry:
-        rep, hist = sheets()
-        try:
-            sp = hist.worksheet("Store promos").get_all_values()[1:]
-            dates = sorted({r[0] for r in sp if r and r[0] < TODAY})
-            if dates: prev = {(r[1], r[3]) for r in sp if r[0] == dates[-1] and r[10].startswith("REAL CUT")}
-        except Exception as e: log("history read failed", e)
     for i in sorted(real, key=lambda i: -(i["l_used"] - i["p"]))[:8]:
         new = "" if (i["store"], i["name"]) in prev else " · NEW"
         lines.append(f"• {i['name'][:60]} · {i['store']} · {fmt(i['p'])} · −{i['real']*100:.0f}% (−{fmt(i['l_used']-i['p'])}) · {i['mv']}{new}")
@@ -1043,92 +1137,11 @@ def write_outputs(items, watch, raw, pm, fails, dry, all_items=(), drops=()):
     lines += ["", "Per store:"]
     for s in summ: lines.append(f"• {s[0]}: {cat_counts.get(s[0], 0)} articles crawled / {s[1]} promos ≥15k / {s[4]} real cuts / {s[6]} raised")
     lines.append(f"• {raw.get('emmezeta','')}")
-    lines += ["", f"Status: pametno {pm_done}/{len(set(i['term'] for i in items))}; failures: {'; '.join(fails) if fails else 'none'}",
-              f"https://docs.google.com/spreadsheets/d/{CFG['daily_report_id']}/edit"] + ([f"Website: {CFG['site_url']}"] if CFG.get("site_url") else [])
+    lines += ["", f"Status: pametno {pm_done}/{len(set(i['term'] for i in items))}; failures: {'; '.join(fails[:15]) if fails else 'none'}"] + \
+             ([f"Website: {CFG['site_url']}"] if CFG.get("site_url") else [])
     report = "\n".join(lines)
     save("site_extra.json", {"summary": summ, "watch": wrows, "drops": drop_rows})
-    if dry:
-        save("dry_rows.json", {"real": [r12(i) for i in real], "raised": [r12(i) for i in raised], "deep": dd, "watch": wrows}); return report
-
-    # ---- write DAILY REPORT
-    title = f"Black Friday store promotions – verified (Belgrade, {TODAY})"
-    hdr12 = ["Verdict", "Store", "Category", "Product", "Promo price (RSD)", "Crossed-out price", "Claimed discount", "Store's own 30-day lowest",
-             "Real discount vs own 30-day low", "Market low elsewhere (pametno)", "vs market low", "Matched market product"]
-    ws = rep.worksheet("Summary"); ws.batch_clear(["A1:Z200"])
-    srows = [[title], ["Promo items ≥15,000 RSD; each checked vs the store's own 30-day low and vs all pametno.rs competitors."], [],
-             ["Store", "Promoted items checked", "Avg claimed discount", "Items with own 30-day low", "Real cuts (≥5% below own 30-day low)",
-              "Price = 30-day low (fake discount)", "Price ABOVE own 30-day low", "Avg real discount"]] + summ + [[], ["Market deep dive verdict", "Items"]] + \
-            [[k, v] for k, v in mvc.most_common()] + [[]] + notes
-    write_chunks(ws, 1, srows, 8)
-    for name, rows in [("Real cuts", [r12(i) for i in real]), ("Price raised", [r12(i) for i in raised]), ("All promos", [r12(i) for i in allp])]:
-        w = rep.worksheet(name); w.batch_clear(["A1:N5000"]); write_chunks(w, 1, [hdr12] + rows, 12)
-    w = rep.worksheet("Market deep dive"); w.batch_clear(["A1:Q5000"])
-    write_chunks(w, 1, [["Verdict", "Store", "Product", "Promo price (RSD)", "Own 30-day check", "Best price (RSD)", "Best store", "2nd cheapest", "Stores",
-                         "Market median", "Highest", "Promo vs best", "Saving vs median (RSD)", "Saving vs median %", "Next cheapest stores", "Link", "Date"]] + dd, 17)
-    w = rep.worksheet("Watch items"); w.batch_clear(["A1:N500"])
-    write_chunks(w, 1, [["Watch group", "Store", "Product", "Key specs (GPU / RAM / storage / SIM)", "Price (RSD)", "Crossed-out price", "Own 30-day lowest",
-                         "Real discount vs own 30-day low", "Market best (pametno)", "Best store", "Stores", "Market verdict", "Link", "Date"]] + wrows, 14)
-    def tab(book, name, rows, cols):
-        try: w_ = book.worksheet(name)
-        except Exception: w_ = book.add_worksheet(title=name, rows=max(100, len(rows) + 10), cols=cols)
-        if w_.row_count < len(rows) + 5: w_.add_rows(len(rows) + 5 - w_.row_count)
-        w_.batch_clear([f"A1:{chr(64 + cols)}{max(len(rows) + 50, 1000)}"]); write_chunks(w_, 1, rows, cols); return w_
-    tab(rep, "Price drops", [["Store", "Category", "Product", "Price today (RSD)", "Price last run", "Drop", "Crossed-out", "Store 30-day low",
-                              "Our 30-day low", "URL", "Date"]] + drop_rows, 11)
-    if CFG.get("write_full_catalogue_sheet"):
-        rows_ = [["Store", "Category", "Product", "Price", "Crossed-out", "Store 30-day low", "Our 30-day low", "URL"]] + \
-                [[a_["store"], a_.get("cat", ""), a_["name"], a_["p"], a_.get("o") or "", a_.get("l") or "", a_.get("l_obs") or "", a_.get("u", "")]
-                 for a_ in sorted(all_items, key=lambda x: (x["store"], x["name"]))]
-        tab(rep, "Full catalogue", rows_, 8)
-    sid = {s.title: s.id for s in rep.worksheets()}
-    rep.batch_update({"requests": [
-        {"updateSheetProperties": {"properties": {"sheetId": sid["Summary"], "gridProperties": {"frozenRowCount": 4}}, "fields": "gridProperties.frozenRowCount"}}] +
-        [{"updateSheetProperties": {"properties": {"sheetId": sid[n], "gridProperties": {"frozenRowCount": 1}}, "fields": "gridProperties.frozenRowCount"}}
-         for n in ["Real cuts", "Price raised", "All promos", "Watch items", "Price drops"] + (["Full catalogue"] if CFG.get("write_full_catalogue_sheet") else [])] +
-        [{"updateSheetProperties": {"properties": {"sheetId": sid["Market deep dive"], "gridProperties": {"frozenRowCount": 1, "frozenColumnCount": 3}},
-          "fields": "gridProperties.frozenRowCount,gridProperties.frozenColumnCount"}},
-         {"setBasicFilter": {"filter": {"range": {"sheetId": sid["Market deep dive"], "startRowIndex": 0, "endRowIndex": len(dd) + 1, "startColumnIndex": 0, "endColumnIndex": 17}}}}]})
-    # verification: read back and compare totals
-    back = rep.worksheet("All promos").get(f"E2:E{len(allp)+1}", value_render_option="UNFORMATTED_VALUE")
-    s1 = sum(float(r[0]) for r in back if r and r[0] != ""); s0 = sum(i["p"] for i in allp)
-    back2 = rep.worksheet("Market deep dive").get(f"D2:D{len(dd)+1}", value_render_option="UNFORMATTED_VALUE")
-    s2 = sum(float(r[0]) for r in back2 if r and r[0] != ""); s3 = sum(x[3] for x in dd)
-    log(f"verify All promos {s1} vs {s0}; deep dive {s2} vs {s3}")
-    if abs(s1 - s0) > 0.5 or abs(s2 - s3) > 0.5: report += "\n⚠ Sheet verification mismatch – check the run log."
-
-    # ---- PRICE HISTORY appends
-    sp_ws = hist.worksheet("Store promos")
-    existing = {(r[0], r[1], r[3]) for r in sp_ws.get_all_values()[1:] if len(r) > 3}
-    fake_big = sorted([i for i in items if i["v"].startswith("FAKE")], key=lambda i: -i["claimed"])[:10]
-    pick = real + [i for i in items if i["v"] in ("BELOW MARKET LOW", "At market low")] + raised[:15] + fake_big
-    rows, done = [], set()
-    for i in pick:
-        k = (TODAY, i["store"], i["name"])
-        if k in existing or k in done: continue
-        done.add(k)
-        rows.append([TODAY, i["store"], i["cat"], i["name"], i["p"], i["o"], i["claimed"], i.get("l") or "", "" if i["real"] is None else i["real"], i["mkt"] or "", i["v"]])
-    for k in range(0, len(rows), 500): sp_ws.append_rows(rows[k:k + 500], value_input_option="RAW")
-    gw = hist.worksheet("Gigatron & WinWin")
-    grows = []
-    for q, res in (raw.get("gigatron_search") or {}).items():
-        if q not in WATCH_TERMS: continue
-        hit = pick_watch(q, res)
-        if hit: grows.append([TODAY, "Gigatron", q, hit["n"], hit["p"], hit.get("o") or "", hit.get("l") or "",
-                              round(1 - hit["p"] / hit["o"], 4) if hit.get("o") else "", round(1 - hit["p"] / hit["l"], 4) if hit.get("l") else "", "", hit["u"]])
-    for q, res in (raw.get("winwin_search") or {}).items():
-        if q not in WATCH_TERMS: continue
-        hit = pick_watch(q, res)
-        if hit: grows.append([TODAY, "WinWin", q, hit["n"], hit["p"], hit.get("o") or "", hit.get("l") or "",
-                              round(1 - hit["p"] / hit["o"], 4) if hit.get("o") else "", round(1 - hit["p"] / hit["l"], 4) if hit.get("l") else "", "", hit["u"]])
-    if grows: gw.append_rows(grows, value_input_option="RAW")
-    rt = hist.worksheet("Retailers"); vals = rt.get_all_values()
-    rt.update(values=[[f"Finding {TODAY}"]], range_name="F1")
-    for idx, row in enumerate(vals[1:], start=2):
-        for s in summ:
-            if row and row[0].strip().lower().startswith(s[0].lower()):
-                txt = raw.get("emmezeta", "") if s[0] == "Emmezeta" else f"{TODAY}: {s[1]} promo items ≥15k; {s[4]} real cuts; {s[6]} above own 30-day low; avg claimed {round((s[2] or 0)*100)}%"
-                rt.update(values=[[txt]], range_name=f"F{idx}")
-    return report
+    return report, dict(wrows=wrows, drop_rows=drop_rows, summ=summ, cat_counts=dict(cat_counts))
 
 def pick_watch(q, res):
     if not res: return None

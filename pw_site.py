@@ -30,6 +30,8 @@ def build(run_dir, date):
     raw = load("raw.json", {}) or {}
     hist, meta = _history(HERE / "history.sqlite")
     promo = {(i["store"], i["name"]): i for i in items}
+    try: pspecs = json.loads((HERE / "state" / "specs.json").read_text(encoding="utf-8"))   # specifications read from product pages
+    except Exception: pspecs = {}
 
     # cheapest price per model code across stores
     def keys(n):
@@ -52,13 +54,13 @@ def build(run_dir, date):
             a["store"], a.get("cat", ""), a["name"], a["p"], a.get("o") or 0, a.get("l") or i.get("l_used") or 0,
             i.get("v", ""), i.get("mv", ""), (i.get("mkt") or 0), a.get("u", ""),
             cheapest[0] if cheapest and cheapest[1] != a["store"] else 0, cheapest[1] if cheapest and cheapest[1] != a["store"] else "",
-            h[-60:], short(since), short(seen),
+            h[-60:], short(since), short(seen), a.get("nl") or 0, pspecs.get(a.get("u", "")) or 0,
         ])
     now = dt.datetime.now(ZoneInfo("Europe/Belgrade"))
     data = {"date": date, "updated": now.strftime("%Y-%m-%d %H:%M"), "repo": REPO,
-            "summary": extra.get("summary", []), "watch": extra.get("watch", []), "drops": extra.get("drops", []),
+            "summary": extra.get("summary", []), "problems": extra.get("problems", []), "watch": extra.get("watch", []), "drops": extra.get("drops", []),
             "report": (run_dir / "report.txt").read_text(encoding="utf-8") if (run_dir / "report.txt").exists() else "",
-            "cols": ["store", "cat", "name", "price", "old", "low30", "verdict", "market_verdict", "market_low", "url", "xs_price", "xs_store", "hist", "since", "seen"]}
+            "cols": ["store", "cat", "name", "price", "old", "low30", "verdict", "market_verdict", "market_low", "url", "xs_price", "xs_store", "hist", "since", "seen", "listings", "specs"]}
     SITE.mkdir(parents=True, exist_ok=True)
     for old_ in SITE.glob("data*.js"): old_.unlink()
     rows_ = rows; CH = 15000
