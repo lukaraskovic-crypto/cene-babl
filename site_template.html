@@ -174,7 +174,7 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',watch:'Pratim',st
         raised:'Podignute cene',raisedS:'„Popust" na cenu koja je viša nego pre mesec dana.',fake:'Lažni popusti',fakeS:'Precrtana cena, a ista cena kao i do sada.'},
  more:n=>`Prikazano prvih ${n}. Suzi izbor filterima.`,
  drops:'Pojeftinilo od juče',dropsS:'Artikli od 15.000 din. kojima je cena pala bar 3%.',
- G:{G1:'Xiaomi G20 Max',G1s:'Štapni usisivač – gde je trenutno najjeftiniji.',G2:'Tableti sa SIM karticom',G2s:'Najjeftiniji tableti sa LTE ili 5G.',G3:'Tablet za posao: 8 GB+ RAM i SIM',G3s:'Dobre specifikacije za uloženi novac. Prvo stvarna sniženja.'},
+ G:{G1:'Xiaomi G20 Max',G1s:'Štapni usisivač – gde je trenutno najjeftiniji.',G2:'Tableti sa SIM karticom',G2s:'Najjeftiniji tableti sa LTE ili 5G.',G3:'Tablet za posao: 8 GB+ RAM i SIM',G3s:'Dobre specifikacije za uloženi novac. Prvo stvarna sniženja.',G4:'Laptop za studenta arhitekture',G4s:'Najmanje 32 GB RAM i 12 GB grafičke memorije (za 3D, render i CAD). Memoriju grafike procenjujemo po modelu kartice kad je naziv ne navodi. Prvo stvarna sniženja, pa najviše za novac.'},
  mktBest:'najniža na tržištu',noWatch:'Nema artikala za praćenje u ovom krugu.',
  storesT:'Prodavnice',storesS:'Koliko artikala pratimo i koliko su popusti iskreni.',st:{n:'Artikala',promos:'Akcija od 15.000 din.',real:'Pravi',fake:'Lažni',raised:'Podignuti',avg:'Prosečan navedeni popust'},
  reportS:'Isti tekst koji stiže u jutarnjem obaveštenju (na engleskom).',
@@ -213,7 +213,7 @@ en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',watch:'Watching',sto
         raised:'Raised prices',raisedS:'A "discount" on a price higher than a month ago.',fake:'Fake discounts',fakeS:'Crossed-out price, but the same price as before.'},
  more:n=>`Showing the first ${n}. Narrow it down with filters.`,
  drops:'Cheaper since yesterday',dropsS:'Products from 15,000 RSD whose price fell at least 3%.',
- G:{G1:'Xiaomi G20 Max',G1s:'Stick vacuum – where it is cheapest right now.',G2:'Tablets with a SIM card',G2s:'The cheapest LTE or 5G tablets.',G3:'Work tablet: 8 GB+ RAM and SIM',G3s:'Good specs for the money. Real price cuts first.'},
+ G:{G1:'Xiaomi G20 Max',G1s:'Stick vacuum – where it is cheapest right now.',G2:'Tablets with a SIM card',G2s:'The cheapest LTE or 5G tablets.',G3:'Work tablet: 8 GB+ RAM and SIM',G3s:'Good specs for the money. Real price cuts first.',G4:'Laptop for an architecture student',G4s:'At least 32 GB RAM and 12 GB of graphics memory (for 3D, rendering and CAD). Graphics memory is inferred from the GPU model when the name doesn\'t state it. Real price cuts first, then best value.'},
  mktBest:'market low',noWatch:'No watched products in this run.',
  storesT:'Stores',storesS:'How many products we track and how honest the discounts are.',st:{n:'Products',promos:'Deals from 15,000 RSD',real:'Real',fake:'Fake',raised:'Raised',avg:'Avg claimed discount'},
  reportS:'The same text as the morning notification.',
@@ -471,7 +471,7 @@ function drops(){ const rs=sortRows(D.drops.filter(d=>!PF.store||d[0]===PF.store
   pst.onchange=()=>{ PF.store=pst.value; drops(); }; mbar.style.display='none'; }
 function psrt(k){ setSort(PF,k,['store','name','price'].includes(k)?1:-1); drops(); }
 function watch(){ const g={}; D.watch.forEach(w=>(g[w[0].slice(0,2)]=g[w[0].slice(0,2)]||[]).push(w));
-  const order=['G3','G1','G2'].filter(k=>g[k]);
+  const order=['G4','G3','G1','G2'].filter(k=>g[k]);
   main.innerHTML=order.map(k=>`<section class="grp"><h2>${esc(t('G')[k])}</h2><p class="sub">${esc(t('G')[k+'s'])}</p>
    <div class="list m">${g[k].map(w=>`<div class="it" style="cursor:default"><div class="top"><div><div class="nm">${w[12]?`<a href="${esc(w[12])}" target="_blank" rel="noopener" style="color:inherit">${esc(w[2])}</a>`:esc(w[2])}</div>
     <div class="meta">${st(w[1])}${w[3]&&k!=='G1'?` &nbsp; ${esc(w[3])}`:''}</div></div>

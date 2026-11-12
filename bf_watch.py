@@ -517,6 +517,40 @@ def tablet_info(name):
     label = f"{n5} · {ram} GB RAM · {sto if sto < 1024 else sto // 1024}{'GB' if sto < 1024 else 'TB'}" + (f" · {screen:g}\"" if screen else "") if sto else f"{n5} · {ram} GB RAM" + (f" · {screen:g}\"" if screen else "")
     return dict(ram=ram, sto=sto, screen=screen, net=n5, score=round(score, 1), label=label)
 
+# laptop GPU → dedicated video memory (laptop versions); used when the name doesn't state it
+VRAM = [(r"RTX\s*PRO\s*5000", 24), (r"RTX\s*PRO\s*4000", 16), (r"RTX\s*PRO\s*3000", 12), (r"RTX\s*PRO\s*2000", 8), (r"RTX\s*PRO\s*1000", 8),
+        (r"RTX\s*5000\s*Ada", 16), (r"RTX\s*4000\s*Ada", 12), (r"RTX\s*3500\s*Ada", 12), (r"RTX\s*A5500", 16), (r"RTX\s*A5000", 16),
+        (r"RTX\s*-?5090", 24), (r"RTX\s*-?5080", 16), (r"RTX\s*-?5070\s*Ti", 12), (r"RTX\s*-?4090", 16), (r"RTX\s*-?4080", 12),
+        (r"RTX\s*-?3080\s*Ti", 16), (r"RTX\s*-?3080", 8), (r"RTX\s*-?50[5-7]0", 8), (r"RTX\s*-?40[5-7]0", 8)]
+GPU_RANK = {24: 10, 16: 8, 12: 6}
+LAP_JUNK = re.compile(r"torb|ranac|futrol|punja|adapter|stalak|hladnja|dock|miš|mis\b|tastatur|monitor|desktop|\bPC\b|all.in.one|mini pc|refurb|outlet|polovn|tower|BC\s*(?:GROUP|COMP)|ra[čc]unar\b|ku[ćc]i[šs]te|X3D|grafi[čc]ka|WINDFORCE|VENTUS|EAGLE|GamingPro", re.I)
+def laptop_g4(name, cat=""):
+    """Laptop with ≥32 GB RAM and ≥12 GB dedicated graphics memory → dict(ram, vram, gpu, score, label) or None."""
+    if LAP_JUNK.search(name): return None
+    if not (re.search(r"laptop|notebook|macbook|zenbook|vivobook|thinkpad|legion|rog|tuf|predator|nitro|alienware|zephyrus|omen|victus|aorus|aero|pro max|precision|proart|stealth|raider|titan|xps|spectre|zbook", name, re.I) or re.search(r"laptop", cat, re.I)): return None
+    g = re.search(r"\bRTX\s*-?\s*(PRO\s*\d{3,4}|A\d{4}|\d{4}\s*(?:Ti|Ada)?)", name, re.I)
+    if not g: return None
+    gpu = "RTX " + re.sub(r"\s+", " ", g.group(1).upper()).strip().replace("TI", "Ti").replace("ADA", "Ada")
+    vram = None
+    m = re.search(r"RTX[^,/]{0,22}?(\d{1,2})\s*GB", name, re.I) or re.search(r"(\d{1,2})\s*GB\s*(?:GDDR\d|VRAM)", name, re.I)
+    if m and 4 <= int(m.group(1)) <= 32: vram = int(m.group(1))
+    if vram is None:
+        for pat, v in VRAM:
+            if re.search(pat, name, re.I): vram = v; break
+    if not vram or vram < 12: return None
+    ram = None
+    for z in re.finditer(r"\b(16|24|32|36|48|64|96|128)\s*(?:GB|G)\b(?!\s*(?:SSD|HDD|GDDR|VRAM))", name, re.I):
+        if vram and int(z.group(1)) == vram and re.search(r"RTX[^,]{0,22}" + z.group(0), name, re.I): continue
+        ram = max(ram or 0, int(z.group(1)))
+    m = re.search(r"\b(16|24|32|48|64|96|128)\s*/\s*(?:\d{3,4}\s*GB|[124]\s*TB)", name, re.I)
+    if m: ram = max(ram or 0, int(m.group(1)))
+    if not ram or ram < 32: return None
+    sto = re.search(r"\b([124])\s*TB\b", name, re.I)
+    scr = re.search(r"\b(1[3-8](?:[.,]\d)?)\s*(?:\"|''|”|″|inch|in[čc]a)", name, re.I)
+    score = vram * 2 + ram / 4 + (int(sto.group(1)) * 2 if sto else 0)
+    label = f"{gpu} {vram} GB · {ram} GB RAM" + (f" · {sto.group(1)} TB" if sto else "") + (f" · {scr.group(1).replace(',', '.')}\"" if scr else "")
+    return dict(ram=ram, vram=vram, gpu=gpu, score=score, label=label)
+
 def tablet_spec(name):
     ram = re.search(r"(\d{1,2})\s*(?:GB)?\s*/\s*(\d{2,4})\s*GB", name)
     sto = storage(name)
@@ -835,6 +869,7 @@ def build_watch_candidates(raw, all_items=()):
         if group == "G2" and not (re.search(SIM_RE, name, re.I) and re.search(r"tab|pad|tablet", name, re.I)): return
         if group == "G2" and re.search(r"refab|refurb|futrol|maska", name, re.I): return
         if group == "G3" and not tablet_info(name): return
+        if group == "G4" and not laptop_g4(name): return
         key = (group, store, name)
         if any((x["group"], x["store"], x["name"]) == key for x in W): return
         W.append(dict(group=group, store=store, name=name, p=int(p), o=o, l=l, u=u,
@@ -868,6 +903,11 @@ def build_watch_candidates(raw, all_items=()):
             grp = "G1" if "G20" in q else "G2"
             add(grp, f"Ananas ({x['s']})", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
             if grp == "G2": add("G3", f"Ananas ({x['s']})", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
+    # G4: laptops for an architecture student (≥32 GB RAM, ≥12 GB graphics memory), from the full catalogues
+    for x in all_items:
+        if x["p"] >= 80000 and laptop_g4(x["name"], x.get("cat", "")):
+            st = x["store"] if x["store"] != "Ananas" else f"Ananas ({x.get('cat', '').split('seller ')[-1]})"
+            add("G4", st, x["name"], x["p"], x.get("o"), x.get("l"), x.get("u", ""))
     # G3: every tablet in the full catalogues (all stores) with SIM and ≥ 8 GB RAM
     for x in all_items:
         if x["p"] >= 15000 and tablet_info(x["name"]):
@@ -906,25 +946,27 @@ def write_outputs(items, watch, raw, pm, fails, dry, all_items=(), drops=()):
     mvc = Counter(i["mv"] for i in items)
     # watch rows
     wrows = []
-    for g, label in [("G1", "G1 Xiaomi G20 Max"), ("G2", "G2 Tablet with SIM"), ("G3", "G3 Tablet ≥8 GB RAM + SIM")]:
+    for g, label in [("G1", "G1 Xiaomi G20 Max"), ("G2", "G2 Tablet with SIM"), ("G3", "G3 Tablet ≥8 GB RAM + SIM"), ("G4", "G4 Laptop ≥32 GB RAM + ≥12 GB GPU")]:
         ws = [w for w in watch if w["group"] == g]
         def score(w):
             real = (1 - w["p"] / w["l"]) if w.get("l") else 0
             r = w.get("r"); below = (r and r.get("b") and w["p"] < r["b"] * 0.99)
             if g == "G3":   # best specs for the money; real cuts first
                 ti = tablet_info(w["name"]); return (0 if real >= .05 else 1, -(ti["score"] / (w["p"] / 10000)) if ti else 0)
+            if g == "G4":
+                li = laptop_g4(w["name"]); return (0 if real >= .05 else 1, -(li["score"] / (w["p"] / 10000)) if li else 0)
             return (0 if real >= .05 else 1 if below else 2, w["p"])
         ws.sort(key=score)
         shown = set()
         for w in ws:
             if len([x for x in wrows if x[0] == label]) >= (50 if g == "G1" else 15 if g == "G2" else 30): break
-            if g == "G3":   # one row per model+storage per store (colours collapsed)
+            if g in ("G3", "G4"):   # one row per model+storage per store (colours collapsed)
                 base = re.sub(r"\(.*?\)|\s[-–]\s[^-–]*$|\b(Gray|Grey|Graphite|Sivi|Siva|Starlight|Midnight|Blue|Purple|Space\s*Gr[ae]y|Moonstone|Silver|Black|White|Pink|Green|Mint|Navy)\b", "", w["name"], flags=re.I)
-                k_ = (w["store"], re.sub(r"\W+", "", base.upper()))
+                k_ = (w["store"].split(" (")[0], re.sub(r"\W+", "", base.upper()))
                 if k_ in shown: continue
                 shown.add(k_)
             r = w.get("r") or {}
-            spec = "Stick vacuum" if g == "G1" else tablet_spec(w["name"]) if g == "G2" else (tablet_info(w["name"]) or {}).get("label", "")
+            spec = "Stick vacuum" if g == "G1" else tablet_spec(w["name"]) if g == "G2" else (tablet_info(w["name"]) or {}).get("label", "") if g == "G3" else (laptop_g4(w["name"]) or {}).get("label", "")
             wreal = round(1 - w["p"] / w["l"], 4) if w.get("l") else ""
             mv = market_verdict(w["p"], r) if r.get("n") else "NOT ON PAMETNO / unchecked"
             wrows.append([label, w["store"], w["name"], spec, w["p"], w.get("o") or "", w.get("l") or "", wreal, r.get("b") or "", r.get("bs", ""), r.get("n", ""), mv, w.get("u") or r.get("u", ""), TODAY])
@@ -967,7 +1009,7 @@ def write_outputs(items, watch, raw, pm, fails, dry, all_items=(), drops=()):
     lines += ["", "Watch items:"]
     g1 = sorted([w for w in wrows if w[0].startswith("G1")], key=lambda w: w[4])
     if g1: lines.append(f"• G20 Max cheapest: {g1[0][1]} {fmt(g1[0][4])}")
-    for g in ("G2", "G3"):
+    for g in ("G2", "G3", "G4"):
         for w in [w for w in wrows if w[0].startswith(g)][:3]:
             lines.append(f"• {g}: {w[2][:50]} · {w[1]} · {fmt(w[4])} · {w[3]}")
     lines += ["", "Inflated discounts:"]
