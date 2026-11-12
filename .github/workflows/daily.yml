@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        store: [gigatron, winwin, bigbang, ananas, dotmarket, bazzar, pcpractic, eurotehna, pametno]
+        store: [gigatron, winwin, bigbang, ananas, pcpractic, eurotehna, pametno]   # dotmarket, bazzar: Cloudflare blocks GitHub's servers
     steps:
       - uses: actions/checkout@v4
       - name: Decide
