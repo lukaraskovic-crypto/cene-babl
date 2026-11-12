@@ -690,7 +690,11 @@ def main():
         if CFG.get("open_site"): subprocess.run(["open", str(page)])
     except Exception as e:
         import traceback; log("website build failed:", traceback.format_exc()); problems.append("website build failed")
-    if not a.refresh: notify(f"Store promotions – {TODAY}", report)
+    usage = ""
+    if not a.refresh and db.enabled():
+        try: usage = db.usage_summary(); log(usage)
+        except Exception as e: log("website usage summary failed:", e)
+    if not a.refresh: notify(f"Store promotions – {TODAY}", (usage + "\n\n" if usage else "") + report)   # usage stays private (not on the site)
     elif problems: notify(f"Price watch problem – {TODAY}", report[:1500])
     log("done" + (f" with {len(problems)} problem(s): " + "; ".join(problems) if problems else ""))
     if problems: sys.exit(1)      # a failed GitHub run → GitHub e-mails the owner

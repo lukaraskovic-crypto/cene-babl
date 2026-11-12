@@ -123,6 +123,26 @@ def previous_real_cuts(date):
     if not r: return set()
     return {(x["store"], x["name"]) for x in select("promos", f"select=store,name,verdict&date=eq.{r[0]['date']}&verdict=like.REAL*")}
 
+# ---------------------------------------------------------------------------------------- website usage
+def usage_summary(hours=24):
+    """Short text about the website's last `hours`: visitors, searches, most opened articles, clicks to shops."""
+    import datetime as _d
+    since = (_d.datetime.now(_d.timezone.utc) - _d.timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    ev = [e for e in select("events", f"select=sid,ev,tab,q,store,item,mobile,ref&ts=gte.{since}") if not e["sid"].startswith("testsession")]
+    if not ev: return f"Website (last {hours} h): no visitors."
+    from collections import Counter
+    sids = {e["sid"] for e in ev}; mob = {e["sid"] for e in ev if e.get("mobile")}
+    c = lambda key, kind, n=5: Counter((e.get(key) or "").strip().lower() if key == "q" else e.get(key) for e in ev if e["ev"] == kind and e.get(key)).most_common(n)
+    fmt = lambda xs: ", ".join(f"{k} ({v})" for k, v in xs) or "–"
+    refs = Counter(e.get("ref") for e in ev if e["ev"] == "visit" and e.get("ref")).most_common(4)
+    return "\n".join([f"Website (last {hours} h): {len(sids)} visitors ({round(100 * len(mob) / len(sids))}% phone), "
+                      f"{sum(e['ev'] == 'search' for e in ev)} searches, {sum(e['ev'] == 'item' for e in ev)} articles opened, "
+                      f"{sum(e['ev'] == 'out' for e in ev)} clicks to shops",
+                      "• Top searches: " + fmt(c("q", "search")),
+                      "• Most opened: " + fmt([(k[:40], v) for k, v in c("item", "item")]),
+                      "• Tabs: " + fmt(c("tab", "tab")),
+                      "• Came from: " + fmt(refs)])
+
 # ---------------------------------------------------------------------------------------- restore
 def restore_history(path, log=print):
     """Rebuild history.sqlite from the database (used when the GitHub cache expired)."""
