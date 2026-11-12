@@ -1,11 +1,21 @@
 name: Daily price check
+# 06:40 Belgrade: full run (all stores in parallel + pametno.rs + Google Sheets + notification)
+# 10:40 / 14:40 / 18:40: quick refresh (stores in parallel, website + price history only)
 on:
   schedule:
-    - cron: "40 5 * * *"        # 05:40 UTC = 06:40 Belgrade (winter time)
+    - cron: "40 5 * * *"        # 06:40 Belgrade (winter time) – full
+    - cron: "40 9 * * *"        # 10:40 – refresh
+    - cron: "40 13 * * *"       # 14:40 – refresh
+    - cron: "40 17 * * *"       # 18:40 – refresh
   workflow_dispatch:
     inputs:
+      mode:
+        description: "full = Sheets + pametno + notification; refresh = website only"
+        type: choice
+        options: [full, refresh]
+        default: full
       no_pametno:
-        description: "Skip the slow pametno.rs market check"
+        description: "Skip the pametno.rs market check"
         type: boolean
         default: false
       dry_run:
@@ -18,49 +28,97 @@ permissions:
   id-token: write
   actions: read
 concurrency: { group: daily, cancel-in-progress: false }
+env:
+  MODE: ${{ github.event_name == 'schedule' && (github.event.schedule == '40 5 * * *' && 'full' || 'refresh') || inputs.mode || 'full' }}
+  TZ: Europe/Belgrade
+  PYTHONUNBUFFERED: "1"
+
 jobs:
-  run:
+  crawl:
+    name: crawl ${{ matrix.store }}
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        store: [gigatron, winwin, bigbang, ananas, pametno]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decide
+        id: go
+        run: |
+          RUN=yes
+          if [ "${{ matrix.store }}" = "pametno" ]; then
+            if [ "$MODE" != "full" ] || [ "${{ inputs.no_pametno }}" = "true" ]; then RUN=no; fi
+          fi
+          echo "run=$RUN" >> $GITHUB_OUTPUT; echo "mode=$MODE run=$RUN"
+      - uses: actions/setup-python@v5
+        if: steps.go.outputs.run == 'yes'
+        with: { python-version: "3.12", cache: pip }
+      - name: Install
+        if: steps.go.outputs.run == 'yes'
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Restore state (cached 30-day lows, pametno results)
+        if: steps.go.outputs.run == 'yes'
+        uses: actions/cache/restore@v4
+        with: { path: state, key: "state-${{ github.run_id }}", restore-keys: "state-" }
+      - name: Seed state on the very first run
+        if: steps.go.outputs.run == 'yes'
+        run: mkdir -p state && cp -n seed/state/* state/ 2>/dev/null || true
+      - name: Crawl
+        if: steps.go.outputs.run == 'yes'
+        run: python bf_watch.py --only ${{ matrix.store }}
+      - name: Hand results to the combine job
+        if: always() && steps.go.outputs.run == 'yes'
+        uses: actions/upload-artifact@v4
+        with: { name: "part-${{ matrix.store }}", path: runs/, retention-days: 3, if-no-files-found: ignore }
+
+  combine:
+    needs: crawl
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
     environment: { name: github-pages, url: "${{ steps.deploy.outputs.page_url }}" }
     env:
       GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
       NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       SITE_URL: ${{ vars.SITE_URL }}
-      TZ: Europe/Belgrade
-      PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12", cache: pip }
-      - name: Install
-        run: |
-          pip install -r requirements.txt
-          python -m playwright install --with-deps chromium
-      # price history (needed for "our own 30-day low", trends, price drops) lives in the Actions cache
+      - run: pip install -r requirements.txt
       - name: Restore price history
         uses: actions/cache/restore@v4
-        with:
-          path: history.sqlite
-          key: history-${{ github.run_id }}
-          restore-keys: history-
-      - name: First run – start from the Mac's history
+        with: { path: history.sqlite, key: "history-${{ github.run_id }}", restore-keys: "history-" }
+      - name: Restore state
+        uses: actions/cache/restore@v4
+        with: { path: state, key: "state-${{ github.run_id }}", restore-keys: "state-" }
+      - name: First run – seed history and state
         run: |
-          if [ ! -f history.sqlite ] && ls seed/history.part* >/dev/null 2>&1; then cat seed/history.part* | gunzip -c > history.sqlite; echo "seeded"; fi
-      - name: Run price check
+          if [ ! -f history.sqlite ] && ls seed/history.part* >/dev/null 2>&1; then cat seed/history.part* | gunzip -c > history.sqlite; echo "seeded history"; fi
+          mkdir -p state && cp -n seed/state/* state/ 2>/dev/null || true
+      - uses: actions/download-artifact@v4
+        with: { pattern: "part-*", path: parts }
+      - name: Combine, analyse, write Sheets, build website
         run: |
           ARGS=""
-          if [ "${{ inputs.no_pametno }}" = "true" ]; then ARGS="$ARGS --no-pametno"; fi
+          if [ "$MODE" != "full" ]; then ARGS="$ARGS --refresh"; fi
           if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
-          python bf_watch.py $ARGS
+          mkdir -p parts
+          python bf_watch.py --combine parts/* $ARGS
       - name: Save price history
         if: always()
         uses: actions/cache/save@v4
-        with:
-          path: history.sqlite
-          key: history-${{ github.run_id }}
-      - name: Back up price history (90 days)
+        with: { path: history.sqlite, key: "history-${{ github.run_id }}" }
+      - name: Save state
         if: always()
+        uses: actions/cache/save@v4
+        with: { path: state, key: "state-${{ github.run_id }}" }
+      - name: Back up price history (90 days)
+        if: always() && env.MODE == 'full'
         uses: actions/upload-artifact@v4
         with: { name: history, path: history.sqlite, retention-days: 90, if-no-files-found: ignore }
       - name: Prepare website
@@ -69,11 +127,12 @@ jobs:
           mkdir -p site
           if [ -n "${{ vars.SITE_DOMAIN }}" ]; then echo "${{ vars.SITE_DOMAIN }}" > site/CNAME; fi
           touch site/.nojekyll
+          ls -la site | head
       - uses: actions/upload-pages-artifact@v3
-        if: always()
+        if: always() && hashFiles('site/index.html') != ''
         with: { path: site }
       - id: deploy
-        if: always()
+        if: always() && hashFiles('site/index.html') != ''
         uses: actions/deploy-pages@v4
       - name: Keep run files
         if: always()
