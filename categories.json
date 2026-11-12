@@ -1,0 +1,9 @@
+{
+  "_help": "Categories left OUT of the detailed (full-catalogue) crawl, per store, as path prefixes. Edit via the website: cene.babl.cc/#admin -> Kategorije. Only the repository owner can commit changes here.",
+  "exclude": {
+    "Gigatron": [],
+    "WinWin": [],
+    "Big Bang": [],
+    "Ananas": []
+  }
+}

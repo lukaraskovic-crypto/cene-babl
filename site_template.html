@@ -1,0 +1,367 @@
+<!doctype html><html lang="sr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cene · Beograd</title>
+<meta name="description" content="Prave i lažne akcije u beogradskim prodavnicama tehnike – Gigatron, WinWin, Big Bang, Ananas.">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M9 20l5-5 4 4 6-8' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f5f8;--card:#ffffff;--ink:#0f172a;--ink2:#334155;--mut:#64748b;--line:#e5e7eb;--soft:#f1f5f9;--acc:#4f46e5;--acc2:#eef2ff;
+ --good:#047857;--goodbg:#ecfdf5;--bad:#b91c1c;--badbg:#fef2f2;--warn:#b45309;--warnbg:#fffbeb;--shadow:0 1px 2px rgba(15,23,42,.05),0 4px 16px rgba(15,23,42,.06);--r:14px}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0f19;--card:#121826;--ink:#e5e7eb;--ink2:#cbd5e1;--mut:#94a3b8;--line:#1f2937;--soft:#172033;--acc:#818cf8;--acc2:#1e1b4b;
+ --good:#34d399;--goodbg:#052e2b;--bad:#f87171;--badbg:#3b0d0d;--warn:#fbbf24;--warnbg:#3a2a05;--shadow:0 1px 2px rgba(0,0,0,.4)}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button,input,select{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line)}
+.bar{max-width:1320px;margin:auto;padding:12px 20px 0;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.02em}
+.logo i{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:grid;place-items:center;box-shadow:0 4px 12px rgba(99,102,241,.35)}
+.logo small{display:block;font-weight:500;font-size:12px;color:var(--mut);letter-spacing:0}
+.sp{flex:1}.upd{font-size:12px;color:var(--mut);text-align:right;line-height:1.3}
+.lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card)}
+.lang button{border:0;background:none;padding:5px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--mut)}.lang button.on{background:var(--ink);color:var(--bg)}
+.tabs{max-width:1320px;margin:auto;padding:10px 20px 0;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tabs button{border:0;background:none;padding:9px 12px 11px;cursor:pointer;font-weight:600;color:var(--mut);white-space:nowrap;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--acc)}.tabs button:hover{color:var(--ink)}
+main{max-width:1320px;margin:auto;padding:18px 20px 80px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+h2{font-size:17px;margin:0 0 4px;letter-spacing:-.01em}h3{font-size:15px;margin:0}.mut{color:var(--mut)}.small{font-size:12px}
+.searchrow{display:flex;gap:8px;align-items:center}
+.sbox{flex:1;position:relative}.sbox input{width:100%;padding:12px 14px 12px 40px;border:1px solid var(--line);border-radius:12px;background:var(--soft);outline:none;font-size:15px}
+.sbox input:focus{border-color:var(--acc);background:var(--card);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 18%,transparent)}
+.sbox svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);opacity:.5}
+.btn{border:1px solid var(--line);background:var(--card);padding:9px 13px;border-radius:10px;cursor:pointer;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--mut)}.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}.btn .n{background:var(--acc);color:#fff;border-radius:999px;font-size:11px;padding:0 6px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:12px}
+.fgrid label{font-size:12px;color:var(--mut);font-weight:500;display:flex;flex-direction:column;gap:4px}
+.fgrid select,.fgrid input{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card);width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink2)}
+.chip.on{background:var(--acc2);border-color:var(--acc);color:var(--acc)}
+.reshead{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}.reshead .sp{flex:1}
+.reshead select{padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card)}
+table{width:100%;border-collapse:separate;border-spacing:0}
+th{font-size:12px;font-weight:600;color:var(--mut);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;position:sticky;top:0;background:var(--card);z-index:1;user-select:none}
+th:hover{color:var(--ink)}th .ar{color:var(--acc)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}tbody tr{cursor:pointer}tbody tr:hover td{background:var(--soft)}
+.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pname{font-weight:500;color:var(--ink);line-height:1.35}.pmeta{font-size:12px;color:var(--mut);margin-top:2px}
+.price{font-weight:700;font-size:15px;letter-spacing:-.01em}.strike{text-decoration:line-through;color:var(--mut);font-size:12px}
+.tw{overflow:auto;max-height:72vh;border-radius:10px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--soft);color:var(--ink2)}
+.pill.g{background:var(--goodbg);color:var(--good)}.pill.b{background:var(--badbg);color:var(--bad)}.pill.w{background:var(--warnbg);color:var(--warn)}
+.g{color:var(--good)}.b{color:var(--bad)}
+.disc{display:inline-block;background:var(--badbg);color:var(--bad);font-weight:700;font-size:12px;border-radius:6px;padding:1px 6px}
+.spark{width:84px;height:22px;color:var(--acc)}
+.pager{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:14px}.pager .btn{padding:6px 11px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow)}
+.kpi span{font-size:12px;color:var(--mut);font-weight:500}.kpi b{display:block;font-size:24px;letter-spacing:-.02em;margin-top:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.list .it{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}.list .it:last-child{border-bottom:0}
+.it .l{flex:1;min-width:0}.it .r{text-align:right;white-space:nowrap}
+.empty{padding:28px;text-align:center;color:var(--mut)}
+pre{white-space:pre-wrap;margin:0;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}
+/* modal / bottom sheet */
+#ov{position:fixed;inset:0;background:rgba(2,6,23,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+#sheet{background:var(--card);border-radius:18px;max-width:760px;width:100%;max-height:90vh;overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.sh-h{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}.x{border:0;background:var(--soft);border-radius:999px;width:32px;height:32px;cursor:pointer;flex:none}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.fact{background:var(--soft);border-radius:10px;padding:10px}.fact span{font-size:11px;color:var(--mut)}.fact b{display:block;font-size:16px}
+/* mobile result cards */
+.cards .rc{display:block;padding:12px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.rc .t{display:flex;gap:10px;justify-content:space-between}.rc .pr{text-align:right;white-space:nowrap}
+.rc .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
+/* admin tree */
+.tree{max-height:65vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.tree .row{display:flex;align-items:center;gap:8px;padding:4px 0}.tree .row label{display:flex;gap:8px;align-items:center;cursor:pointer;flex:1}
+.tree .tg{width:20px;border:0;background:none;cursor:pointer;color:var(--mut);padding:0}
+.tree .c{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--soft);font:12px ui-monospace,monospace}
+.note{background:var(--acc2);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink2)}
+@media (max-width:1100px){.hide-m{display:none}}
+@media (max-width:760px){
+ .bar{padding:10px 14px 0}.tabs{padding:6px 10px 0}main{padding:12px 12px 80px}.card{padding:13px;border-radius:12px}
+ .upd{display:none}.logo small{font-size:11px}
+ .grid2{grid-template-columns:1fr}.facts{grid-template-columns:1fr 1fr}
+ #ov{align-items:flex-end;padding:0}#sheet{border-radius:18px 18px 0 0;max-height:88vh;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+ .kpi b{font-size:20px}.fgrid{grid-template-columns:1fr 1fr}
+ .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:-13px;margin-right:-13px;padding:0 13px}.chips::-webkit-scrollbar{display:none}.chip{white-space:nowrap}
+ .reshead{flex-wrap:nowrap}.reshead label{display:flex;align-items:center;gap:6px}.reshead select{max-width:130px}.sbox input{font-size:16px}
+ .tw{max-height:none}
+}
+</style></head><body>
+<div class="top"><div class="bar">
+ <div class="logo"><i><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l5-5 4 4 7-9"/></svg></i>
+  <div>Cene<small id="tagline"></small></div></div>
+ <div class="sp"></div><div class="upd" id="upd"></div>
+ <div class="lang"><button data-l="sr">SR</button><button data-l="en">EN</button></div>
+</div><nav class="tabs" id="tabs"></nav></div>
+<main id="main"></main>
+<div id="ov"><div id="sheet"></div></div>
+<!--DATA-->
+<script>
+"use strict";
+const D=window.DATA, R=D.rows, CATS=window.CATS||{found:{},exclude:{}};
+const C=Object.fromEntries(D.cols.map((c,i)=>[c,i]));
+// ---------------------------------------------------------------- i18n
+const L={
+sr:{tagline:'Prave i lažne akcije · Beograd',updated:'Ažurirano',articles:'artikala',stores:'prodavnice',
+ tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinjenja',watch:'Praćenje',stores:'Prodavnice',report:'Izveštaj',admin:'Kategorije'},
+ ph:'Traži model, brend ili naziv… (npr. OLED65C61LA, G20 Max, iPad Air)',filters:'Filteri',reset:'Poništi',allStores:'Sve prodavnice',allCats:'Sve kategorije',allBrands:'Svi brendovi',anyVerdict:'Bilo koja ocena',
+ store:'Prodavnica',cat:'Kategorija',brand:'Brend',verdict:'Ocena',minP:'Cena od (RSD)',maxP:'Cena do (RSD)',minD:'Min. popust %',perPage:'Po strani',sortBy:'Sortiraj',
+ chDisc:'Samo na popustu',chReal:'Ispod svog 30-dnevnog minimuma',chXs:'Jeftinije u drugoj prodavnici',chNew:'Promena cene danas',
+ product:'Proizvod',price:'Cena',old:'Precrtana',claimed:'Popust',low30:'Najniža (30 d)',vsLow:'vs 30 d',market:'Tržište',cheaper:'Jeftinije drugde',trend:'Trend',since:'Cena od',seen:'Viđeno',
+ found:n=>`${n} artikala`,page:(a,b)=>`Strana ${a} / ${b}`,prev:'‹',next:'›',none:'Nema rezultata.',
+ openStore:'Otvori u prodavnici ↗',crossed:'Precrtana cena',low30l:'Najniža cena 30 dana',mktLow:'Najniža na tržištu',noHist:'Još nema istorije – gradi se sa svakim osvežavanjem.',
+ same:'Isti model u drugim prodavnicama',priceSince:d=>`Cena važi od ${d}`,seenOn:d=>`poslednji put viđeno ${d}`,history:'Istorija cene',
+ dealsBoth:'Prave akcije – stvarno sniženje I najjeftinije na tržištu',dealsReal:'Stvarno sniženje u odnosu na sopstveni 30-dnevni minimum',dealsRaised:'Podignuta cena – „popust" iznad sopstvenog 30-dnevnog minimuma',dealsFake:'Lažni popust – cena jednaka 30-dnevnom minimumu',
+ saved:'Ušteda',showingFirst:n=>`Prikazano prvih ${n} – suzi filterima.`,
+ dropsT:'Pojeftinjenja ≥3% od prethodnog dana',before:'Pre',now:'Sada',drop:'Pad',ourLow:'Naš 30 d min.',minDrop:'Min. pad %',search:'Traži…',
+ watchNone:'Nema artikala za praćenje u ovom krugu.',specs:'Specifikacije',mktBest:'Najbolja na tržištu',
+ G:{G1:'Xiaomi G20 Max (štapni usisivač)',G2:'Tablet sa SIM karticom',G3:'Tablet ≥8 GB RAM + SIM (dobre specifikacije)'},
+ st:{promos:'Akcije ≥15.000',avgClaimed:'Prosečan popust',with30:'Sa 30-d min.',real:'Prava sniženja',fake:'Lažna',raised:'Podignuta',avgReal:'Prosečno stvarno'},
+ reportNote:'Dnevni izveštaj (na engleskom, isti kao u obaveštenju).',
+ V:{real:'Pravo sniženje',raised:'Podignuta cena',fake:'Lažni popust',nochange:'Bez stvarne promene',below:'Ispod tržišta',at:'Na tržišnom minimumu',above:'Iznad tržišta',unverified:'Neprovereno',none:'(nije akcija)'},
+ MV:{'BUY-WORTHY':'Isplati se','BEST IN MARKET':'Najjeftinije','GOOD':'Dobro','OK':'OK','SKIP':'Preskoči','SINGLE SELLER':'Jedan prodavac','NOT ON PAMETNO':'Nije na pametno.rs','NOT CHECKED':'Nije provereno','LISTED, NO CURRENT OFFERS':'Bez ponuda','MODEL VARIANT DIFFERS':'Druga varijanta','STORAGE DIFFERS':'Druga memorija','UNCERTAIN MATCH':'Nesiguran par','LOOKUP FAILED':'Greška u proveri'},
+ adm:{title:'Kategorije za detaljno pretraživanje',intro:'Štikliraj kategorije koje želiš u detaljnom (punom) pretraživanju. Promene može da sačuva samo vlasnik repozitorijuma: dugme ispod kopira novu listu i otvara GitHub, gde nalepiš (Cmd/Ctrl+A, Cmd/Ctrl+V) i klikneš „Commit changes". Važi od sledećeg pokretanja.',
+  filter:'Filtriraj kategorije…',all:'Uključi sve',none:'Isključi sve',save:'Kopiraj i otvori GitHub',copied:'Kopirano! Nalepi u GitHub editor i klikni „Commit changes".',excluded:n=>`${n} isključeno`,
+  noData:'Lista kategorija se pojavljuje posle prvog punog pokretanja sa novom verzijom.',json:'Novi sadržaj datoteke categories.json',notCrawled:'nije pretraživano'}},
+en:{tagline:'Real vs fake discounts · Belgrade',updated:'Updated',articles:'articles',stores:'stores',
+ tabs:{search:'Search',deals:'Deals',drops:'Price drops',watch:'Watch',stores:'Stores',report:'Report',admin:'Categories'},
+ ph:'Search model, brand or name… (e.g. OLED65C61LA, G20 Max, iPad Air)',filters:'Filters',reset:'Reset',allStores:'All stores',allCats:'All categories',allBrands:'All brands',anyVerdict:'Any verdict',
+ store:'Store',cat:'Category',brand:'Brand',verdict:'Verdict',minP:'Min price (RSD)',maxP:'Max price (RSD)',minD:'Min claimed %',perPage:'Per page',sortBy:'Sort by',
+ chDisc:'Discounted only',chReal:'Below its own 30-day low',chXs:'Cheaper at another store',chNew:'Price changed today',
+ product:'Product',price:'Price',old:'Crossed-out',claimed:'Claimed',low30:'30-day low',vsLow:'vs 30-day',market:'Market',cheaper:'Cheaper elsewhere',trend:'Trend',since:'Price since',seen:'Seen',
+ found:n=>`${n} articles`,page:(a,b)=>`Page ${a} / ${b}`,prev:'‹',next:'›',none:'No results.',
+ openStore:'Open in store ↗',crossed:'Crossed-out price',low30l:'30-day lowest price',mktLow:'Market low',noHist:'No history yet – it builds up with every refresh.',
+ same:'Same model at other stores',priceSince:d=>`Price unchanged since ${d}`,seenOn:d=>`last seen ${d}`,history:'Price history',
+ dealsBoth:'Real deals – real cut AND cheapest in the market',dealsReal:"Real cuts vs the store's own 30-day low",dealsRaised:'Price raised – "discount" above its own 30-day low',dealsFake:'Fake discounts – price equals the 30-day low',
+ saved:'Saved',showingFirst:n=>`Showing the first ${n} – narrow with the filters.`,
+ dropsT:'Price drops ≥3% since the previous day',before:'Before',now:'Now',drop:'Drop',ourLow:'Our 30-day low',minDrop:'Min drop %',search:'Search…',
+ watchNone:'No watch items in this run.',specs:'Specs',mktBest:'Market best',
+ G:{G1:'Xiaomi G20 Max (stick vacuum)',G2:'Tablet with SIM',G3:'Tablet ≥8 GB RAM + SIM (good specs)'},
+ st:{promos:'Promos ≥15,000',avgClaimed:'Avg claimed',with30:'With 30-day low',real:'Real cuts',fake:'Fake',raised:'Raised',avgReal:'Avg real'},
+ reportNote:'Daily report (same text as the notification).',
+ V:{real:'Real cut',raised:'Price raised',fake:'Fake discount',nochange:'No real change',below:'Below market',at:'At market low',above:'Above market',unverified:'Unverified',none:'(not a promo)'},
+ MV:{'BUY-WORTHY':'Buy-worthy','BEST IN MARKET':'Best in market','GOOD':'Good','OK':'OK','SKIP':'Skip','SINGLE SELLER':'Single seller','NOT ON PAMETNO':'Not on pametno.rs','NOT CHECKED':'Not checked','LISTED, NO CURRENT OFFERS':'No offers','MODEL VARIANT DIFFERS':'Other variant','STORAGE DIFFERS':'Other storage','UNCERTAIN MATCH':'Uncertain match','LOOKUP FAILED':'Lookup failed'},
+ adm:{title:'Categories in the detailed crawl',intro:'Tick the categories you want in the detailed (full-catalogue) crawl. Only the repository owner can save changes: the button copies the new list and opens GitHub, where you paste it (Cmd/Ctrl+A, Cmd/Ctrl+V) and click "Commit changes". Takes effect from the next run.',
+  filter:'Filter categories…',all:'Include all',none:'Exclude all',save:'Copy & open GitHub',copied:'Copied! Paste into the GitHub editor and click "Commit changes".',excluded:n=>`${n} excluded`,
+  noData:'The category list appears after the first full run with the new version.',json:'New content of categories.json',notCrawled:'not crawled'}}};
+let lang='sr'; try{ lang=localStorage.getItem('lang')||'sr'; }catch(e){}
+const t=k=>{ const v=k.split('.').reduce((o,p)=>o&&o[p],L[lang]); return v==null?k:v; };
+// ---------------------------------------------------------------- helpers
+const loc=()=>lang==='sr'?'sr-Latn-RS':'en-GB';
+const f=n=>n?Number(n).toLocaleString('sr-RS'):'', pct=x=>Math.round(x*100)+'%';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dm=s=>{ if(!s) return ''; const [m,d]=s.split('-'); return `${+d}.${+m}.`; };
+const TODAY=D.date.slice(5);
+const VG=v=>!v?'none':v.startsWith('REAL CUT')?'real':v.startsWith('PRICE RAISED')?'raised':v.startsWith('FAKE')?'fake':v.startsWith('No real')?'nochange':v.startsWith('BELOW')?'below':v.startsWith('At market')?'at':v.startsWith('Above')?'above':'unverified';
+const VCLS={real:'g',below:'g',raised:'b',fake:'b',above:'w',nochange:'w',at:'',unverified:'',none:''};
+function vpill(v){ if(!v) return ''; const g=VG(v); return `<span class="pill ${VCLS[g]}" title="${esc(v)}">${esc(t('V.'+g))}</span>`; }
+function mpill(v){ if(!v) return ''; const k=Object.keys(L.en.MV).sort((a,b)=>b.length-a.length).find(k=>v.startsWith(k)); if(!k) return `<span class="pill" title="${esc(v)}">${esc(v.split(' ')[0])}</span>`;
+  const c=/BUY|BEST/.test(k)?'g':k==='SKIP'?'b':k==='GOOD'?'g':''; return `<span class="pill ${c}" title="${esc(v)}">${esc(t('MV')[k])}</span>`; }
+function spark(h){ if(!h||h.length<2) return ''; const ps=h.map(x=>x[1]), mn=Math.min(...ps), mx=Math.max(...ps), W=84,H=22;
+  const pts=ps.map((p,i)=>`${(i/(ps.length-1)*W).toFixed(1)},${(mx===mn?H/2:H-2-(p-mn)/(mx-mn)*(H-4)).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}"><polyline fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" points="${pts}"/></svg>`; }
+function chart(h){ if(!h||h.length<1) return `<p class="mut">${t('noHist')}</p>`;
+  const ps=h.map(x=>x[1]), mn=Math.min(...ps)*0.97, mx=Math.max(...ps)*1.03, W=700,H=220,Lm=64,B=26;
+  const x=i=>Lm+(h.length<2?(W-Lm-12)/2:i/(h.length-1)*(W-Lm-12)), y=p=>H-B-(p-mn)/(mx-mn||1)*(H-B-12);
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img">`;
+  for(const v of [mn,(mn+mx)/2,mx]) s+=`<text x="4" y="${y(v)+4}" font-size="11" fill="currentColor" opacity=".55">${f(Math.round(v))}</text><line x1="${Lm}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="currentColor" opacity=".1"/>`;
+  const pts=h.map((d,i)=>x(i)+','+y(d[1])).join(' ');
+  s+=`<polygon fill="var(--acc)" opacity=".08" points="${x(0)},${H-B} ${pts} ${x(h.length-1)},${H-B}"/><polyline fill="none" stroke="var(--acc)" stroke-width="2.2" stroke-linejoin="round" points="${pts}"/>`;
+  h.forEach((d,i)=>{ if(i===0||i===h.length-1||h.length<14) s+=`<circle cx="${x(i)}" cy="${y(d[1])}" r="3.5" fill="var(--card)" stroke="var(--acc)" stroke-width="2"><title>${dm(d[0])}: ${f(d[1])}</title></circle>`; });
+  s+=`<text x="${Lm}" y="${H-6}" font-size="11" fill="currentColor" opacity=".55">${dm(h[0][0])}</text><text x="${W-12}" y="${H-6}" font-size="11" text-anchor="end" fill="currentColor" opacity=".55">${dm(h[h.length-1][0])}</text></svg>`; return s; }
+const kc={}; function keyset(n){ if(kc[n]) return kc[n]; return kc[n]=(n.match(/[A-Za-z0-9][A-Za-z0-9\-\/.+]*/g)||[]).map(z=>z.replace(/[^A-Za-z0-9]/g,'').toUpperCase()).filter(z=>z.length>=6&&/[A-Z]/.test(z)&&/\d/.test(z)); }
+const isMobile=()=>window.matchMedia('(max-width:760px)').matches;
+const uniq=a=>[...new Set(a)].filter(Boolean).sort((x,y)=>x.localeCompare(y,'sr'));
+const opt=(vals,sel,all,lab)=>`<option value="">${all}</option>`+vals.map(v=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(lab?lab(v):v)}</option>`).join('');
+// ---------------------------------------------------------------- derived rows
+const X=R.map((r,i)=>{ const h=r[C.hist]||[]; return {i,r,brand:(r[2].split(/\s+/)[0]||'').toUpperCase().replace(/[^A-Z0-9-]/g,''),
+  claimed:r[4]>r[3]?1-r[3]/r[4]:0, real:r[5]?1-r[3]/r[5]:null, vg:VG(r[6]), xs:(r[10]&&r[10]<r[3])?r[10]:0,
+  trend:h.length>1?h[h.length-1][1]/h[0][1]-1:null, since:r[C.since]||'', low:(r[0]+' '+r[1]+' '+r[2]).toLowerCase(), cat:r[1].split(' · seller')[0]}; });
+// ---------------------------------------------------------------- item sheet
+function openItem(k){ const x=X[k], r=x.r; const ks=keyset(r[2]);
+  const same=ks.length?X.filter(y=>y!==x && keyset(y.r[2]).some(z=>ks.includes(z))).sort((a,b)=>a.r[3]-b.r[3]).slice(0,8):[];
+  sheet.innerHTML=`<div class="sh-h"><div><h2>${esc(r[2])}</h2><div class="mut small">${esc(r[0])} · ${esc(r[1])}</div></div><button class="x" onclick="closeS()" aria-label="close">✕</button></div>
+  <div class="facts"><div class="fact"><span>${t('price')}</span><b>${f(r[3])}</b></div><div class="fact"><span>${t('crossed')}</span><b>${f(r[4])||'–'}</b></div>
+  <div class="fact"><span>${t('low30l')}</span><b>${f(r[5])||'–'}</b></div><div class="fact"><span>${t('mktLow')}</span><b>${f(r[8])||'–'}</b></div></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${vpill(r[6])} ${mpill(r[7])} ${x.claimed?`<span class="disc">−${pct(x.claimed)}</span>`:''}
+   <span class="mut small">${x.since?t('priceSince')(dm(x.since)):''}${r[C.seen]&&r[C.seen]!==TODAY?' · '+t('seenOn')(dm(r[C.seen])):''}</span></div>
+  ${r[C.url]?`<p><a class="btn pri" style="text-decoration:none" href="${esc(r[C.url])}" target="_blank" rel="noopener">${t('openStore')}</a></p>`:''}
+  <h3 style="margin:16px 0 6px">${t('history')}</h3>${chart(r[C.hist])}
+  ${same.length?`<h3 style="margin:16px 0 4px">${t('same')}</h3><div class="list">${same.map(y=>`<div class="it" onclick="openItem(${y.i})"><div class="l"><div class="pname">${esc(y.r[2])}</div><div class="pmeta">${esc(y.r[0])}</div></div><div class="r price">${f(y.r[3])}</div></div>`).join('')}</div>`:''}`;
+  ov.style.display='flex'; sheet.scrollTop=0; document.body.style.overflow='hidden'; }
+function closeS(){ ov.style.display='none'; document.body.style.overflow=''; }
+ov.onclick=e=>{ if(e.target===ov) closeS(); }; document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeS(); });
+// ---------------------------------------------------------------- sortable tables
+function cmp(a,b){ return typeof a==='number'&&typeof b==='number'?a-b:String(a).localeCompare(String(b),'sr'); }
+function sortRows(rows,cols,st){ const c=cols.find(c=>c.k===st.sort)||cols[0]; return rows.slice().sort((a,b)=>{ const va=c.v(a), vb=c.v(b);
+  if(va==null||va==='') return vb==null||vb===''?0:1; if(vb==null||vb==='') return -1; return cmp(va,vb)*st.dir; }); }
+function thead(cols,st,fn){ return '<thead><tr>'+cols.map(c=>`<th class="${c.n?'n':''} ${c.hm?'hide-m':''}" onclick="${fn}('${c.k}')">${t(c.t)}${st.sort===c.k?`<span class="ar">${st.dir>0?' ↑':' ↓'}</span>`:''}</th>`).join('')+'</tr></thead>'; }
+function setSort(st,k,defDir){ if(st.sort===k) st.dir=-st.dir; else { st.sort=k; st.dir=defDir||1; } st.page=0; }
+const realCell=x=>x.real==null?'':x.real>0?`<span class="g">−${pct(x.real)}</span>`:x.real<0?`<span class="b">+${pct(-x.real)}</span>`:'0%';
+// ---------------------------------------------------------------- Search
+const S0={q:'',store:'',cat:'',brand:'',vg:'',min:'',max:'',dmin:'',onlyDisc:false,onlyXs:false,onlyReal:false,onlyNew:false,sort:'saved',dir:-1,page:0,per:50};
+const S=Object.assign({},S0); let showF=!isMobile();
+const SC=[{k:'store',t:'store',v:x=>x.r[0]},{k:'name',t:'product',v:x=>x.r[2]},{k:'price',t:'price',n:1,v:x=>x.r[3]},
+ {k:'old',t:'old',n:1,hm:1,v:x=>x.r[4]||null},{k:'claimed',t:'claimed',n:1,v:x=>x.claimed||null},{k:'low',t:'low30',n:1,hm:1,v:x=>x.r[5]||null},
+ {k:'real',t:'vsLow',n:1,v:x=>x.real},{k:'saved',t:'saved',n:1,hm:1,v:x=>x.r[5]&&x.r[5]>x.r[3]?x.r[5]-x.r[3]:null},{k:'verdict',t:'verdict',v:x=>x.r[6]?t('V.'+x.vg):null},{k:'xs',t:'cheaper',n:1,v:x=>x.xs||null},
+ {k:'trend',t:'trend',n:1,hm:1,v:x=>x.trend},{k:'since',t:'since',n:1,v:x=>x.since||null}];
+const VGS=['real','fake','raised','nochange','below','at','above','unverified','none'];
+function nFilters(){ return ['store','cat','brand','vg','min','max','dmin'].filter(k=>S[k]).length+['onlyDisc','onlyXs','onlyReal','onlyNew'].filter(k=>S[k]).length; }
+function search(){ const pool=X.filter(x=>!S.store||x.r[0]===S.store);
+  main.innerHTML=`<div class="card">
+   <div class="searchrow"><div class="sbox"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input type="search" id="q" placeholder="${esc(t('ph'))}" value="${esc(S.q)}" autocomplete="off"></div>
+    <button class="btn" id="ft">${t('filters')}${nFilters()?` <span class="n">${nFilters()}</span>`:''}</button></div>
+   <div class="chips">${[['onlyDisc','chDisc'],['onlyReal','chReal'],['onlyXs','chXs'],['onlyNew','chNew']].map(([k,l])=>`<button class="chip ${S[k]?'on':''}" data-k="${k}">${t(l)}</button>`).join('')}</div>
+   <div id="fp" style="display:${showF?'block':'none'}"><div class="fgrid">
+    <label>${t('store')}<select id="st">${opt(uniq(X.map(x=>x.r[0])),S.store,t('allStores'))}</select></label>
+    <label>${t('cat')}<select id="ca">${opt(uniq(pool.map(x=>x.cat)),S.cat,t('allCats'))}</select></label>
+    <label>${t('brand')}<select id="br">${opt(uniq(pool.map(x=>x.brand)),S.brand,t('allBrands'))}</select></label>
+    <label>${t('verdict')}<select id="vg">${opt(VGS,S.vg,t('anyVerdict'),v=>t('V.'+v))}</select></label>
+    <label>${t('minP')}<input id="mn" type="number" inputmode="numeric" value="${S.min}"></label>
+    <label>${t('maxP')}<input id="mx" type="number" inputmode="numeric" value="${S.max}"></label>
+    <label>${t('minD')}<input id="dmin" type="number" inputmode="numeric" value="${S.dmin}"></label>
+    <label>${t('perPage')}<select id="pp">${[25,50,100,250].map(n=>`<option ${n===S.per?'selected':''}>${n}</option>`).join('')}</select></label>
+   </div><div style="margin-top:10px"><button class="btn" id="rs">${t('reset')}</button></div></div></div>
+  <div class="card"><div class="reshead"><b id="cnt"></b><span class="sp"></span>
+   <label class="mut small">${t('sortBy')} <select id="so">${SC.map(c=>`<option value="${c.k}" ${S.sort===c.k?'selected':''}>${t(c.t)}</option>`).join('')}</select></label>
+   <button class="btn" id="sd" title="↑↓">${S.dir>0?'↑':'↓'}</button></div><div id="res"></div><div class="pager" id="pg"></div></div>`;
+  const upd=()=>{ const st0=S.store; Object.assign(S,{q:q.value,store:st.value,cat:ca.value,brand:br.value,vg:vg.value,min:mn.value,max:mx.value,dmin:dmin.value,per:+pp.value,page:0});
+    if(st0!==S.store){ S.cat=''; S.brand=''; search(); } else { table(); ft.innerHTML=t('filters')+(nFilters()?` <span class="n">${nFilters()}</span>`:''); } };
+  ['st','ca','br','vg','mn','mx','dmin','pp'].forEach(id=>document.getElementById(id).addEventListener('change',upd));
+  let tm; q.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(upd,180); });
+  document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ S[b.dataset.k]=!S[b.dataset.k]; S.page=0; b.classList.toggle('on'); table(); });
+  ft.onclick=()=>{ showF=!showF; fp.style.display=showF?'block':'none'; };
+  rs.onclick=()=>{ Object.assign(S,S0,{per:S.per}); search(); };
+  so.onchange=()=>{ S.sort=so.value; S.dir=['price','name','store','xs'].includes(S.sort)?1:-1; S.page=0; search(); };
+  sd.onclick=()=>{ S.dir=-S.dir; S.page=0; search(); };
+  table(); }
+function table(){ const w=S.q.toLowerCase().split(/\s+/).filter(Boolean);
+  let rs=X.filter(x=>(!S.store||x.r[0]===S.store)&&(!S.cat||x.cat===S.cat)&&(!S.brand||x.brand===S.brand)&&(!S.vg||x.vg===S.vg)
+    &&(!S.min||x.r[3]>=+S.min)&&(!S.max||x.r[3]<=+S.max)&&(!S.dmin||x.claimed*100>=+S.dmin)&&(!S.onlyDisc||x.claimed>0)&&(!S.onlyReal||(x.real!=null&&x.real>0))
+    &&(!S.onlyXs||x.xs>0)&&(!S.onlyNew||x.since===TODAY)&&w.every(z=>x.low.includes(z)));
+  rs=sortRows(rs,SC,S); const pages=Math.max(1,Math.ceil(rs.length/S.per)); if(S.page>=pages) S.page=pages-1;
+  cnt.textContent=t('found')(rs.length.toLocaleString(loc()));
+  const pg_=rs.slice(S.page*S.per,(S.page+1)*S.per);
+  if(!rs.length) res.innerHTML=`<div class="empty">${t('none')}</div>`;
+  else if(isMobile()) res.innerHTML=`<div class="cards">${pg_.map(card).join('')}</div>`;
+  else res.innerHTML=`<div class="tw"><table>${thead(SC,S,'srt')}<tbody>${pg_.map(x=>{ const r=x.r; return `<tr onclick="openItem(${x.i})">
+   <td class="small">${esc(r[0])}</td><td><div class="pname">${esc(r[2])}</div><div class="pmeta">${esc(x.cat)}</div></td><td class="n price">${f(r[3])}</td>
+   <td class="n hide-m strike">${f(r[4])}</td><td class="n">${x.claimed?`<span class="disc">−${pct(x.claimed)}</span>`:''}</td><td class="n hide-m">${f(r[5])}</td>
+   <td class="n">${realCell(x)}</td><td class="n hide-m">${r[5]&&r[5]>r[3]?f(r[5]-r[3]):''}</td><td>${vpill(r[6])}</td><td class="n">${x.xs?`<b class="b">${f(x.xs)}</b><div class="pmeta">${esc(r[11])}</div>`:''}</td>
+   <td class="n hide-m">${spark(r[C.hist])}${x.trend?`<div class="pmeta">${x.trend>0?'+':''}${Math.round(x.trend*100)}%</div>`:''}</td>
+   <td class="n small ${x.since===TODAY?'g':'mut'}">${dm(x.since)}</td></tr>`; }).join('')}</tbody></table></div>`;
+  pg.innerHTML=pages>1?`<button class="btn" ${S.page?'':'disabled'} onclick="S.page--;table();scrollTo({top:0,behavior:'smooth'})">${t('prev')}</button><span class="mut small">${t('page')(S.page+1,pages)}</span><button class="btn" ${S.page<pages-1?'':'disabled'} onclick="S.page++;table();scrollTo({top:0,behavior:'smooth'})">${t('next')}</button>`:''; }
+function card(x){ const r=x.r; return `<div class="rc" onclick="openItem(${x.i})"><div class="t"><div style="min-width:0"><div class="pname">${esc(r[2])}</div>
+  <div class="pmeta">${esc(r[0])} · ${esc(x.cat)}</div></div><div class="pr"><div class="price">${f(r[3])}</div>${r[4]?`<div class="strike">${f(r[4])}</div>`:''}</div></div>
+  <div class="tags">${x.claimed?`<span class="disc">−${pct(x.claimed)}</span>`:''}${vpill(r[6])}${x.real!=null&&r[6]?`<span class="small">${realCell(x)} ${t('vsLow')}</span>`:''}
+  ${x.xs?`<span class="pill b">${t('cheaper')}: ${f(x.xs)} · ${esc(r[11])}</span>`:''}<span class="sp"></span><span class="small ${x.since===TODAY?'g':'mut'}">${t('since')} ${dm(x.since)}</span></div></div>`; }
+function srt(k){ setSort(S,k,['price','name','store','xs'].includes(k)?1:-1); search(); }
+// ---------------------------------------------------------------- Deals
+const DF={store:'',min:'',max:''};
+const DL={both:{sort:'saved',dir:-1},real:{sort:'saved',dir:-1},raised:{sort:'real',dir:1},fake:{sort:'claimed',dir:-1}};
+const DC=[{k:'store',t:'store',v:x=>x.r[0]},{k:'name',t:'product',v:x=>x.r[2]},{k:'price',t:'price',n:1,v:x=>x.r[3]},{k:'old',t:'old',n:1,hm:1,v:x=>x.r[4]||null},
+ {k:'claimed',t:'claimed',n:1,v:x=>x.claimed||null},{k:'low',t:'low30',n:1,hm:1,v:x=>x.r[5]||null},{k:'real',t:'vsLow',n:1,v:x=>x.real},
+ {k:'saved',t:'saved',n:1,v:x=>x.r[5]?x.r[5]-x.r[3]:null},{k:'market',t:'market',v:x=>x.r[7]||null}];
+function dlist(id,title,rs){ const st=DL[id]; rs=sortRows(rs,DC,st); const lim=300;
+  const body=!rs.length?`<div class="empty">${t('none')}</div>`:isMobile()?`<div class="cards">${rs.slice(0,lim).map(card).join('')}</div>`:
+   `<div class="tw"><table>${thead(DC,st,"dsrt.bind(null,'"+id+"')")}<tbody>${rs.slice(0,lim).map(x=>{ const r=x.r; return `<tr onclick="openItem(${x.i})"><td class="small">${esc(r[0])}</td><td><div class="pname">${esc(r[2])}</div><div class="pmeta">${esc(x.cat)}</div></td>
+   <td class="n price">${f(r[3])}</td><td class="n hide-m strike">${f(r[4])}</td><td class="n">${x.claimed?`<span class="disc">−${pct(x.claimed)}</span>`:''}</td><td class="n hide-m">${f(r[5])}</td>
+   <td class="n">${realCell(x)}</td><td class="n">${r[5]?f(r[5]-r[3]):''}</td><td>${mpill(r[7])}</td></tr>`; }).join('')}</tbody></table></div>`;
+  return `<div class="card"><h2>${title} <span class="mut">· ${rs.length.toLocaleString(loc())}</span></h2>${body}${rs.length>lim?`<p class="mut small">${t('showingFirst')(lim)}</p>`:''}</div>`; }
+function dsrt(id,k){ setSort(DL[id],k,['store','name','price'].includes(k)?1:-1); deals(); }
+function deals(){ const base=X.filter(x=>(!DF.store||x.r[0]===DF.store)&&(!DF.min||x.r[3]>=+DF.min)&&(!DF.max||x.r[3]<=+DF.max));
+  const real=base.filter(x=>x.vg==='real'), both=real.filter(x=>/BUY-WORTHY|BEST IN MARKET/.test(x.r[7]));
+  main.innerHTML=`<div class="kpis"><div class="kpi"><span>${t('dealsBoth').split(' – ')[0]}</span><b class="g">${both.length}</b></div><div class="kpi"><span>${t('V.real')}</span><b>${real.length}</b></div>
+   <div class="kpi"><span>${t('V.raised')}</span><b class="b">${base.filter(x=>x.vg==='raised').length}</b></div><div class="kpi"><span>${t('V.fake')}</span><b class="b">${base.filter(x=>x.vg==='fake').length}</b></div></div>
+   <div class="card"><div class="fgrid" style="margin:0"><label>${t('store')}<select id="dst">${opt(uniq(X.map(x=>x.r[0])),DF.store,t('allStores'))}</select></label>
+   <label>${t('minP')}<input id="dmn" type="number" inputmode="numeric" value="${DF.min}"></label><label>${t('maxP')}<input id="dmx" type="number" inputmode="numeric" value="${DF.max}"></label></div></div>`
+   +dlist('both',t('dealsBoth'),both)+dlist('real',t('dealsReal'),real)+dlist('raised',t('dealsRaised'),base.filter(x=>x.vg==='raised'))+dlist('fake',t('dealsFake'),base.filter(x=>x.vg==='fake'));
+  const u=()=>{ DF.store=dst.value; DF.min=dmn.value; DF.max=dmx.value; deals(); }; ['dst','dmn','dmx'].forEach(i=>document.getElementById(i).addEventListener('change',u)); }
+// ---------------------------------------------------------------- Price drops
+const PF={store:'',q:'',min:'',sort:'drop',dir:-1};
+const PC=[{k:'store',t:'store',v:d=>d[0]},{k:'name',t:'product',v:d=>d[2]},{k:'before',t:'before',n:1,v:d=>d[4]},{k:'now',t:'now',n:1,v:d=>d[3]},
+ {k:'drop',t:'drop',n:1,v:d=>d[5]},{k:'rsd',t:'saved',n:1,v:d=>d[4]-d[3]},{k:'low',t:'ourLow',n:1,hm:1,v:d=>d[8]||null}];
+function drops(){ const w=PF.q.toLowerCase().split(/\s+/).filter(Boolean);
+  let rs=D.drops.filter(d=>(!PF.store||d[0]===PF.store)&&(!PF.min||d[5]*100>=+PF.min)&&w.every(z=>(d[0]+' '+d[2]).toLowerCase().includes(z))); rs=sortRows(rs,PC,PF);
+  const link=d=>d[9]?`<a href="${esc(d[9])}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(d[2])}</a>`:esc(d[2]);
+  main.innerHTML=`<div class="card"><div class="fgrid" style="margin:0"><label>${t('search')}<input type="search" id="pq" value="${esc(PF.q)}"></label>
+   <label>${t('store')}<select id="pst">${opt(uniq(D.drops.map(d=>d[0])),PF.store,t('allStores'))}</select></label><label>${t('minDrop')}<input id="pmn" type="number" inputmode="numeric" value="${PF.min}"></label></div></div>
+   <div class="card"><h2>${t('dropsT')} <span class="mut">· ${rs.length}</span></h2>${!rs.length?`<div class="empty">${t('none')}</div>`:isMobile()?
+   `<div class="cards">${rs.map(d=>`<div class="rc"><div class="t"><div style="min-width:0"><div class="pname">${link(d)}</div><div class="pmeta">${esc(d[0])} · ${esc(d[1])}</div></div>
+     <div class="pr"><div class="price">${f(d[3])}</div><div class="strike">${f(d[4])}</div></div></div><div class="tags"><span class="pill g">−${pct(d[5])}</span><span class="small mut">−${f(d[4]-d[3])} RSD</span></div></div>`).join('')}</div>`:
+   `<div class="tw"><table>${thead(PC,PF,'psrt')}<tbody>${rs.map(d=>`<tr style="cursor:default"><td class="small">${esc(d[0])}</td><td><div class="pname">${link(d)}</div><div class="pmeta">${esc(d[1])}</div></td><td class="n strike">${f(d[4])}</td><td class="n price">${f(d[3])}</td>
+   <td class="n"><span class="pill g">−${pct(d[5])}</span></td><td class="n">${f(d[4]-d[3])}</td><td class="n hide-m">${f(d[8])}</td></tr>`).join('')}</tbody></table></div>`}</div>`;
+  const u=()=>{ PF.store=pst.value; PF.min=pmn.value; PF.q=pq.value; drops(); const e=document.getElementById('pq'); if(document.activeElement!==e&&PF.q){ e.focus(); e.setSelectionRange(e.value.length,e.value.length);} };
+  ['pst','pmn'].forEach(i=>document.getElementById(i).addEventListener('change',u)); let tm; pq.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(u,300); }); }
+function psrt(k){ setSort(PF,k,['store','name'].includes(k)?1:-1); drops(); }
+// ---------------------------------------------------------------- Watch
+function watch(){ const g={}; D.watch.forEach(w=>(g[w[0].slice(0,2)]=g[w[0].slice(0,2)]||[]).push(w));
+  main.innerHTML=Object.entries(g).sort().map(([k,ws])=>`<div class="card"><h2>${esc(t('G')[k]||k)} <span class="mut">· ${ws.length}</span></h2>
+  <div class="list">${ws.map(w=>`<div class="it" style="cursor:default"><div class="l"><div class="pname">${w[12]?`<a href="${esc(w[12])}" target="_blank" rel="noopener">${esc(w[2])}</a>`:esc(w[2])}</div>
+   <div class="pmeta">${esc(w[1])}${w[3]?` · <b>${esc(w[3])}</b>`:''}</div>
+   <div class="tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">${w[7]!==''&&w[7]!=null?(w[7]>0?`<span class="pill g">−${pct(w[7])} ${t('vsLow')}</span>`:w[7]<0?`<span class="pill b">+${pct(-w[7])} ${t('vsLow')}</span>`:''):''}${mpill(String(w[11]))}
+   ${w[8]?`<span class="small mut">${t('mktBest')}: ${f(w[8])} ${esc(w[9])}</span>`:''}</div></div>
+   <div class="r"><div class="price">${f(w[4])}</div>${w[5]?`<div class="strike">${f(w[5])}</div>`:''}${w[6]?`<div class="small mut">${t('low30')}: ${f(w[6])}</div>`:''}</div></div>`).join('')}</div></div>`).join('')
+  ||`<div class="card empty">${t('watchNone')}</div>`; }
+// ---------------------------------------------------------------- Stores
+function stores(){ const cnt={}; R.forEach(r=>cnt[r[0]]=(cnt[r[0]]||0)+1);
+  main.innerHTML=`<div class="kpis">${Object.entries(cnt).map(([s,n])=>`<div class="kpi"><span>${esc(s)}</span><b>${n.toLocaleString(loc())}</b><span>${t('articles')}</span></div>`).join('')}</div>
+  <div class="card"><div class="tw"><table><thead><tr><th>${t('store')}</th><th class="n">${t('st.promos')}</th><th class="n">${t('st.avgClaimed')}</th><th class="n">${t('st.with30')}</th><th class="n">${t('st.real')}</th><th class="n">${t('st.fake')}</th><th class="n">${t('st.raised')}</th><th class="n">${t('st.avgReal')}</th></tr></thead><tbody>
+  ${D.summary.map(s=>`<tr style="cursor:default"><td><b>${esc(s[0])}</b></td><td class="n">${s[1]}</td><td class="n">${s[2]!==''?pct(s[2]):''}</td><td class="n">${s[3]}</td><td class="n g">${s[4]}</td><td class="n">${s[5]}</td><td class="n b">${s[6]}</td><td class="n">${s[7]!==''?pct(s[7]):''}</td></tr>`).join('')}</tbody></table></div></div>`; }
+function report(){ main.innerHTML=`<div class="card"><p class="mut small" style="margin-top:0">${t('reportNote')}</p><pre>${esc(D.report||'–')}</pre></div>`; }
+// ---------------------------------------------------------------- Admin: categories (owner commits on GitHub)
+const AD={store:Object.keys(CATS.found)[0]||'',q:'',ex:JSON.parse(JSON.stringify(CATS.exclude||{})),open:{}};
+const pretty=s=>{ try{ s=decodeURIComponent(s); }catch(e){} s=s.replace(/-/g,' '); return s.charAt(0).toUpperCase()+s.slice(1); };
+function tree(store){ const found=CATS.found[store]||{}; const root={p:'',kids:{},own:0};
+  for(const [path,n] of Object.entries(found)){ const segs=path.split('/').filter(Boolean); let node=root, p='';
+    segs.forEach(sg=>{ p+='/'+sg; node=node.kids[sg]=node.kids[sg]||{p,kids:{},own:0,name:sg}; }); node.own+=n; node.real=true; }
+  const tot=n=>n.tot=n.own+Object.values(n.kids).reduce((a,k)=>a+tot(k),0); tot(root); return root; }
+const isEx=(store,p)=>(AD.ex[store]||[]).some(e=>p===e||p.startsWith(e+'/'));
+function setEx(store,p,exclude){ let ex=(AD.ex[store]||[]).filter(e=>!(e===p||e.startsWith(p+'/')));
+  if(exclude) ex.push(p); else { const anc=ex.find(e=>p.startsWith(e+'/')); if(anc){ // re-include a child of an excluded parent: split the parent
+      ex=ex.filter(e=>e!==anc); const sib=(n)=>{ for(const k of Object.values(n.kids)){ if(k.p===p) continue; if(p.startsWith(k.p+'/')) sib(k); else ex.push(k.p); } };
+      const find=(n,q)=>n.p===q?n:Object.values(n.kids).map(k=>q.startsWith(k.p)?find(k,q):null).find(Boolean); sib(find(tree(store),anc)); } }
+  AD.ex[store]=[...new Set(ex)].sort(); }
+function admin(){ const stores=Object.keys(CATS.found);
+  if(!stores.length){ main.innerHTML=`<div class="card"><h2>${t('adm.title')}</h2><p class="mut">${t('adm.noData')}</p></div>`; return; }
+  const rt=tree(AD.store); const q=AD.q.toLowerCase();
+  const match=n=>!q||n.p.toLowerCase().includes(q)||Object.values(n.kids).some(match);
+  const rowsH=(n,d)=>Object.values(n.kids).sort((a,b)=>b.tot-a.tot).filter(match).map(k=>{ const ex=isEx(AD.store,k.p); const hasK=Object.keys(k.kids).length;
+    const partial=!ex&&hasK&&(AD.ex[AD.store]||[]).some(e=>e.startsWith(k.p+'/')); const op=AD.open[k.p]||!!q;
+    return `<div class="row" style="padding-left:${d*18}px">${hasK?`<button class="tg" onclick="AD.open['${esc(k.p)}']=${!op};admin()">${op?'▾':'▸'}</button>`:'<span class="tg"></span>'}
+     <label><input type="checkbox" ${ex?'':'checked'} data-p="${esc(k.p)}" ${partial?'data-partial="1"':''}> ${esc(pretty(k.name))}</label><span class="c">${k.tot?k.tot.toLocaleString(loc()):t('adm.notCrawled')}</span></div>${hasK&&op?rowsH(k,d+1):''}`; }).join('');
+  const json=JSON.stringify({_help:'Categories left OUT of the detailed crawl (path prefixes). Edit via the website #admin.',exclude:Object.fromEntries(Object.entries(AD.ex).map(([s,v])=>[s,v]))},null,2);
+  main.innerHTML=`<div class="card"><h2>${t('adm.title')}</h2><p class="mut">${t('adm.intro')}</p>
+   <div class="chips">${stores.map(s=>`<button class="chip ${s===AD.store?'on':''}" onclick="AD.store='${esc(s)}';admin()">${esc(s)} <span class="mut">· ${t('adm.excluded')((AD.ex[s]||[]).length)}</span></button>`).join('')}</div>
+   <div class="searchrow" style="margin:12px 0"><div class="sbox"><input id="aq" placeholder="${t('adm.filter')}" value="${esc(AD.q)}" style="padding-left:14px"></div>
+    <button class="btn" onclick="AD.ex[AD.store]=[];admin()">${t('adm.all')}</button><button class="btn" onclick="AD.ex[AD.store]=Object.values(tree(AD.store).kids).map(k=>k.p);admin()">${t('adm.none')}</button></div>
+   <div class="tree" id="tr">${rowsH(rt,0)}</div></div>
+   <div class="card"><h3>${t('adm.json')}</h3><textarea id="js" readonly>${esc(json)}</textarea>
+   <p><button class="btn pri" id="sv">${t('adm.save')}</button> <span id="cp" class="small g"></span></p></div>`;
+  tr.querySelectorAll('input[type=checkbox]').forEach(c=>{ if(c.dataset.partial) c.indeterminate=true; c.onchange=()=>{ setEx(AD.store,c.dataset.p,!c.checked); const y=scrollY; admin(); scrollTo(0,y); }; });
+  let tm; aq.oninput=()=>{ clearTimeout(tm); tm=setTimeout(()=>{ AD.q=aq.value; admin(); const e=document.getElementById('aq'); e.focus(); e.setSelectionRange(e.value.length,e.value.length); },250); };
+  sv.onclick=async()=>{ try{ await navigator.clipboard.writeText(json); }catch(e){ js.select(); document.execCommand('copy'); }
+    cp.textContent=t('adm.copied'); window.open(`https://github.com/${D.repo}/edit/main/categories.json`,'_blank','noopener'); }; }
+// ---------------------------------------------------------------- shell
+const TABS=['search','deals','drops','watch','stores','report'];
+const FN={search,deals,drops,watch,stores,report,admin};
+let cur='search';
+function tabs(){ const list=TABS.concat(location.hash==='#admin'?['admin']:[]);
+  document.getElementById('tabs').innerHTML=list.map(k=>`<button data-t="${k}" class="${k===cur?'on':''}">${t('tabs.'+k)}</button>`).join(''); }
+function go(k){ cur=k; tabs(); FN[k](); }
+function chrome(){ document.documentElement.lang=lang; tagline.textContent=t('tagline');
+  const [d,h]=D.updated.split(' '); const [y,m,dd]=d.split('-');
+  upd.innerHTML=`${t('updated')}: <b>${+dd}.${+m}.${y}. ${h}</b><br>${R.length.toLocaleString(loc())} ${t('articles')} · ${uniq(R.map(r=>r[0])).length} ${t('stores')}`;
+  document.querySelectorAll('.lang button').forEach(b=>b.classList.toggle('on',b.dataset.l===lang)); }
+document.getElementById('tabs').onclick=e=>{ const k=e.target.closest('button')?.dataset.t; if(k) go(k); };
+document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{ lang=b.dataset.l; try{ localStorage.setItem('lang',lang); }catch(e){} chrome(); go(cur); });
+window.addEventListener('hashchange',()=>{ if(location.hash==='#admin') go('admin'); else tabs(); });
+let wasM=isMobile(); window.addEventListener('resize',()=>{ const m=isMobile(); if(m!==wasM){ wasM=m; go(cur); } });
+chrome(); go(location.hash==='#admin'?'admin':'search');
+</script></body></html>

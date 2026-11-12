@@ -11,9 +11,14 @@ What it does (same rules as the Claude routine):
   5. Rewrites the DAILY REPORT sheet, appends to the PRICE HISTORY sheet,
      writes a text report and sends a notification (macOS + optional ntfy.sh push to phone).
 
-Run:  python3 bf_watch.py            (full run)
-      python3 bf_watch.py --no-pametno   (skip the 2-hour market check)
+Run:  python3 bf_watch.py            (full run, everything in one process – used on a Mac)
+      python3 bf_watch.py --no-pametno   (skip the market check)
       python3 bf_watch.py --dry-run      (no Google Sheets writes)
+Cloud (GitHub Actions) runs the stores in parallel:
+      python3 bf_watch.py --only gigatron|winwin|bigbang|ananas|pametno   (one crawl job each)
+      python3 bf_watch.py --combine parts/*   [--refresh]                   (merge, analyse, Sheets, website)
+  --refresh = intraday update: website + history only (no Sheets, no notification, cached pametno results).
+Categories for the detailed crawl: categories.json  {"exclude": {"WinWin": ["/bela-tehnika/frizideri", ...]}}
 """
 import argparse, json, os, re, statistics, subprocess, sys, time, datetime as dt
 from collections import Counter
@@ -45,6 +50,45 @@ def save(name, data):
 def load(name):
     p = OUT / name
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+
+# --------------------------------------------------------------------------------------
+# State carried between cloud runs (state/ is cached by GitHub Actions together with history.sqlite)
+# --------------------------------------------------------------------------------------
+STATE = HERE / "state"; STATE.mkdir(exist_ok=True)
+STORE_KEYS = {"gigatron": ["gigatron", "full_gigatron", "emmezeta"], "winwin": ["winwin", "full_winwin"],
+              "tehnomanija": ["tehnomanija", "full_tehnomanija"], "bigbang": ["bigbang", "full_bigbang"], "ananas": ["ananas", "full_ananas"]}
+STORE_NAME = {"gigatron": "Gigatron", "winwin": "WinWin", "tehnomanija": "Tehnomanija", "bigbang": "Big Bang", "ananas": "Ananas"}
+LOW_DAYS = CFG.get("low30_cache_days", 5)       # re-read a product page's 30-day low at least this often
+PM_DAYS = CFG.get("pametno_cache_days", 4)      # pametno.rs results are reused for this many days
+
+def sload(name, default=None):
+    p = STATE / name
+    try: return json.loads(p.read_text(encoding="utf-8")) if p.exists() else default
+    except Exception: return default
+
+def ssave(name, data):
+    (STATE / name).write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
+def age_days(d):
+    try: return (dt.date.fromisoformat(TODAY) - dt.date.fromisoformat(d)).days
+    except Exception: return 999
+
+def known_lows(store_key):
+    """{url: [price, low30]} for 30-day lows read recently enough to reuse while the price is unchanged."""
+    return {u: v[:2] for u, v in (sload(f"lows_{store_key}.json", {}) or {}).items() if age_days(v[2]) <= LOW_DAYS}
+
+def updated_lows(store_key, its):
+    old = sload(f"lows_{store_key}.json", {}) or {}
+    out = {u: v for u, v in old.items() if age_days(v[2]) <= 30}
+    for x in its:
+        u, l = x.get("u"), x.get("l")
+        if not u or not l: continue
+        if x.get("lf") or u not in out or out[u][0] != x.get("p"): out[u] = [x.get("p"), l, TODAY]
+    return out
+
+def categories_cfg():
+    try: return json.loads((HERE / "categories.json").read_text(encoding="utf-8")).get("exclude", {})
+    except Exception: return {}
 
 # --------------------------------------------------------------------------------------
 # In-page JavaScript helpers (injected into each shop's origin)
@@ -182,15 +226,16 @@ def crawl_gigatron(br):
 def search_gigatron(br, terms):
     return br.js("""async (terms)=>{ const r=await pool(terms,4,async q=>{ const t=await ft2('/pretraga?q='+encodeURIComponent(q)); return t?parseGiga(t):null; }); return r; }""", terms)
 
-def crawl_magento(br, home, bases):
+def crawl_magento(br, home, bases, known=None):
     br.go(home)
-    return br.js(r"""async ([bases,keep])=>{ const items={}; const fails=[];
+    return br.js(r"""async ([bases,keep,known])=>{ const items={}; const fails=[];
       for(const base of bases){ for(let p=1;p<=80;p++){ const t=await ft2(base+(base.includes('?')?'&':'?')+'product_list_limit=60&p='+p);
          if(!t){fails.push(base+' p'+p); break;} let added=0; for(const x of parseMag(t)){ if(x.u&&!items[x.u]){items[x.u]=x; added++;} }
          if(!added) break; await sleep(250);} }
       const kre=new RegExp(keep); const kept=Object.values(items).filter(x=>{ let path=''; try{path=new URL(x.u).pathname}catch(e){} x.cat=path.split('/').slice(-2,-1)[0]; return kre.test(path)&&x.p>=15000&&x.o; });
-      await pool(kept,4,async x=>{ const t=await ft2(x.u); x.l=t?lowFrom(t,/Najni[žz]a web cena u prethodnih 30 dana\s*:?\s*([\d.]+)/i):null; },200);
-      return {items:kept, fails, total:Object.keys(items).length}; }""", [bases, MAG_KEEP])
+      const todo=kept.filter(x=>{ const k=known[x.u]; if(k&&k[0]===x.p){ x.l=k[1]; return false; } return true; });
+      await pool(todo,4,async x=>{ const t=await ft2(x.u); x.l=t?lowFrom(t,/Najni[žz]a web cena u prethodnih 30 dana\s*:?\s*([\d.]+)/i):null; x.lf=1; },200);
+      return {items:kept, fails, total:Object.keys(items).length, cached:kept.length-todo.length}; }""", [bases, MAG_KEEP, known or {}])
 
 def search_magento(br, terms):
     return br.js(r"""async (terms)=>{ const out={}; for(const q of terms){ try{ const t=await ft('/catalogsearch/result/?q='+encodeURIComponent(q)+'&product_list_limit=60');
@@ -435,6 +480,43 @@ def laptop_spec(name):
     label = gpu or (("Apple " + chip.group(0)) if (mac and chip) else "?")
     return ok, f"{label} / {ram or '?'}GB / {(ssd.group(1) + 'TB') if ssd else '?'}"
 
+TAB_LINE = re.compile(r"\b(tab|tablet|ipad|pad|matepad|mediapad)\b", re.I)
+TAB_JUNK = re.compile(r"futrol|maska|case\b|cover|torb|staklo|folij|zaštit|zastit|olovk|pencil|\bpen\b|tastatur|keyboard|punja|kabl|adapter|holder|držač|drzac|stalak|nosač|refurb|refab|outlet|polovn|dečij|decij|kids", re.I)
+def tablet_info(name):
+    """Tablet with SIM and RAM ≥ 8 GB? → dict(ram, sto, screen, net, score, label) or None."""
+    if not TAB_LINE.search(name) or TAB_JUNK.search(name): return None
+    if re.search(r"\b(laptop|notebook|telefon|phone|smartphone|sat|watch|monitor|televizor)\b", name, re.I) and not re.search(r"ipad|galaxy tab", name, re.I): return None
+    net = re.search(r"\b(5G|LTE|4G|Cellular|SIM)\b", name, re.I)
+    if not net: return None
+    ram = None
+    m = re.search(r"\b(\d{1,2})\s*(?:GB)?\s*[/+]\s*(64|128|256|512|1024|1|2)\s*(?:GB|TB)?\b", name, re.I) or re.search(r"\b(\d{1,2})\s*GB\s*RAM", name, re.I) or re.search(r"RAM\s*(\d{1,2})\s*GB", name, re.I)
+    if m and 2 <= int(m.group(1)) <= 24: ram = int(m.group(1))
+    sto = 0
+    for v, u in re.findall(r"(\d{1,4})\s*(GB|TB)\b", name, re.I):
+        g = int(v) * (1024 if u.upper() == "TB" else 1)
+        if g >= 32 and g != ram: sto = max(sto, g)
+    line = 0
+    if re.search(r"ipad", name, re.I):
+        if re.search(r"ipad\s*pro", name, re.I): ram = ram or (16 if sto >= 1024 else 8); line = 9
+        elif re.search(r"ipad\s*air", name, re.I) and re.search(r"\bM[1-9]\b|2024|2025|2026", name, re.I): ram = ram or 8; line = 6
+        elif re.search(r"ipad\s*mini", name, re.I) and re.search(r"A17|2024|2026|7\.?\s*gen|\(7|nano-texture|standard glass", name, re.I): ram = ram or 8; line = 5
+    if not ram and re.search(r"Tab(let)?\s*S\d+\s*(Ultra|\+|Plus)|Tab(let)?\s*S\d+(?!\s*(FE|Lite))\b", name, re.I): ram = 12   # Galaxy Tab S Ultra/+/base: 12 GB
+    elif not ram and re.search(r"Tab(let)?\s*S\d+\s*FE", name, re.I): ram = 8
+    if not ram or ram < 8: return None
+    if re.search(r"Tab(let)?\s*S\d+\s*Ultra", name, re.I): line = 9
+    elif re.search(r"Tab(let)?\s*S\d+\s*(\+|Plus)(?!.*FE)", name, re.I) and not re.search(r"FE", name): line = 8
+    elif re.search(r"Tab(let)?\s*S\d+\s*FE", name, re.I): line = 5
+    elif re.search(r"Tab(let)?\s*S\d+(?!\s*(FE|Lite))\b", name, re.I) and not re.search(r"Lite", name, re.I): line = 7
+    elif re.search(r"Xiaomi\s*Pad\s*\d+\s*(Pro|Ultra)|OnePlus\s*Pad|MatePad\s*Pro|Tab\s*P1\d|Yoga\s*Tab|Legion\s*Tab|Honor\s*Pad\s*\d+\s*Pro", name, re.I): line = max(line, 6)
+    elif re.search(r"Redmi\s*Pad\s*\d*\s*Pro|Xiaomi\s*Pad\s*\d+|Poco\s*Pad|Idea\s*Tab\s*Pro|MatePad\s*\d+", name, re.I): line = max(line, 4)
+    if line < 4: return None      # "good specs": upper mid-range and flagships only (no budget A-series / Lite / no-name)
+    scr = re.search(r"(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:\"|''|”|-?\s?inch|in\b|incha|\s?col)", name, re.I)
+    screen = float(scr.group(1).replace(",", ".")) if scr and 7 <= float(scr.group(1).replace(",", ".")) <= 15 else None
+    score = ram * 3 + (min(sto, 1024) / 128) * 2 + line * 3 + (screen or 11)
+    n5 = net.group(1).upper(); n5 = "5G" if n5 == "5G" else "LTE"
+    label = f"{n5} · {ram} GB RAM · {sto if sto < 1024 else sto // 1024}{'GB' if sto < 1024 else 'TB'}" + (f" · {screen:g}\"" if screen else "") if sto else f"{n5} · {ram} GB RAM" + (f" · {screen:g}\"" if screen else "")
+    return dict(ram=ram, sto=sto, screen=screen, net=n5, score=round(score, 1), label=label)
+
 def tablet_spec(name):
     ram = re.search(r"(\d{1,2})\s*(?:GB)?\s*/\s*(\d{2,4})\s*GB", name)
     sto = storage(name)
@@ -484,151 +566,52 @@ def main():
     ap.add_argument("--no-pametno", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--show", action="store_true", help="show the browser window")
+    ap.add_argument("--only", help="crawl just one store (gigatron|winwin|bigbang|ananas) or 'pametno', then stop")
+    ap.add_argument("--combine", nargs="+", help="folders with the parallel jobs' results to merge and analyse")
+    ap.add_argument("--refresh", action="store_true", help="intraday update: site + history only")
     a = ap.parse_args()
+    if a.refresh: a.dry_run = True; a.no_pametno = True
     if CFG.get("stop_after") and TODAY > CFG["stop_after"]:
         notify("Store promotions", "Black Friday checker: season is over – you can remove the scheduled job."); return
-    from playwright.sync_api import sync_playwright
     fails = []
-    with sync_playwright() as pw:
-        br = Browser(pw, headless=not a.show)
-        try:
-            raw = load("raw.json") or {}
-            # ---- Gigatron
-            if "gigatron" not in raw:
-                try:
-                    g, f = crawl_gigatron(br); fails += [f"Gigatron {x}" for x in f]
-                    watch = search_gigatron(br, WATCH_TERMS + ["G20 Max", "Xiaomi G20"] + G2_TERMS + G3_TERMS)
-                    raw["gigatron"] = g; raw["gigatron_search"] = dict(zip(WATCH_TERMS + ["G20 Max", "Xiaomi G20"] + G2_TERMS + G3_TERMS, watch)); save("raw.json", raw)
-                    log("Gigatron", len(g))
-                except Exception as e:
-                    log("Gigatron failed:", str(e).splitlines()[0]); fails.append(f"Gigatron failed: {str(e).splitlines()[0][:100]}"); raw["gigatron"] = []; raw["gigatron_search"] = {}
-            # ---- WinWin / Tehnomanija
-            for key, home, bases in [("winwin", "https://www.winwin.rs", ["/black-friday?product_list_order=saving"]),
-                                     ("tehnomanija", "https://www.tehnomanija.rs", ["/crni-petak", "/crni-petak-vec-sad"])]:
-                if key in raw: continue
-                if key in [x.lower() for x in CFG.get("skip_stores", [])]:
-                    raw[key] = []; raw[key + "_search"] = {}; log(f"{key}: skipped (config skip_stores)"); continue
-                log(f"{key}: crawling promo pages…")
-                try:
-                    r = crawl_magento(br, home, bases)
-                    log(f"{key}: {len(r['items'])} promo items, running site searches…")
-                    fails += [f"{key} {x}" for x in r["fails"]]
-                    s = search_magento(br, (WATCH_TERMS if key == "winwin" else []) + ["G20 Max", "Xiaomi G20", "tablet LTE", "tablet 5G", "RTX 5060", "RTX 5070", "RTX 5080", "32GB", "MacBook Pro"])
-                    raw[key] = r["items"]; raw[key + "_search"] = s; save("raw.json", raw); log(key, len(r["items"]), "of", r["total"])
-                except Exception as e:
-                    log(f"{key} failed:", str(e).splitlines()[0]); fails.append(f"{key} failed: {str(e).splitlines()[0][:100]}"); raw[key] = []; raw[key + "_search"] = {}
-            # ---- Big Bang
-            if "bigbang" not in raw:
-                try:
-                    log("Big Bang: crawling…")
-                    r = crawl_bigbang(br); fails += [f"Big Bang {x}" for x in r["fails"]]
-                    raw["bigbang"] = r["items"]; raw["bigbang_search"] = search_bigbang(br, ["G20 Max", "Xiaomi G20", "tablet 5G", "Galaxy Tab 5G", "RTX 5060", "RTX 5070", "RTX 5080", "MacBook Pro"])
-                    save("raw.json", raw); log("Big Bang", len(r["items"]))
-                except Exception as e:
-                    log("Big Bang failed:", str(e).splitlines()[0]); fails.append(f"Big Bang failed: {str(e).splitlines()[0][:100]}"); raw["bigbang"] = []; raw["bigbang_search"] = {}
-            # ---- Ananas
-            if "ananas" not in raw:
-                try:
-                    log("Ananas: crawling…")
-                    r = crawl_ananas(br); fails += [f"Ananas {x}" for x in r["fails"]]
-                    raw["ananas_all"] = r["all"]; raw["ananas_search"] = search_ananas(br, ["G20 Max", "Xiaomi G20", "tablet LTE", "tablet 5G", "RTX 5070", "RTX 5060", "RTX 5080", "MacBook Pro"])
-                    raw["ananas"] = True; save("raw.json", raw); log("Ananas", len(r["all"]))
-                except Exception as e:
-                    log("Ananas failed:", str(e).splitlines()[0]); fails.append(f"Ananas failed: {str(e).splitlines()[0][:100]}"); raw["ananas_all"] = []; raw["ananas_search"] = {}; raw["ananas"] = True
-            if "emmezeta" not in raw:
-                try: raw["emmezeta"] = emmezeta_status(br)
-                except Exception as e: raw["emmezeta"] = f"Emmezeta check failed: {e}"
-                save("raw.json", raw)
-            # ---- FULL CATALOGUE (every article in the electronics/appliance categories)
-            if CFG.get("mode", "full") == "full":
-                import catalog; catalog.FULL_MINUTES = CFG.get("full_store_minutes", 60)
-                for key, fn in [("full_gigatron", lambda: catalog.full_gigatron(br, log)),
-                                ("full_winwin", lambda: catalog.full_magento(br, "WinWin", "https://www.winwin.rs", log)),
-                                ("full_tehnomanija", lambda: catalog.full_magento(br, "Tehnomanija", "https://www.tehnomanija.rs", log)),
-                                ("full_bigbang", lambda: catalog.full_bigbang(br, log)),
-                                ("full_ananas", lambda: catalog.full_ananas(br, log))]:
-                    if key in raw: continue
-                    if key.replace("full_", "") in [x.lower().replace(" ", "") for x in CFG.get("skip_stores", [])]:
-                        raw[key] = []; log(f"{key}: skipped (config skip_stores)"); continue
-                    log(f"{key}: crawling full catalogue…")
-                    try:
-                        its, f = fn(); fails += f
-                    except Exception as e:
-                        its = []; fails.append(f"{key} crashed: {e}"); log(key, "crashed:", e)
-                    raw[key] = its; save("raw.json", raw)
-
-            # ---- assemble promo items
-            items = []
-            for x in raw["gigatron"]:
-                items.append(dict(store="Gigatron", cat=x.get("cat", ""), name=x["n"], p=x["p"], o=x.get("o"), l=x.get("l"), u=x["u"]))
-            for key, st in [("winwin", "WinWin"), ("tehnomanija", "Tehnomanija")]:
-                for x in raw[key]: items.append(dict(store=st, cat=x.get("cat", ""), name=x["n"], p=x["p"], o=x.get("o"), l=x.get("l"), u=x["u"]))
-            for x in raw["bigbang"]:
-                if x["p"] >= 3_000_000: continue   # data glitch guard (e.g. 10,000,000 RSD fridge)
-                items.append(dict(store="Big Bang", cat=x.get("c") or "", name=x["n"], p=int(x["p"]), o=int(round(x["p"] + x["d"])), l=None, u=""))
-            for x in raw["ananas_all"]:
-                if x.get("o") and x.get("p") and x["o"] > x["p"]:
-                    items.append(dict(store="Ananas", cat=f"{x['cat']} · seller {x['s']}", name=x["n"], p=x["p"], o=x["o"], l=x.get("l"), u=x["u"]))
-            seen, uniq = set(), []
-            for it in items:
-                if not it["p"] or it["p"] < MIN_PRICE or not it.get("o") or it["o"] <= it["p"]: continue
-                k = (it["store"], it["name"], it["p"])
-                if k in seen: continue
-                seen.add(k); it["term"] = term_for(it["name"]); uniq.append(it)
-            # ---- merge full catalogue
-            all_items = []
-            for key in ["full_gigatron", "full_winwin", "full_tehnomanija", "full_bigbang", "full_ananas"]:
-                for x in raw.get(key, []):
-                    if not x.get("p") or x["p"] >= 3_000_000: continue
-                    all_items.append(dict(store=x["store"], cat=x.get("cat", ""), name=x["n"], p=int(x["p"]), o=x.get("o"), l=x.get("l"), u=x.get("u", "")))
-            known = {(i["store"], i["name"]) for i in items}
-            for a_ in all_items:
-                if (a_["store"], a_["name"]) in known: continue
-                if a_["p"] >= MIN_PRICE and a_.get("o") and a_["o"] > a_["p"]:
-                    a_ = dict(a_); a_["term"] = term_for(a_["name"]); items.append(a_); known.add((a_["store"], a_["name"]))
-            in_all = {(x["store"], x["name"]) for x in all_items}
-            all_items += [dict(i) for i in items if (i["store"], i["name"]) not in in_all]
-            # ---- own price history (SQLite) + price drops vs last run
-            import catalog
-            hist_db = catalog.History(HERE / "history.sqlite")
-            drops = []
-            for a_ in all_items:
-                lo, last, n = hist_db.observed(TODAY, a_["store"], a_.get("u", ""), a_["name"])
-                a_["l_obs"], a_["obs_days"] = lo, n
-                if last and a_["p"] < last * 0.97 and a_["p"] >= CFG.get("drops_min_price", MIN_PRICE):
-                    drops.append(dict(a_, last=last))
-            obs = {(a_["store"], a_["name"]): (a_["l_obs"], a_["obs_days"]) for a_ in all_items}
-            for it in items:
-                it["l_obs"], it["obs_days"] = obs.get((it["store"], it["name"]), (None, 0))
-            for it in items:
-                if not it.get("term"): it["term"] = term_for(it["name"])
-            hist_db.save(TODAY, all_items)
-            cross_store(all_items, items)
-            save("all_items.json", all_items)
-            log("all articles:", len(all_items), "| promo items >=15k:", len(items), "| price drops vs last run:", len(drops))
-
-            # ---- watch-group candidates
-            watch = build_watch_candidates(raw)
-            # ---- pametno
-            pm = {}
-            if not a.no_pametno and CFG.get("pametno_scope", "promos") != "none":
-                def prio(i):
-                    rl = (1 - i["p"] / i["l"]) if i.get("l") else None
-                    return (0 if (rl is not None and rl >= .05) else 1 if not i.get("l") else 2, -i["p"])
-                terms = []
-                for it in sorted(items, key=prio):
-                    if it["term"] not in terms: terms.append(it["term"])
-                wterms = [w["term"] for w in watch if w["term"] not in terms]
-                if CFG.get("pametno_scope") == "all":
-                    for x in sorted(all_items, key=lambda x: -x["p"]):
-                        if x["p"] >= MIN_PRICE:
-                            t_ = term_for(x["name"])
-                            if t_ not in terms: terms.append(t_)
-                terms = terms[: CFG.get("pametno_max_terms", 1500)]
-                pm = run_pametno(br, list(dict.fromkeys(wterms + terms)))
-        finally:
-            br.close()
-
+    t_start = time.time()
+    if a.only == "pametno":
+        return pametno_job(a)
+    if a.combine:
+        raw, pm_fresh = combine_parts(a.combine, fails)
+    else:
+        raw = load("raw.json") or {}
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as pw:
+            br = Browser(pw, headless=not a.show)
+            try: crawl(br, raw, fails, only=a.only)
+            finally: br.close()
+        if a.only:
+            st = STORE_NAME.get(a.only, a.only)
+            if a.only in ("gigatron", "winwin", "tehnomanija"):
+                lows_its = list(raw.get("full_" + a.only, [])) + [x for x in raw.get(a.only, []) if isinstance(x, dict)]
+                (OUT / f"lows_{a.only}.json").write_text(json.dumps(updated_lows(a.only, lows_its), separators=(",", ":")), encoding="utf-8")
+            save("fails.json", fails)
+            log(f"{st}: done in {(time.time() - t_start) / 60:.0f} min"); return
+    items, all_items, drops = assemble(raw)
+    watch = build_watch_candidates(raw, all_items)
+    # ---- pametno (market comparison)
+    terms = pametno_terms(items, all_items, watch)
+    ssave("pametno_terms.json", terms)            # tomorrow's parallel pametno job works on this list
+    cache = sload("pametno_cache.json", {}) or {}
+    if a.combine:
+        cache.update(pm_fresh)
+    elif not a.no_pametno and CFG.get("pametno_scope", "promos") != "none":
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as pw:
+            br = Browser(pw, headless=not a.show)
+            try:
+                for t_, r_ in run_pametno(br, terms).items():
+                    if r_ is not None: cache[t_] = dict(r_, d=TODAY)
+            finally: br.close()
+    cache = {t_: r_ for t_, r_ in cache.items() if r_ and age_days(r_.get("d", TODAY)) <= 30}
+    ssave("pametno_cache.json", cache)
+    pm = {t_: r_ for t_, r_ in cache.items() if age_days(r_.get("d", TODAY)) <= PM_DAYS}
     analyse(items, pm)
     for w in watch:
         r = pm.get(w["term"]); w["r"] = r if (r and not r.get("e")) else None
@@ -647,21 +630,211 @@ def main():
         page = pw_site.build(OUT, TODAY); log("website:", page)
         if CFG.get("open_site"): subprocess.run(["open", str(page)])
     except Exception as e:
-        log("website build failed:", e)
-    notify(f"Store promotions – {TODAY}", report)
+        import traceback; log("website build failed:", traceback.format_exc())
+    if not a.refresh: notify(f"Store promotions – {TODAY}", report)
     log("done")
     if sheets_error: sys.exit(1)
 
-def build_watch_candidates(raw):
+def want(raw, key, only):
+    """Should this run crawl `key`? (not done yet today, and belongs to the store this job crawls)"""
+    if key in raw: return False
+    if only and key not in STORE_KEYS.get(only, []): return False
+    return True
+
+def crawl(br, raw, fails, only=None):
+    skip = [x.lower().replace(" ", "") for x in CFG.get("skip_stores", [])]
+    excl = categories_cfg()
+    # ---- Gigatron
+    if want(raw, "gigatron", only):
+        try:
+            g, f = crawl_gigatron(br); fails += [f"Gigatron {x}" for x in f]
+            q = WATCH_TERMS + ["G20 Max", "Xiaomi G20"] + G2_TERMS + G3_TERMS
+            raw["gigatron"] = g; raw["gigatron_search"] = dict(zip(q, search_gigatron(br, q))); save("raw.json", raw)
+            log("Gigatron", len(g))
+        except Exception as e:
+            log("Gigatron failed:", str(e).splitlines()[0]); fails.append(f"Gigatron failed: {str(e).splitlines()[0][:100]}"); raw["gigatron"] = []; raw["gigatron_search"] = {}
+    # ---- WinWin / Tehnomanija
+    for key, home, bases in [("winwin", "https://www.winwin.rs", ["/black-friday?product_list_order=saving"]),
+                             ("tehnomanija", "https://www.tehnomanija.rs", ["/crni-petak", "/crni-petak-vec-sad"])]:
+        if not want(raw, key, only): continue
+        if key in skip:
+            raw[key] = []; raw[key + "_search"] = {}; log(f"{key}: skipped (config skip_stores)"); continue
+        log(f"{key}: crawling promo pages…")
+        try:
+            r = crawl_magento(br, home, bases, known=known_lows(key))
+            log(f"{key}: {len(r['items'])} promo items ({r.get('cached', 0)} 30-day lows from cache), running site searches…")
+            fails += [f"{key} {x}" for x in r["fails"]]
+            s = search_magento(br, (WATCH_TERMS if key == "winwin" else []) + ["G20 Max", "Xiaomi G20", "tablet LTE", "tablet 5G", "iPad Cellular", "Galaxy Tab 5G"])
+            raw[key] = r["items"]; raw[key + "_search"] = s; save("raw.json", raw); log(key, len(r["items"]), "of", r["total"])
+        except Exception as e:
+            log(f"{key} failed:", str(e).splitlines()[0]); fails.append(f"{key} failed: {str(e).splitlines()[0][:100]}"); raw[key] = []; raw[key + "_search"] = {}
+    # ---- Big Bang
+    if want(raw, "bigbang", only):
+        try:
+            log("Big Bang: crawling…")
+            r = crawl_bigbang(br); fails += [f"Big Bang {x}" for x in r["fails"]]
+            raw["bigbang"] = r["items"]; raw["bigbang_search"] = search_bigbang(br, ["G20 Max", "Xiaomi G20", "tablet 5G", "Galaxy Tab 5G", "iPad Cellular"])
+            save("raw.json", raw); log("Big Bang", len(r["items"]))
+        except Exception as e:
+            log("Big Bang failed:", str(e).splitlines()[0]); fails.append(f"Big Bang failed: {str(e).splitlines()[0][:100]}"); raw["bigbang"] = []; raw["bigbang_search"] = {}
+    # ---- Ananas
+    if want(raw, "ananas", only):
+        try:
+            log("Ananas: crawling…")
+            r = crawl_ananas(br); fails += [f"Ananas {x}" for x in r["fails"]]
+            raw["ananas_all"] = r["all"]; raw["ananas_search"] = search_ananas(br, ["G20 Max", "Xiaomi G20", "tablet LTE", "tablet 5G", "iPad Cellular"])
+            raw["ananas"] = True; save("raw.json", raw); log("Ananas", len(r["all"]))
+        except Exception as e:
+            log("Ananas failed:", str(e).splitlines()[0]); fails.append(f"Ananas failed: {str(e).splitlines()[0][:100]}"); raw["ananas_all"] = []; raw["ananas_search"] = {}; raw["ananas"] = True
+    if want(raw, "emmezeta", only):
+        try: raw["emmezeta"] = emmezeta_status(br)
+        except Exception as e: raw["emmezeta"] = f"Emmezeta check failed: {e}"
+        save("raw.json", raw)
+    # ---- FULL CATALOGUE (every article in the chosen categories)
+    if CFG.get("mode", "full") == "full":
+        import catalog; catalog.FULL_MINUTES = CFG.get("full_store_minutes", 60)
+        for key, st, fn in [("full_gigatron", "Gigatron", lambda ex, kn: catalog.full_gigatron(br, log, exclude=ex, known=kn)),
+                            ("full_winwin", "WinWin", lambda ex, kn: catalog.full_magento(br, "WinWin", "https://www.winwin.rs", log, exclude=ex, known=kn)),
+                            ("full_tehnomanija", "Tehnomanija", lambda ex, kn: catalog.full_magento(br, "Tehnomanija", "https://www.tehnomanija.rs", log, exclude=ex, known=kn)),
+                            ("full_bigbang", "Big Bang", lambda ex, kn: catalog.full_bigbang(br, log, exclude=ex)),
+                            ("full_ananas", "Ananas", lambda ex, kn: catalog.full_ananas(br, log, exclude=ex))]:
+            if not want(raw, key, only): continue
+            sk = key.replace("full_", "")
+            if sk in skip:
+                raw[key] = []; log(f"{key}: skipped (config skip_stores)"); continue
+            ex = excl.get(st, [])
+            log(f"{key}: crawling full catalogue… ({len(ex)} categories excluded)")
+            try:
+                its, f, ci = fn(ex, known_lows(sk)); fails += f; raw["cats_" + sk] = ci
+            except Exception as e:
+                its = []; fails.append(f"{key} crashed: {e}"); log(key, "crashed:", e)
+            raw[key] = its; save("raw.json", raw)
+
+def combine_parts(dirs, fails):
+    """Merge the parallel crawl jobs (each folder holds raw.json, lows_*.json, pametno_new.json, fails.json, run.log)."""
+    raw, pm_fresh = {}, {}
+    for d in dirs:
+        d = Path(d)
+        for f_ in d.rglob("raw.json"):
+            part = json.loads(f_.read_text(encoding="utf-8")); raw.update(part); log(f"merged {f_.parent.name}: {', '.join(sorted(part))}")
+        for f_ in d.rglob("lows_*.json"):
+            (STATE / f_.name).write_text(f_.read_text(encoding="utf-8"), encoding="utf-8")
+        for f_ in d.rglob("pametno_new.json"):
+            pm_fresh.update(json.loads(f_.read_text(encoding="utf-8")))
+        for f_ in d.rglob("fails.json"):
+            fails += json.loads(f_.read_text(encoding="utf-8"))
+        for f_ in d.rglob("run.log"):
+            with open(OUT / "run.log", "a", encoding="utf-8") as out: out.write(f"\n---- {f_.parent} ----\n" + f_.read_text(encoding="utf-8"))
+    # a store whose job failed completely: empty placeholders so the rest still works
+    for k in ["gigatron", "winwin", "tehnomanija", "bigbang", "ananas_all", "full_gigatron", "full_winwin", "full_tehnomanija", "full_bigbang", "full_ananas"]:
+        if k not in raw:
+            raw[k] = []
+            if not k.startswith(("full_tehnomanija", "tehnomanija")): fails.append(f"{k}: no data from its job")
+    for k in ["gigatron_search", "winwin_search", "tehnomanija_search", "bigbang_search", "ananas_search"]: raw.setdefault(k, {})
+    raw.setdefault("emmezeta", "")
+    save("raw.json", raw)
+    return raw, pm_fresh
+
+def assemble(raw):
+    items = []
+    for x in raw["gigatron"]:
+        items.append(dict(store="Gigatron", cat=x.get("cat", ""), name=x["n"], p=x["p"], o=x.get("o"), l=x.get("l"), u=x["u"]))
+    for key, st in [("winwin", "WinWin"), ("tehnomanija", "Tehnomanija")]:
+        for x in raw.get(key) or []: items.append(dict(store=st, cat=x.get("cat", ""), name=x["n"], p=x["p"], o=x.get("o"), l=x.get("l"), u=x["u"]))
+    for x in raw["bigbang"]:
+        if x["p"] >= 3_000_000: continue   # data glitch guard (e.g. 10,000,000 RSD fridge)
+        items.append(dict(store="Big Bang", cat=x.get("c") or "", name=x["n"], p=int(x["p"]), o=int(round(x["p"] + x["d"])), l=None, u=""))
+    for x in raw.get("ananas_all") or []:
+        if x.get("o") and x.get("p") and x["o"] > x["p"]:
+            items.append(dict(store="Ananas", cat=f"{x['cat']} · seller {x['s']}", name=x["n"], p=x["p"], o=x["o"], l=x.get("l"), u=x["u"]))
+    seen, uniq = set(), []
+    for it in items:
+        if not it["p"] or it["p"] < MIN_PRICE or not it.get("o") or it["o"] <= it["p"]: continue
+        k = (it["store"], it["name"], it["p"])
+        if k in seen: continue
+        seen.add(k); it["term"] = term_for(it["name"]); uniq.append(it)
+    items = uniq
+    # ---- merge full catalogue
+    all_items = []
+    for key in ["full_gigatron", "full_winwin", "full_tehnomanija", "full_bigbang", "full_ananas"]:
+        for x in raw.get(key, []):
+            if not x.get("p") or x["p"] >= 3_000_000: continue
+            all_items.append(dict(store=x["store"], cat=x.get("cat", ""), cp=x.get("cp", ""), name=x["n"], p=int(x["p"]), o=x.get("o"), l=x.get("l"), u=x.get("u", "")))
+    known = {(i["store"], i["name"]) for i in items}
+    for a_ in all_items:
+        if (a_["store"], a_["name"]) in known: continue
+        if a_["p"] >= MIN_PRICE and a_.get("o") and a_["o"] > a_["p"]:
+            a_ = dict(a_); a_["term"] = term_for(a_["name"]); items.append(a_); known.add((a_["store"], a_["name"]))
+    in_all = {(x["store"], x["name"]) for x in all_items}
+    all_items += [dict(i) for i in items if (i["store"], i["name"]) not in in_all]
+    # ---- own price history (SQLite) + price drops vs last run
+    import catalog
+    hist_db = catalog.History(HERE / "history.sqlite")
+    drops = []
+    for a_ in all_items:
+        lo, last, n = hist_db.observed(TODAY, a_["store"], a_.get("u", ""), a_["name"])
+        a_["l_obs"], a_["obs_days"] = lo, n
+        if last and a_["p"] < last * 0.97 and a_["p"] >= CFG.get("drops_min_price", MIN_PRICE):
+            drops.append(dict(a_, last=last))
+    obs = {(a_["store"], a_["name"]): (a_["l_obs"], a_["obs_days"]) for a_ in all_items}
+    for it in items:
+        it["l_obs"], it["obs_days"] = obs.get((it["store"], it["name"]), (None, 0))
+        if not it.get("term"): it["term"] = term_for(it["name"])
+    hist_db.save(TODAY, all_items)
+    cross_store(all_items, items)
+    save("all_items.json", all_items)
+    log("all articles:", len(all_items), "| promo items >=15k:", len(items), "| price drops vs last run:", len(drops))
+    return items, all_items, drops
+
+def pametno_terms(items, all_items, watch):
+    def prio(i):
+        rl = (1 - i["p"] / i["l"]) if i.get("l") else None
+        return (0 if (rl is not None and rl >= .05) else 1 if not i.get("l") else 2, -i["p"])
+    terms = []
+    for it in sorted(items, key=prio):
+        if it["term"] not in terms: terms.append(it["term"])
+    wterms = [w["term"] for w in watch if w["term"] not in terms]
+    if CFG.get("pametno_scope") == "all":
+        for x in sorted(all_items, key=lambda x: -x["p"]):
+            if x["p"] >= MIN_PRICE:
+                t_ = term_for(x["name"])
+                if t_ not in terms: terms.append(t_)
+    return list(dict.fromkeys(wterms + terms[: CFG.get("pametno_max_terms", 1500)]))
+
+def pametno_job(a):
+    """Parallel job: refresh pametno.rs results for yesterday's term list (stale or missing ones first), within a time limit."""
+    terms = sload("pametno_terms.json") or (["G20 Max"] + WATCH_TERMS)
+    cache = sload("pametno_cache.json", {}) or {}
+    todo = [t for t in terms if t not in cache or cache[t].get("e") == "ERR" or age_days(cache[t].get("d", "2000-01-01")) >= PM_DAYS - 1]
+    todo.sort(key=lambda t: 0 if t not in cache else 1)
+    limit = time.time() + CFG.get("pametno_minutes", 75) * 60
+    log(f"pametno job: {len(terms)} terms, {len(todo)} need a fresh lookup (limit {CFG.get('pametno_minutes', 75)} min)")
+    new = {}
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as pw:
+        br = Browser(pw, headless=True)
+        try:
+            br.go("https://www.pametno.rs")
+            for k in range(0, len(todo), 20):
+                if time.time() > limit: log("pametno: time limit reached"); break
+                part = todo[k:k + 20]
+                try: res = br.js(JS_PAMETNO, part)
+                except Exception as e:
+                    log("pametno chunk failed:", e); br.go("https://www.pametno.rs"); continue
+                for t_, r_ in zip(part, res):
+                    if r_ is not None: new[t_] = dict(r_, d=TODAY)
+                save("pametno_new.json", new); log(f"pametno {min(k + 20, len(todo))}/{len(todo)}")
+        finally: br.close()
+    save("pametno_new.json", new)
+
+def build_watch_candidates(raw, all_items=()):
     W = []
     def add(group, store, name, p, o=None, l=None, u=""):
         if not p: return
         if group == "G1" and (not re.search(r"G20\s*Max", name, re.I) or re.search(r"Lite|robot", name, re.I)): return
         if group == "G2" and not (re.search(SIM_RE, name, re.I) and re.search(r"tab|pad|tablet", name, re.I)): return
         if group == "G2" and re.search(r"refab|refurb|futrol|maska", name, re.I): return
-        if group == "G3":
-            ok, _ = laptop_spec(name)
-            if not ok: return
+        if group == "G3" and not tablet_info(name): return
         key = (group, store, name)
         if any((x["group"], x["store"], x["name"]) == key for x in W): return
         W.append(dict(group=group, store=store, name=name, p=int(p), o=o, l=l, u=u,
@@ -673,24 +846,33 @@ def build_watch_candidates(raw):
         for x in gs.get(q) or []: add("G2", "Gigatron", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
     for x in raw.get("gigatron", []):
         if x.get("cat") == "tablet-racunari": add("G2", "Gigatron", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
-    for q in G3_TERMS:
+    for q in G2_TERMS:
         for x in gs.get(q) or []: add("G3", "Gigatron", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
     for key, st in [("winwin_search", "WinWin"), ("tehnomanija_search", "Tehnomanija")]:
         for q, res in (raw.get(key) or {}).items():
             for x in res or []:
-                grp = "G1" if "G20" in q else "G2" if "tablet" in q else "G3" if (re.search(r"RTX|32GB|MacBook", q)) else None
+                grp = "G1" if "G20" in q else "G2" if re.search(r"tablet|Tab|iPad", q) else None
                 if grp: add(grp, st, x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
+                if grp == "G2": add("G3", st, x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
     for q, res in (raw.get("bigbang_search") or {}).items():
         for x in res or []:
-            grp = "G1" if "G20" in q else "G2" if "Tab" in q or "tablet" in q else "G3"
+            grp = "G1" if "G20" in q else "G2"
             add(grp, "Big Bang", x["n"], x["p"], int(x["p"] + x["d"]) if x.get("d") else None, None, "")
+            if grp == "G2": add("G3", "Big Bang", x["n"], x["p"], int(x["p"] + x["d"]) if x.get("d") else None, None, "")
     for x in raw.get("ananas_all", []):
-        if x["cat"] == "tableti": add("G2", f"Ananas ({x['s']})", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
-        if x["cat"] == "laptop-racunari": add("G3", f"Ananas ({x['s']})", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
+        if x["cat"] == "tableti":
+            add("G2", f"Ananas ({x['s']})", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
+            add("G3", f"Ananas ({x['s']})", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
     for q, res in (raw.get("ananas_search") or {}).items():
         for x in res or []:
-            grp = "G1" if "G20" in q else "G2" if "tablet" in q else "G3"
+            grp = "G1" if "G20" in q else "G2"
             add(grp, f"Ananas ({x['s']})", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
+            if grp == "G2": add("G3", f"Ananas ({x['s']})", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
+    # G3: every tablet in the full catalogues (all stores) with SIM and ≥ 8 GB RAM
+    for x in all_items:
+        if x["p"] >= 15000 and tablet_info(x["name"]):
+            st = x["store"] if x["store"] != "Ananas" else f"Ananas ({x.get('cat', '').split('seller ')[-1]})"
+            add("G3", st, x["name"], x["p"], x.get("o"), x.get("l"), x.get("u", ""))
     return W
 
 def write_outputs(items, watch, raw, pm, fails, dry, all_items=(), drops=()):
@@ -724,16 +906,25 @@ def write_outputs(items, watch, raw, pm, fails, dry, all_items=(), drops=()):
     mvc = Counter(i["mv"] for i in items)
     # watch rows
     wrows = []
-    for g, label in [("G1", "G1 Xiaomi G20 Max"), ("G2", "G2 Tablet with SIM"), ("G3", "G3 Design laptop")]:
+    for g, label in [("G1", "G1 Xiaomi G20 Max"), ("G2", "G2 Tablet with SIM"), ("G3", "G3 Tablet ≥8 GB RAM + SIM")]:
         ws = [w for w in watch if w["group"] == g]
         def score(w):
             real = (1 - w["p"] / w["l"]) if w.get("l") else 0
             r = w.get("r"); below = (r and r.get("b") and w["p"] < r["b"] * 0.99)
+            if g == "G3":   # best specs for the money; real cuts first
+                ti = tablet_info(w["name"]); return (0 if real >= .05 else 1, -(ti["score"] / (w["p"] / 10000)) if ti else 0)
             return (0 if real >= .05 else 1 if below else 2, w["p"])
         ws.sort(key=score)
-        for w in ws[: (50 if g == "G1" else 15)]:
+        shown = set()
+        for w in ws:
+            if len([x for x in wrows if x[0] == label]) >= (50 if g == "G1" else 15 if g == "G2" else 30): break
+            if g == "G3":   # one row per model+storage per store (colours collapsed)
+                base = re.sub(r"\(.*?\)|\s[-–]\s[^-–]*$|\b(Gray|Grey|Graphite|Sivi|Siva|Starlight|Midnight|Blue|Purple|Space\s*Gr[ae]y|Moonstone|Silver|Black|White|Pink|Green|Mint|Navy)\b", "", w["name"], flags=re.I)
+                k_ = (w["store"], re.sub(r"\W+", "", base.upper()))
+                if k_ in shown: continue
+                shown.add(k_)
             r = w.get("r") or {}
-            spec = "Stick vacuum" if g == "G1" else tablet_spec(w["name"]) if g == "G2" else laptop_spec(w["name"])[1]
+            spec = "Stick vacuum" if g == "G1" else tablet_spec(w["name"]) if g == "G2" else (tablet_info(w["name"]) or {}).get("label", "")
             wreal = round(1 - w["p"] / w["l"], 4) if w.get("l") else ""
             mv = market_verdict(w["p"], r) if r.get("n") else "NOT ON PAMETNO / unchecked"
             wrows.append([label, w["store"], w["name"], spec, w["p"], w.get("o") or "", w.get("l") or "", wreal, r.get("b") or "", r.get("bs", ""), r.get("n", ""), mv, w.get("u") or r.get("u", ""), TODAY])
