@@ -446,15 +446,16 @@ def tablet_spec(name):
 # --------------------------------------------------------------------------------------
 def sheets():
     import gspread
-    gc = gspread.service_account(filename=str(HERE / CFG["service_account_json"]))
+    from gspread.http_client import BackOffHTTPClient   # waits and retries on "quota exceeded" (60 writes/min)
+    gc = gspread.service_account(filename=str(HERE / CFG["service_account_json"]), http_client=BackOffHTTPClient)
     return gc.open_by_key(CFG["daily_report_id"]), gc.open_by_key(CFG["price_history_id"])
 
 def write_chunks(ws, start_row, rows, ncols):
     need_r, need_c = start_row + len(rows) - 1, ncols
     if ws.row_count < need_r or ws.col_count < need_c:   # grow the tab instead of failing on "exceeds grid limits"
         ws.resize(rows=max(ws.row_count, need_r + 50), cols=max(ws.col_count, need_c))
-    for k in range(0, len(rows), 110):
-        part = rows[k:k + 110]
+    for k in range(0, len(rows), 500):
+        part = rows[k:k + 500]
         a1 = f"A{start_row + k}"
         ws.update(values=[[("" if v is None else v) for v in r] + [""] * (ncols - len(r)) for r in part], range_name=a1, value_input_option="RAW")
 
@@ -852,7 +853,7 @@ def write_outputs(items, watch, raw, pm, fails, dry, all_items=(), drops=()):
         if k in existing or k in done: continue
         done.add(k)
         rows.append([TODAY, i["store"], i["cat"], i["name"], i["p"], i["o"], i["claimed"], i.get("l") or "", "" if i["real"] is None else i["real"], i["mkt"] or "", i["v"]])
-    for k in range(0, len(rows), 110): sp_ws.append_rows(rows[k:k + 110], value_input_option="RAW")
+    for k in range(0, len(rows), 500): sp_ws.append_rows(rows[k:k + 500], value_input_option="RAW")
     gw = hist.worksheet("Gigatron & WinWin")
     grows = []
     for q, res in (raw.get("gigatron_search") or {}).items():
