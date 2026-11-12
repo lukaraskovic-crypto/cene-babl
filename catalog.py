@@ -74,7 +74,7 @@ def full_gigatron(br, log, max_pages=60):
           if(!added) break; await sleep(200); }
       },300);
       // 30-day low only for discounted articles
-      const disc=Object.values(items).filter(x=>x.o && x.o>x.p);
+      const disc=Object.values(items).filter(x=>x.o && x.o>x.p).sort((a,b)=>((b.p>=15000)-(a.p>=15000)) || ((1-b.p/b.o)-(1-a.p/a.o)));  // most relevant first, in case the time limit cuts in
       await pool(disc,4,async x=>{ const h=await ft2(x.u); if(h){ x.l=lowFrom(h,/Najni[žz]a cena u proteklih 30 dana\s*([\d.]+)/i); } },150);
       return {items:Object.values(items), fails, cats:cats.length, apiOK, apiFail}; }""", max_pages)
     log(f"Gigatron full: {len(res['items'])} articles from {res['cats']} categories (api ok {res['apiOK']}, api fail {res['apiFail']})")
@@ -97,7 +97,7 @@ def full_magento(br, store, home, log, max_pages=80):
           if(!t){ fails.push(c+' p'+p); break; } const arr=parseMag(t); if(!arr.length) break;
           let added=0; arr.forEach(x=>{ if(x.u && x.p && !items[x.u]){ x.cat=c.split('/').pop(); items[x.u]=x; added++; } });
           if(!added) break; await sleep(200);} visited.push(c); },300);
-      const disc=Object.values(items).filter(x=>x.o && x.o>x.p);
+      const disc=Object.values(items).filter(x=>x.o && x.o>x.p).sort((a,b)=>((b.p>=15000)-(a.p>=15000)) || ((1-b.p/b.o)-(1-a.p/a.o)));  // most relevant first, in case the time limit cuts in
       await pool(disc,4,async x=>{ const t=await ft2(x.u); x.l=t?lowFrom(t,/Najni[žz]a web cena u prethodnih 30 dana\s*:?\s*([\d.]+)/i):null; },150);
       return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length}; }""", [MAG_TOP, max_pages])
     log(f"{store} full: {len(res['items'])} articles from {res['cats']} categories")
