@@ -7,7 +7,7 @@ store's own legally required 30-day lowest price, compares promos with all selle
 
 | When (Belgrade) | What |
 |---|---|
-| 06:40 | **full**: all stores in parallel + pametno.rs + Google Sheets + phone notification |
+| 04:00 | **full**: all stores in parallel + pametno.rs + Google Sheets + phone notification |
 | 10:40 · 14:40 · 18:40 | **refresh**: all stores in parallel, website + price history only |
 
 Speed-ups: one parallel job per store; each store's full crawl has a time limit (`full_store_minutes`, 60);
