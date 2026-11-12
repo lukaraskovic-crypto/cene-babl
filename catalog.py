@@ -42,8 +42,11 @@ window.vtexProducts = (root) => { const out=[]; const seen=new Set();
   walk(root,0); return out; };
 """
 
+FULL_MINUTES = 60   # time limit for one store's full-catalogue crawl (config: full_store_minutes)
+
 def _run(br, code, arg=None):
     br.page.evaluate(JS_CAT)
+    br.page.evaluate("m => { window.__deadline = Date.now() + m*60000; window.__dlHit = 0; }", FULL_MINUTES)
     return br.js(code, arg)
 
 # ------------------------------------------------------------------ Gigatron (VTEX headless, Next.js)
@@ -61,6 +64,7 @@ def full_gigatron(br, log, max_pages=60):
       await pool(cats,4,async path=>{
         const segs=path.split('/').filter(Boolean); const facets=segs.map((s,i)=>'category-'+(i+1)+'/'+s).join('/');
         for(let pg=1; pg<=maxPages; pg++){
+          if(window.__deadline && Date.now()>window.__deadline) break;
           const t=await ft2('/api/vtex/plp-search?facetsPath='+encodeURIComponent(facets)+'&page='+pg);
           let arr=null; if(t){ try{ arr=vtexProducts(JSON.parse(t)); apiOK++; }catch(e){ apiFail++; } }
           if(arr===null){ // fallback: server-rendered first page

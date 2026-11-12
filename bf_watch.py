@@ -57,8 +57,9 @@ window.ft = async (u,ms=30000) => { const c=new AbortController(); const tm=setT
   finally { clearTimeout(tm); } };
 window.ft2 = async (u) => { for (let k=0;k<2;k++){ try { return await ft(u); } catch(e){ await sleep(2000); } } return null; };
 window.lowFrom = (t,re) => { const m=t.replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').match(re); return m?toN(m[1]):null; };
-window.pool = async (arr, n, fn, pause=250) => { let i=0; const out=new Array(arr.length);
-  await Promise.all([...Array(n)].map(async()=>{ while(i<arr.length){ const k=i++; try{ out[k]=await fn(arr[k],k);}catch(e){ out[k]=null; } await sleep(pause);} })); return out; };
+window.pool = async (arr, n, fn, pause=250) => { let i=0, done=0, last=Date.now(); const out=new Array(arr.length);
+  await Promise.all([...Array(n)].map(async()=>{ while(i<arr.length){ if(window.__deadline && Date.now()>window.__deadline){ if(!window.__dlHit){ window.__dlHit=1; console.log('PROG '+location.host+' time limit reached at '+done+'/'+arr.length+', keeping what we have'); } break; } const k=i++; try{ out[k]=await fn(arr[k],k);}catch(e){ out[k]=null; } done++;
+    if(Date.now()-last>120000){ last=Date.now(); console.log('PROG '+location.host+' '+done+'/'+arr.length); } await sleep(pause);} })); return out; };
 
 window.parseGiga = function(html){
  const doc = new DOMParser().parseFromString(html,'text/html');
@@ -140,6 +141,7 @@ class Browser:
         self.ctx = self.b.new_context(locale="sr-RS", user_agent=None)
         self.page = self.ctx.new_page()
         self.page.set_default_timeout(120000)
+        self.page.on("console", lambda m: log("  progress", m.text[5:]) if m.text.startswith("PROG ") else None)
     def go(self, url):
         for k in range(3):
             try:
@@ -535,7 +537,7 @@ def main():
                 save("raw.json", raw)
             # ---- FULL CATALOGUE (every article in the electronics/appliance categories)
             if CFG.get("mode", "full") == "full":
-                import catalog
+                import catalog; catalog.FULL_MINUTES = CFG.get("full_store_minutes", 60)
                 for key, fn in [("full_gigatron", lambda: catalog.full_gigatron(br, log)),
                                 ("full_winwin", lambda: catalog.full_magento(br, "WinWin", "https://www.winwin.rs", log)),
                                 ("full_tehnomanija", lambda: catalog.full_magento(br, "Tehnomanija", "https://www.tehnomanija.rs", log)),
