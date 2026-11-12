@@ -1,0 +1,87 @@
+name: Daily price check
+on:
+  schedule:
+    - cron: "40 5 * * *"        # 05:40 UTC = 06:40 Belgrade (winter time)
+  workflow_dispatch:
+    inputs:
+      no_pametno:
+        description: "Skip the slow pametno.rs market check"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Don't write Google Sheets"
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: read
+concurrency: { group: daily, cancel-in-progress: false }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    environment: { name: github-pages, url: "${{ steps.deploy.outputs.page_url }}" }
+    env:
+      GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      SITE_URL: ${{ vars.SITE_URL }}
+      TZ: Europe/Belgrade
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - name: Install
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+      # price history (needed for "our own 30-day low", trends, price drops) lives in the Actions cache
+      - name: Restore price history
+        uses: actions/cache/restore@v4
+        with:
+          path: history.sqlite
+          key: history-${{ github.run_id }}
+          restore-keys: history-
+      - name: First run – start from the Mac's history
+        run: |
+          if [ ! -f history.sqlite ] && ls seed/history.part* >/dev/null 2>&1; then cat seed/history.part* | gunzip -c > history.sqlite; echo "seeded"; fi
+      - name: Run price check
+        run: |
+          ARGS=""
+          if [ "${{ inputs.no_pametno }}" = "true" ]; then ARGS="$ARGS --no-pametno"; fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          python bf_watch.py $ARGS
+      - name: Save price history
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: history.sqlite
+          key: history-${{ github.run_id }}
+      - name: Back up price history (90 days)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: history, path: history.sqlite, retention-days: 90, if-no-files-found: ignore }
+      - name: Prepare website
+        if: always()
+        run: |
+          mkdir -p site
+          if [ -n "${{ vars.SITE_DOMAIN }}" ]; then echo "${{ vars.SITE_DOMAIN }}" > site/CNAME; fi
+          touch site/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        if: always()
+        with: { path: site }
+      - id: deploy
+        if: always()
+        uses: actions/deploy-pages@v4
+      - name: Keep run files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-files
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            runs/*/run.log
+            runs/*/report.txt
+            runs/*/catalogue.csv
