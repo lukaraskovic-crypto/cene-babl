@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "full = Sheets + pametno + notification; refresh = website only"
+        description: "full = Sheets + pametno + notification; refresh = new prices, website only; site = no crawl, just re-publish the website design"
         type: choice
-        options: [full, refresh]
+        options: [full, refresh, site]
         default: full
       no_pametno:
         description: "Skip the pametno.rs market check"
@@ -48,6 +48,7 @@ jobs:
         id: go
         run: |
           RUN=yes
+          if [ "$MODE" = "site" ]; then RUN=no; fi
           if [ "${{ matrix.store }}" = "pametno" ]; then
             if [ "$MODE" != "full" ] || [ "${{ inputs.no_pametno }}" = "true" ]; then RUN=no; fi
           fi
@@ -102,7 +103,15 @@ jobs:
           mkdir -p state && cp -n seed/state/* state/ 2>/dev/null || true
       - uses: actions/download-artifact@v4
         with: { pattern: "part-*", path: parts }
+      - name: Website only – reuse the data that is already live
+        if: env.MODE == 'site'
+        run: |
+          mkdir -p site && cd site
+          curl -fsS "$SITE_URL/data.js" -o data.js && curl -fsS "$SITE_URL/cats.js" -o cats.js || echo "window.CATS={found:{},exclude:{}};" > cats.js
+          n=0; while curl -fsS "$SITE_URL/data-$n.js" -o "data-$n.js"; do n=$((n+1)); done; rm -f "data-$n.js"
+          cd .. && python -c "import sys,pathlib; n=int(sys.argv[1]); t=pathlib.Path('site_template.html').read_text(encoding='utf-8'); tags='<script src=\"data.js\"></script>'+''.join(f'<script src=\"data-{k}.js\"></script>' for k in range(n))+'<script src=\"cats.js\"></script>'; pathlib.Path('site/index.html').write_text(t.replace('<!--DATA-->',tags),encoding='utf-8'); print('index.html with',n,'data files')" $n
       - name: Combine, analyse, write Sheets, build website
+        if: env.MODE != 'site'
         run: |
           ARGS=""
           if [ "$MODE" != "full" ]; then ARGS="$ARGS --refresh"; fi
@@ -110,11 +119,11 @@ jobs:
           mkdir -p parts
           python bf_watch.py --combine parts/* $ARGS
       - name: Save price history
-        if: always()
+        if: always() && env.MODE != 'site'
         uses: actions/cache/save@v4
         with: { path: history.sqlite, key: "history-${{ github.run_id }}" }
       - name: Save state
-        if: always()
+        if: always() && env.MODE != 'site'
         uses: actions/cache/save@v4
         with: { path: state, key: "state-${{ github.run_id }}" }
       - name: Back up price history (90 days)
