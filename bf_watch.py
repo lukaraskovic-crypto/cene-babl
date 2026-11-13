@@ -684,6 +684,7 @@ def main():
     (OUT / "report.txt").write_text(report, encoding="utf-8")
     extra = load("site_extra.json") or {}; extra["problems"] = problems; save("site_extra.json", extra)
     try:
+        if raw.get("_partial"): raise RuntimeError("partial catalogue – website not rebuilt")
         import importlib.util
         spec = importlib.util.spec_from_file_location("pw_site", HERE / "pw_site.py"); pw_site = importlib.util.module_from_spec(spec); spec.loader.exec_module(pw_site)
         page = pw_site.build(OUT, TODAY); log("website:", page)
@@ -837,7 +838,9 @@ def combine_parts(dirs, fails, refresh=False):
             if k.replace("full_", "").replace("_all", "") not in skipped: fails.append(f"{k}: no data from its job")
     for k in ["gigatron_search", "winwin_search", "tehnomanija_search", "bigbang_search", "ananas_search"]: raw.setdefault(k, {})
     raw.setdefault("emmezeta", "")
-    catalog_state(raw, refresh)
+    if not catalog_state(raw, refresh):
+        fails.append("refresh without a morning catalogue – no full run since the update; website left as it was (no data from its job)")
+        raw["_partial"] = True
     save("raw.json", raw)
     return raw, pm_fresh, light_counts
 
@@ -852,7 +855,8 @@ def catalog_state(raw, refresh):
         for k in FULL_KEYS:
             if raw.get(k): base[k] = raw[k]
         base["date"] = TODAY
-        p.write_bytes(gzip.compress(json.dumps(base, ensure_ascii=False, separators=(",", ":")).encode("utf-8"), 6)); return
+        p.write_bytes(gzip.compress(json.dumps(base, ensure_ascii=False, separators=(",", ":")).encode("utf-8"), 6)); return True
+    if not any(base.get(k) for k in FULL_KEYS): return False     # no morning catalogue to lay the refresh over
     for k in FULL_KEYS:
         old = base.get(k) or []
         if not old: continue
@@ -866,6 +870,7 @@ def catalog_state(raw, refresh):
             merged.append(y)
         raw[k] = merged + list(new.values())
         log(f"refresh {k}: {len(raw[k]) - len(old)} new + updates over {len(old)} articles from the morning ({base.get('date', '?')})")
+    return True
 
 def assemble(raw):
     items = []

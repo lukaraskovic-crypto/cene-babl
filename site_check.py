@@ -8,7 +8,7 @@ import json, re, sys
 from pathlib import Path
 
 d = Path(sys.argv[1] if len(sys.argv) > 1 else "site")
-MIN_ROWS = 20000   # the full site lists >100,000 articles; far fewer means something went wrong
+MIN_ROWS = 80000   # the full site lists >100,000 articles; far fewer means something went wrong
 err = []
 idx = d / "index.html"
 if not idx.exists(): err.append("index.html missing")
