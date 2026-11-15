@@ -93,7 +93,7 @@ def push_articles(all_items, date, full, hist_sqlite=None, specs=None, log=print
         k = (a["store"], a.get("u") or "", a["name"])
         r = dict(store=k[0], url=k[1], name=k[2], cat=a.get("cat", "")[:200], first_seen=first.get(k, date), last_seen=date,
                  price=a["p"], old=a.get("o"), low30=a.get("l"))
-        sp = specs.get(k[1])
+        sp = {a_: b_ for a_, b_ in (specs.get(k[1]) or {}).items() if not a_.startswith("_")}
         if sp: r["specs"] = sp
         rows.append(r)
     n = upsert("articles", rows, ["store", "url", "name"]) if rows else 0
@@ -119,7 +119,7 @@ def push_run(date, mode, items, watch_rows, drop_rows, summ, cat_counts, report,
 
 def previous_real_cuts(date):
     """(store, name) of yesterday's real cuts – for the NEW marker in the report."""
-    r = select("promos", f"select=date&date=lt.{date}&order=date.desc", page=1)[:1]
+    r, _ = _req("GET", f"promos?select=date&date=lt.{date}&source=eq.run&order=date.desc&limit=1")   # one row (paging 1 by 1 took 40 min)
     if not r: return set()
     return {(x["store"], x["name"]) for x in select("promos", f"select=store,name,verdict&date=eq.{r[0]['date']}&verdict=like.REAL*")}
 

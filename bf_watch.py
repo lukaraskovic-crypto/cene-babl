@@ -897,13 +897,18 @@ def assemble(raw):
         for x in raw.get(key, []):
             if not x.get("p") or x["p"] >= 3_000_000: continue
             all_items.append(dict(store=x["store"], cat=x.get("cat", ""), cp=x.get("cp", ""), name=x["n"], p=int(x["p"]), o=x.get("o"), l=x.get("l"), u=x.get("u", "")))
-    known = {(i["store"], i["name"]) for i in items}
+    known = {ikey(i) for i in items}
     for a_ in all_items:
-        if (a_["store"], a_["name"]) in known: continue
+        if ikey(a_) in known: continue
         if a_["p"] >= MIN_PRICE and a_.get("o") and a_["o"] > a_["p"]:
-            a_ = dict(a_); a_["term"] = term_for(a_["name"]); items.append(a_); known.add((a_["store"], a_["name"]))
-    in_all = {(x["store"], x["name"]) for x in all_items}
-    all_items += [dict(i) for i in items if (i["store"], i["name"]) not in in_all]
+            a_ = dict(a_); a_["term"] = term_for(a_["name"]); items.append(a_); known.add(ikey(a_))
+    in_all = {ikey(x): x for x in all_items}
+    for i in items:     # a promo page shows the crossed-out price / 30-day low that the catalogue listing may lack
+        a_ = in_all.get(ikey(i))
+        if a_ is None: all_items.append(dict(i)); continue
+        if a_["p"] == i["p"]:
+            if not a_.get("o") and i.get("o"): a_["o"] = i["o"]
+            if not a_.get("l") and i.get("l"): a_["l"] = i["l"]
     # ---- own price history (SQLite) + price drops vs last run
     import catalog
     hist_db = catalog.History(HERE / "history.sqlite")
@@ -913,9 +918,9 @@ def assemble(raw):
         a_["l_obs"], a_["obs_days"] = lo, n
         if last and a_["p"] < last * 0.97 and a_["p"] >= CFG.get("drops_min_price", MIN_PRICE):
             drops.append(dict(a_, last=last))
-    obs = {(a_["store"], a_["name"]): (a_["l_obs"], a_["obs_days"]) for a_ in all_items}
+    obs = {ikey(a_): (a_["l_obs"], a_["obs_days"]) for a_ in all_items}
     for it in items:
-        it["l_obs"], it["obs_days"] = obs.get((it["store"], it["name"]), (None, 0))
+        it["l_obs"], it["obs_days"] = obs.get(ikey(it), (None, 0))
         if not it.get("term"): it["term"] = term_for(it["name"])
     hist_db.save(TODAY, all_items)          # history is kept per listing (URL), before duplicates are merged
     for a_ in all_items:
@@ -929,23 +934,57 @@ def assemble(raw):
     log("all articles:", len(all_items), f"({len(all_full) - len(all_items)} duplicate listings merged)", "| promo items >=15k:", len(items), "| price drops vs last run:", len(drops))
     return items, all_items, drops, counts, all_full
 
+COLOURS = re.compile(r"\b(crn[aoie]?|bel[aoie]?|siv[aoie]?|tamnosiv[aoi]?|svetlosiv[aoi]?|crven[aoi]?|zelen[aoi]?|svetlozelen[aoi]?|tamnozelen[aoi]?|plav[aoi]?|tamnoplav[aoi]?|"
+                     r"svetloplav[aoi]?|krem|bež|bez|roz[aei]?|ljubičast[aoi]?|ljubicast[aoi]?|žut[aoi]?|zut[aoi]?|narandžast[aoi]?|srebrn[aoi]?|srebrne boje|zlatn[aoi]?|bakarn[aoi]?|"
+                     r"barkarn[aoi]?|hrom|inox|teget|grafit|black|white|gr[ae]y|blue|green|red|pink|purple|silver|gold|graphite|midnight|starlight|navy|mint|cream|beige|"
+                     r"matte?|empire red|pistachio|almond cream|ink blue|space gr[ae]y|titanium|natural)\b", re.I)
+CODE_JUNK = re.compile(r"^(\d+([.,]\d+)?(GB|TB|W|L|MAH|HZ|PA|V|K|BTU|KG|MM|CM|BARA?|RPM|IN)|\d+/\d+(GB|TB)?|[0-9]K|[45]G|USB\d.*|WIFI\d*|DDR\d|LPDDR\d.*)$", re.I)
+
+def family(name):
+    """Model family of an article: its main model code without colour/edition suffix (KA5KEK1222EOB → KA5KEK1222, BAR300/60 → BAR300,
+    OK0040-2600 → OK0040). Without a code: the name without colour words, cut after the memory spec (phones: '… 12/256GB Shamrock')."""
+    toks = [t.strip(".,()") for t in re.split(r"\s+", name)]
+    codes = [t for t in toks if len(t) >= 5 and re.search(r"[A-Za-z]", t) and len(re.findall(r"\d", t)) >= 2 and not CODE_JUNK.match(t)
+             and t.count("/") < 2 and not re.match(r"^\d+x\d+", t, re.I) and t.lower() != toks[0].lower()]   # not the brand (INSTA360)
+    if codes:
+        c = max(codes, key=len).upper()
+        c0 = re.sub(r"[/-]\d{1,4}$", "", c)                # BAR300/60, OK0040-2600 (not MWO-2077: the rest must still hold a number)
+        if len(re.findall(r"\d", c0)) >= 2: c = c0
+        c2 = re.sub(r"(?<=\d)[A-Z]{2,4}$", "", c)          # …1222EOB → …1222 (one letter, LC241c/LC241i, can be another model)
+        cfg = sorted({re.sub(r"\W", "", t).upper() for t in toks if re.search(r"\d\s*/\s*\d|^\d+(GB|TB)$", t, re.I)})   # R5/16/512GB vs R3/8/512GB
+        return "c:" + (c2 if len(c2) >= 5 else c) + ("|" + ",".join(cfg) if cfg else "")
+    n = re.sub(r"\(.*?\)", " ", name)
+    m = re.search(r"\b\d{1,2}\s*/\s*\d{2,4}\s*(GB|TB)?\b", n, re.I)
+    if m: n = n[:m.end()]
+    n = COLOURS.sub(" ", n)
+    return "n:" + re.sub(r"[^0-9a-zčćžšđ]+", "", n.lower())
+
+def ikey(x):
+    """Identity of one listing: its product URL (Big Bang has none – category page – so store + name there)."""
+    u = x.get("u") or ""
+    return (x["store"], u) if u and x["store"] != "Big Bang" else (x["store"], x["name"])
+
 def dup_key(x):
     cat = x.get("cat", "")
     seller = cat.split("seller ")[-1].strip().lower() if "seller " in cat else ""
-    return (x["store"], re.sub(r"[^0-9a-zа-яčćžšđ]+", "", x["name"].lower()), seller)
+    return (x["store"], re.sub(r"[^0-9a-zа-яčćžšđ]+", "", x["name"].lower()), "")   # sellers of one product → one row, cheapest offer
 
-def dedupe(rows):
-    """One row per (store, name, seller): the cheapest listing wins (one with a 30-day low preferred on a tie); nl = listings merged."""
+def var_key(x):
+    k = dup_key(x)
+    return (k[0], k[2], (x["name"].split() or [""])[0].lower(), family(x["name"]), x["p"])   # same price: colours of one model
+
+def _merge(rows, keyf):
     best, n = {}, Counter()
     for x in rows:
-        k = dup_key(x); n[k] += 1
+        k = keyf(x); w = x.get("nl", 1); n[k] += w
         b = best.get(k)
         if b is None or x["p"] < b["p"] or (x["p"] == b["p"] and x.get("l") and not b.get("l")): best[k] = x
-    out = []
-    for k, x in best.items():
-        if n[k] > 1: x = dict(x, nl=n[k])
-        out.append(x)
-    return out
+    return [dict(x, nl=n[k]) if n[k] > 1 else x for k, x in best.items()]
+
+def dedupe(rows):
+    """One row per article and store (and seller on marketplaces): first identical listings, then colour variants of the same
+    model at the same price (same model code apart from a colour suffix, or the same name apart from colour words). nl = listings merged."""
+    return _merge(_merge(rows, dup_key), var_key)
 
 def pametno_terms(items, all_items, watch):
     def prio(i):

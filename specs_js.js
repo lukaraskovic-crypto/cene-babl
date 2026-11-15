@@ -4,6 +4,8 @@ window.specKV = html => { const d=new DOMParser().parseFromString(html,'text/htm
   d.querySelectorAll('tr').forEach(tr=>{ const c=tr.querySelectorAll('th,td'); if(c.length===2) add(c[0].textContent,c[1].textContent); });
   d.querySelectorAll('dt').forEach(dt=>{ const dd=dt.nextElementSibling; if(dd&&dd.tagName==='DD') add(dt.textContent,dd.textContent); });
   d.querySelectorAll('li,p').forEach(li=>{ if(li.children.length<=3){ const m=li.textContent.match(/^\s*([^:\n]{2,50}):\s*([^\n]{1,140})$/); if(m) add(m[1],m[2]); } });
+  // Gigatron (VTEX / Next.js): specifications travel in the page's JSON as {"name":…,"originalName":…,"values":[…]}
+  for(const m of html.matchAll(/\\?"name\\?":\\?"([^"\\]{2,60})\\?",\\?"originalName\\?":\\?"[^"\\]{0,80}\\?",\\?"values\\?":\[\\?"([^"\\]{1,160})\\?"/g)) add(m[1],m[2]);
   if(Object.keys(out).length<6){   // marketplaces (Ananas): seller-written "Label: value" lines inside the page's JSON
     const txt=html.replace(/\\n/g,'\n').replace(/\\"|&#34;|&quot;/g,'″').replace(/<[^>]+>/g,'\n');
     for(const m of txt.matchAll(/^[ \t]*[•\-*]?[ \t]*([A-Za-zČĆŽŠĐčćžšđ][^:\n"{}]{1,48}):[ \t]*([^\n"{}]{1,140})$/gm)) add(m[1],m[2]); }
@@ -18,7 +20,7 @@ window.SPEC_MAP = [
   ['cpu', /^(model procesora|procesor|cpu|tip procesora|serija procesora|[čc]ipset)/i, null],
   ['gpu', /^(grafi[čc]ka kart|tip grafi[čc]ke|model grafi[čc]ke|grafi[čc]ki [čc]ip|gpu|grafika)/i, /memorij/i],
   ['vram', /grafi[čc]ka memorija|memorija grafi[čc]ke|vram/i, null],
-  ['kg', /kapacitet (pranja|su[šs]enja|punjenja)|kapacitet \(kg\)|maksimalno punjenje|kapacitet ve[šs]/i, null],
+  ['kg', /kapacitet (pranja|su[šs]enja|punjenja)|kapacitet \(kg\)|maksimalno punjenje|kapacitet ve[šs]|^kapacitet$/i, null],
   ['rpm', /centrifug|obrtaj|brzina okretanja/i, null],
   ['lit', /^(ukupna zapremina|zapremina|ukupni neto kapacitet|neto zapremina|ukupna neto zapremina|bruto zapremina|kapacitet \(l\))/i, null],
   ['btu', /btu|kapacitet hla[dđ]enja/i, null],
@@ -44,7 +46,7 @@ window.specFromKV = kv => { const o={}; const num=s=>{ const m=String(s).replace
       else if(k==='gpu'){ const m=v.match(/\b(RTX|GTX)\s*-?\s*(PRO\s*)?(\d{3,4})\s*(Ti)?/i); if(m) r=`${m[1].toUpperCase()} ${m[2]?'PRO ':''}${m[3]}${m[4]?' Ti':''}`;
         else if(/Radeon\s*RX\s*\d{4}/i.test(v)) r='Radeon '+v.match(/RX\s*\d{4}\w*/i)[0].toUpperCase();
         const vm=v.match(/(\d{1,2})\s*GB/i); if(vm&&!('vram' in o)) o.vram=+vm[1]; }
-      else if(k==='kg'){ const n=num(v); if(n>=1&&n<=30) r=n; }
+      else if(k==='kg'){ if(/^kapacitet$/i.test(label)&&!/kg/i.test(v)) continue; const n=num(v); if(n>=1&&n<=30) r=n; }
       else if(k==='rpm'){ const n=num(v); if(n>=400&&n<=2000) r=n; }
       else if(k==='lit'){ const n=num(v); if(n>=5&&n<=1500) r=n; }
       else if(k==='btu'){ const n=num(v.replace(/\s/g,'')); if(n>=5000&&n<=60000) r=n; else if(n>=5&&n<=60&&/k/i.test(v)) r=n*1000; }

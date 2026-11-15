@@ -15,7 +15,8 @@ Speed-ups: one parallel job per store; each store's full crawl has a time limit 
 product pages (30-day lows) are read only for articles ≥ `low30_min_price` whose price changed – otherwise the cached value is reused;
 pametno.rs is looked up again only for new terms, failed lookups, a >3% change of our price, or after `pametno_recheck_days` (7).
 Specifications are read from product pages once per article (new articles only, `spec_budget` per store per day) and kept.
-Duplicate listings (same store, same name, same seller) are shown as one row – the cheapest – with "N oglasa".
+Duplicate listings are shown as one row – the cheapest offer – with "N ponuda": the same product from several sellers (Ananas),
+the same name listed twice, and colours of one model at the same price. Verdicts belong to the exact listing (URL).
 
 Health check: a store with 0 articles, a drop of more than 40% (`health_max_drop`), a crashed job or a database error
 marks the run as failed (GitHub e-mails you), shows "⚠ problem" on the website and goes into the report.

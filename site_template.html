@@ -145,7 +145,7 @@ const DOT={'Gigatron':'#C2410C','WinWin':'#2563EB','Big Bang':'#B7791F','Ananas'
 const MON={sr:['jan','feb','mar','apr','maj','jun','jul','avg','sep','okt','nov','dec'],en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']};
 const L={
 sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',watch:'Pratim',stores:'Prodavnice',report:'Izveštaj',admin:'Kategorije'},
- fresh:(d,h)=>`osveženo ${d} u ${h}`, nl:n=>`${n} oglasa`, prob:n=>`⚠ ${n} problem(a) u poslednjem preuzimanju`,
+ fresh:(d,h)=>`osveženo ${d} u ${h}`, nl:n=>`${n} ponuda`, prob:n=>`⚠ ${n} problem(a) u poslednjem preuzimanju`,
  lede:(n,s,real,fake)=>`Pratimo <em>${n}</em> artikala u ${s} ${s%10>=2&&s%10<=4&&(s<12||s>14)?'prodavnice':'prodavnica'}. Danas je <a href="#" data-go="deals">${real} popusta stvarno</a>, a <span class="bad">${fake}</span> samo deluje kao popust.`,
  ph:'Model, brend ili naziv – npr. OLED65C61LA, G20 Max, iPad Air',
  store:'Prodavnica',cat:'Kategorija',brand:'Brend',verdict:'Ocena',price:'Cena',from:'od',to:'do',
@@ -184,7 +184,7 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',watch:'Pratim',st
   filter:'Pronađi kategoriju',all:'Uključi sve',none:'Isključi sve',save:'Kopiraj i otvori GitHub',copied:'Kopirano. Nalepi u GitHub editor i klikni „Commit changes".',excluded:n=>`${n} isključeno`,
   noData:'Lista se pojavljuje posle prvog punog pokretanja.',json:'Novi sadržaj categories.json',notCrawled:'nije pretraživano'}},
 en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',watch:'Watching',stores:'Stores',report:'Report',admin:'Categories'},
- fresh:(d,h)=>`updated ${d} at ${h}`, nl:n=>`${n} listings`, prob:n=>`⚠ ${n} problem(s) in the last crawl`,
+ fresh:(d,h)=>`updated ${d} at ${h}`, nl:n=>`${n} offers`, prob:n=>`⚠ ${n} problem(s) in the last crawl`,
  lede:(n,s,real,fake)=>`We track <em>${n}</em> products across ${s} stores. Today <a href="#" data-go="deals">${real} discounts are real</a> and <span class="bad">${fake}</span> only look like one.`,
  ph:'Model, brand or name – e.g. OLED65C61LA, G20 Max, iPad Air',
  store:'Store',cat:'Category',brand:'Brand',verdict:'Verdict',price:'Price',from:'from',to:'to',

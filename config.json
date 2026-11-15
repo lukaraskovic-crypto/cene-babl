@@ -15,8 +15,13 @@
   "pametno_max_terms": 400,
   "pametno_cache_days": 8,
   "pametno_recheck_days": 7,
-  "spec_stores": ["gigatron", "winwin", "ananas", "eurotehna"],
-  "spec_budget": 1500,
+  "spec_stores": [
+    "gigatron",
+    "winwin",
+    "ananas",
+    "eurotehna"
+  ],
+  "spec_budget": 3000,
   "spec_minutes": 12,
   "health_max_drop": 0.4,
   "min_history_days": 7,

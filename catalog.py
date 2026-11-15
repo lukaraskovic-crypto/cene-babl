@@ -252,9 +252,12 @@ def full_ananas(br, log, max_pages=30, exclude=(), known=None):
 SPEC_CATS = re.compile(r"laptop|notebook|tablet|telefon|mobiln|smartphone|televiz|\btv\b|monitor|fri[žz]ider|frizider|zamrziv|ve[šs]|vesa|su[šs]il|susil|sudoma|sudov|klima|"
                        r"usisiv|ra[čc]unar|racunar|desktop|konzol|projektor|bojler|sporet|[šs]poret|rern|mikrotalas|sat|kamer|foto|dron|slu[šs]al|zvu[čc]n|soundbar", re.I)
 
+SPEC_V = 2          # version of the spec reader; pages that gave nothing with an older version are read again
+
 def fetch_specs(br, store, items, known, log, budget=1500, minutes=12, min_price=10000):
     """Read specifications for articles not seen before (known = {url: specs}); returns {url: specs} for the new ones ({} = page had none)."""
-    todo = [x for x in items if x.get("u") and x["u"] not in known and (x.get("p") or 0) >= min_price
+    done = lambda v: bool(v) and (any(not k.startswith("_") for k in v) or v.get("_e", 0) >= SPEC_V)   # empty results are retried once the reader improves
+    todo = [x for x in items if x.get("u") and not done(known.get(x["u"])) and (x.get("p") or 0) >= min_price
             and SPEC_CATS.search(" ".join([x.get("cat", ""), x.get("cp", ""), x.get("n", "")]))]
     todo.sort(key=lambda x: -(x.get("p") or 0))
     todo = todo[:budget]
@@ -262,9 +265,10 @@ def fetch_specs(br, store, items, known, log, budget=1500, minutes=12, min_price
     br.page.evaluate(SPECS_JS)
     br.page.evaluate("m => { window.__deadline = Date.now() + m*60000; window.__dlHit = 0; }", minutes)
     res = br.js(r"""async (urls)=>{ const out={};
-      await pool(urls,4,async u=>{ const t=await ft2(u); if(t==null) return; try{ out[u]=specFromKV(specKV(t)); }catch(e){ out[u]={}; } },150);
+      await pool(urls,4,async u=>{ const t=await ft2(u); if(t==null||window.__st>=400) return; try{ out[u]=specFromKV(specKV(t)); }catch(e){ out[u]={}; } },150);
       return out; }""", [x["u"] for x in todo])
-    log(f"{store} specs: read {len(res)} of {len(todo)} new product pages, {sum(1 for v in res.values() if v)} with specifications")
+    res = {u: (v or {"_e": SPEC_V}) for u, v in res.items()}
+    log(f"{store} specs: read {len(res)} of {len(todo)} new product pages, {sum(1 for v in res.values() if any(not k.startswith("_") for k in v))} with specifications")
     return res
 
 # ------------------------------------------------------------------ local price history (SQLite)

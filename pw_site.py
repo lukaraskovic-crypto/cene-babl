@@ -29,7 +29,8 @@ def build(run_dir, date):
     extra = load("site_extra.json", {})
     raw = load("raw.json", {}) or {}
     hist, meta = _history(HERE / "history.sqlite")
-    promo = {(i["store"], i["name"]): i for i in items}
+    ik = lambda x: (x["store"], x.get("u") or "") if x.get("u") and x["store"] != "Big Bang" else (x["store"], x["name"])
+    promo = {ik(i): i for i in items}       # verdicts belong to one listing (URL), not to every listing with the same name
     try: pspecs = json.loads((HERE / "state" / "specs.json").read_text(encoding="utf-8"))   # specifications read from product pages
     except Exception: pspecs = {}
 
@@ -45,7 +46,7 @@ def build(run_dir, date):
     short = lambda d: d[5:] if d else ""
     rows = []
     for a in allit:
-        i = promo.get((a["store"], a["name"]), {})
+        i = promo.get(ik(a), {})
         cheapest = min((best[k] for k in keys(a["name"]) if k in best), default=None)
         key = f"{a['store']}|{a.get('u','')}|{a['name']}"
         h = hist.get(key, [])
@@ -54,7 +55,7 @@ def build(run_dir, date):
             a["store"], a.get("cat", ""), a["name"], a["p"], a.get("o") or 0, a.get("l") or i.get("l_used") or 0,
             i.get("v", ""), i.get("mv", ""), (i.get("mkt") or 0), a.get("u", ""),
             cheapest[0] if cheapest and cheapest[1] != a["store"] else 0, cheapest[1] if cheapest and cheapest[1] != a["store"] else "",
-            h[-60:], short(since), short(seen), a.get("nl") or 0, pspecs.get(a.get("u", "")) or 0,
+            h[-60:], short(since), short(seen), a.get("nl") or 0, {k: v for k, v in (pspecs.get(a.get("u", "")) or {}).items() if not k.startswith("_")} or 0,
         ])
     now = dt.datetime.now(ZoneInfo("Europe/Belgrade"))
     data = {"date": date, "updated": now.strftime("%Y-%m-%d %H:%M"), "repo": REPO,
