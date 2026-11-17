@@ -1,12 +1,10 @@
 name: Daily price check
-# 04:00 Belgrade: full run (every store's whole catalogue in parallel + pametno.rs + database + notification)
-# 10:40 / 14:40 / 18:40: light refresh (first pages of every category, laid over the morning catalogue)
+# Started on time by the database (Supabase pg_cron → GitHub API, token in Vault "github_dispatch_token"),
+# because GitHub's own schedule ran 3–7 hours late:
+#   03:00 UTC (04:00 Belgrade in winter, 05:00 in summer): full run (every store's whole catalogue + pametno.rs + database + e-mail)
+#   09:40 / 13:40 / 17:40 UTC: light refresh (first pages of every category, laid over the morning catalogue)
+# Change the times in Supabase: cron jobs "cene-full" and "cene-refresh".
 on:
-  schedule:
-    - cron: "0 3 * * *"         # 04:00 Belgrade (winter time; 05:00 in summer) – full
-    - cron: "40 9 * * *"        # 10:40 – refresh
-    - cron: "40 13 * * *"       # 14:40 – refresh
-    - cron: "40 17 * * *"       # 18:40 – refresh
   workflow_dispatch:
     inputs:
       mode:
