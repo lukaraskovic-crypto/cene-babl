@@ -70,14 +70,20 @@ def meta_get(key):
 def meta_set(key, value): upsert("meta", [{"key": key, "value": str(value)}], ["key"])
 
 # ---------------------------------------------------------------------------------------- price history
+def akey(store, url, name):
+    """Short key of one listing – the same value the database computes: md5(store|url|name) as a uuid."""
+    import hashlib, uuid
+    return str(uuid.UUID(hashlib.md5(f"{store}|{url or ''}|{name}".encode("utf-8")).hexdigest()))
+
 def push_history(sqlite_path, log=print):
-    """Send every price point the database doesn't have yet (all of them the first time)."""
+    """Send every price point the database doesn't have yet (all of them the first time).
+    Points refer to their listing by akey (the listing itself – store, url, name – lives once in `articles`)."""
     db = sqlite3.connect(str(sqlite_path))
     since = meta_get("points_through") or "0000-00-00"
-    rows = [dict(store=s, url=u or "", name=n, date=d, price=p, old=o, low30=l) for s, u, n, d, p, o, l in
+    rows = [dict(akey=akey(s, u, n), date=d, price=p, old=o, low30=l) for s, u, n, d, p, o, l in
             db.execute("SELECT store,url,name,date,price,old,low30 FROM points WHERE date>=?", (since,))]
     if rows:
-        upsert("price_points", rows, ["store", "url", "name", "date"])
+        upsert("price_points", rows, ["akey", "date"])
         meta_set("points_through", max(r["date"] for r in rows))
     log(f"database: {len(rows)} price points sent (since {since})")
     return len(rows)
@@ -211,10 +217,10 @@ def _brevo(method, path, body=None):
         raise RuntimeError(f"Brevo {path}: HTTP {e.code} {e.read().decode('utf-8', 'ignore')[:300]}")
 
 def send_daily_report(today, hour, log=print, force=False):
-    """Once a day, with the first run after 05:00: e-mail yesterday's website usage (plus MTD / YTD) through Brevo.
+    """Once a day, with the first run after 04:00 (the morning full run): e-mail yesterday's website usage (plus MTD / YTD) through Brevo.
     Recipient = REPORT_EMAIL, else the Brevo account's own sender address (so no address is kept in this public repository)."""
     if not (enabled() and BREVO_KEY): log("daily report: BREVO_API_KEY not set – skipped"); return False
-    if not force and (hour < 5 or meta_get("report_sent") == today): return False
+    if not force and (hour < 4 or meta_get("report_sent") == today): return False
     import datetime as _d
     day = (_d.date.fromisoformat(today) - _d.timedelta(days=1)).isoformat()
     u = usage_report(day)
@@ -231,9 +237,11 @@ def send_daily_report(today, hour, log=print, force=False):
 # ---------------------------------------------------------------------------------------- restore
 def restore_history(path, log=print):
     """Rebuild history.sqlite from the database (used when the GitHub cache expired)."""
-    pts = select("price_points", "select=store,url,name,date,price,old,low30&order=store,url,name,date")
-    if not pts: log("database: no price points to restore"); return False
-    arts = select("articles", "select=store,url,name,first_seen,last_seen")
+    raw = select("price_points", "select=akey,date,price,old,low30&order=akey,date")
+    if not raw: log("database: no price points to restore"); return False
+    arts = select("articles", "select=akey,store,url,name,first_seen,last_seen")
+    who = {a["akey"]: a for a in arts}
+    pts = [dict(p, store=who[p["akey"]]["store"], url=who[p["akey"]]["url"], name=who[p["akey"]]["name"]) for p in raw if p["akey"] in who]
     db = sqlite3.connect(str(path))
     db.execute("CREATE TABLE IF NOT EXISTS points(store TEXT, url TEXT, name TEXT, date TEXT, price INTEGER, old INTEGER, low30 INTEGER, PRIMARY KEY(store, url, name, date))")
     db.execute("CREATE TABLE IF NOT EXISTS seen(store TEXT, url TEXT, name TEXT, first TEXT, last TEXT, PRIMARY KEY(store, url, name))")
