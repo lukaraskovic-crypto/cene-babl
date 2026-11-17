@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        store: [gigatron, winwin, bigbang, ananas, pcpractic, eurotehna, pametno]   # dotmarket, bazzar: Cloudflare blocks GitHub's servers
+        store: [gigatron, winwin, bigbang, ananas, pcpractic, eurotehna, tehnomedia, pametno]   # dotmarket, bazzar: Cloudflare blocks GitHub's servers
     steps:
       - uses: actions/checkout@v7
       - name: Decide
@@ -86,6 +86,8 @@ jobs:
     environment: { name: github-pages, url: "${{ steps.deploy.outputs.page_url }}" }
     env:
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}           # daily back-office e-mail (optional)
+      REPORT_EMAIL: ${{ secrets.REPORT_EMAIL }}             # optional: send the report to another address
       GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}     # only for the one-time import of the old Google Sheets
       NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       SITE_URL: ${{ vars.SITE_URL }}
