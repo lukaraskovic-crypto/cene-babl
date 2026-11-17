@@ -77,10 +77,12 @@ tbody tr{cursor:pointer}tbody tr:hover td{background:var(--alt)}
 #ov{position:fixed;inset:0;background:rgba(8,19,13,.5);display:none;align-items:center;justify-content:center;padding:24px;z-index:50}
 #sheet{background:var(--surface);border-radius:16px;max-width:720px;width:100%;max-height:90vh;overflow:auto;padding:24px}
 .sh{display:flex;gap:14px;align-items:flex-start;justify-content:space-between}.sh h2{font-size:20px;line-height:1.3}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 0}.btn.on{background:var(--alt)}
+#toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--text,#111);color:var(--bg,#fff);padding:9px 16px;border-radius:999px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99}#toast.on{opacity:.94}
 .x{border:0;background:var(--alt);border-radius:999px;width:34px;height:34px;cursor:pointer;flex:none;font-size:16px}
 .big{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:18px 0 6px}.big .pr{font-size:30px}
 .why{background:var(--alt);border-radius:var(--r);padding:12px 14px;margin:14px 0;font-size:14px}.why b{display:block;margin-bottom:2px}
-dl.kv{display:grid;grid-template-columns:repeat(3,1fr);margin:14px 0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+dl.kv{display:grid;grid-template-columns:repeat(4,1fr);margin:14px 0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 dl.kv div{padding:10px 12px;border-right:1px solid var(--border)}dl.kv div:last-child{border-right:0}dl.kv dt{font-size:12px;color:var(--muted);font-weight:600}dl.kv dd{margin:2px 0 0;font-weight:800}
 .sec{margin-top:22px}.sec h3{font-size:14px;margin:0 0 8px}
 .cmp a{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);color:inherit;text-decoration:none;cursor:pointer}.cmp a:last-child{border-bottom:0}
@@ -124,7 +126,7 @@ textarea{width:100%;min-height:130px;border:1px solid var(--border);border-radiu
  .mbar button{flex:1;border:0;background:none;color:var(--bg);padding:13px;font-weight:700;font-size:15px}.mbar button+button{border-left:1px solid rgba(255,255,255,.18)}
  .resbar label{display:none}.list{border-radius:10px}
  #ov{align-items:flex-end;padding:0}#sheet{border-radius:16px 16px 0 0;max-height:90vh;padding:20px 18px calc(20px + env(safe-area-inset-bottom))}
- .big .pr{font-size:26px}footer .cols{grid-template-columns:1fr}
+ .big .pr{font-size:26px}footer .cols{grid-template-columns:1fr}dl.kv{grid-template-columns:repeat(2,1fr)}dl.kv div:nth-child(2n){border-right:0}dl.kv div:nth-child(-n+2){border-bottom:1px solid var(--border)}
 }
 </style></head><body>
 <header class="hd"><div class="wrap">
@@ -135,16 +137,17 @@ textarea{width:100%;min-height:130px;border:1px solid var(--border);border-radiu
 <footer><div class="wrap cols" id="foot"></div></footer>
 <div class="mbar" id="mbar"><button id="mbf"></button><button id="mbs"></button></div>
 <div id="fs"></div>
-<div id="ov"><div id="sheet"></div></div>
+<div id="ov"><div id="sheet"></div></div><div id="toast"></div>
 <!--DATA-->
 <script>
 "use strict";
 const D=window.DATA, R=D.rows, CATS=window.CATS||{found:{},exclude:{}};
 const C=Object.fromEntries(D.cols.map((c,i)=>[c,i]));
-const DOT={'Gigatron':'#C2410C','WinWin':'#2563EB','Big Bang':'#B7791F','Ananas':'#BE185D','Tehnomanija':'#7C3AED','DOTmarket':'#E11D48','Bazzar':'#0E7490','PC Practic':'#475569','Eurotehna':'#65A30D'};
+const DOT={'Gigatron':'#C2410C','WinWin':'#2563EB','Big Bang':'#B7791F','Ananas':'#BE185D','Tehnomanija':'#7C3AED','DOTmarket':'#E11D48','Bazzar':'#0E7490','PC Practic':'#475569','Eurotehna':'#65A30D','Tehnomedia':'#DB2777'};
 const MON={sr:['jan','feb','mar','apr','maj','jun','jul','avg','sep','okt','nov','dec'],en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']};
 const L={
-sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',watch:'Pratim',stores:'Prodavnice',report:'Izveštaj',admin:'Kategorije'},
+sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',fav:'Sačuvano',watch:'Pratim',stores:'Prodavnice',report:'Izveštaj',admin:'Kategorije'},
+ fv:{add:'☆ Sačuvaj',on:'★ Sačuvano',share:'Podeli',copied:'Link kopiran',h:'Sačuvani artikli',s:'Artikli koje ste sačuvali ostaju u ovom pregledaču. Ovde vidite kako se cena promenila otkad ste ih sačuvali.',empty:'Još ništa niste sačuvali. Otvorite artikal i pritisnite „Sačuvaj“ – pratićemo mu cenu za vas.',then:p=>`sačuvano po ${p} din`,gone:'trenutno nije u ponudi',rm:'Ukloni',same:'bez promene',minH:'Najniža zabeležena',atMin:'Najniža cena do sada'},
  fresh:(d,h)=>`osveženo ${d} u ${h}`, nl:n=>`${n} ponuda`, prob:n=>`⚠ ${n} problem(a) u poslednjem preuzimanju`,
  lede:(n,s,real,fake)=>`Pratimo <em>${n}</em> artikala u ${s} ${s%10>=2&&s%10<=4&&(s<12||s>14)?'prodavnice':'prodavnica'}. Danas je <a href="#" data-go="deals">${real} popusta stvarno</a>, a <span class="bad">${fake}</span> samo deluje kao popust.`,
  ph:'Model, brend ili naziv – npr. OLED65C61LA, G20 Max, iPad Air',
@@ -183,7 +186,8 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',watch:'Pratim',st
  adm:{title:'Kategorije za detaljnu pretragu',intro:'Štikliraj šta ulazi u punu pretragu. Dugme ispod kopira novu listu i otvara GitHub – tamo nalepi (Cmd/Ctrl+A, pa Cmd/Ctrl+V) i klikni „Commit changes". Samo vlasnik repozitorijuma može da sačuva izmenu. Važi od sledećeg pokretanja.',
   filter:'Pronađi kategoriju',all:'Uključi sve',none:'Isključi sve',save:'Kopiraj i otvori GitHub',copied:'Kopirano. Nalepi u GitHub editor i klikni „Commit changes".',excluded:n=>`${n} isključeno`,
   noData:'Lista se pojavljuje posle prvog punog pokretanja.',json:'Novi sadržaj categories.json',notCrawled:'nije pretraživano'}},
-en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',watch:'Watching',stores:'Stores',report:'Report',admin:'Categories'},
+en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',fav:'Saved',watch:'Watching',stores:'Stores',report:'Report',admin:'Categories'},
+ fv:{add:'☆ Save',on:'★ Saved',share:'Share',copied:'Link copied',h:'Saved articles',s:'Articles you save stay in this browser. Here you can see how the price has moved since you saved them.',empty:'Nothing saved yet. Open an article and press “Save” – we will track its price for you.',then:p=>`saved at ${p} RSD`,gone:'not on offer right now',rm:'Remove',same:'no change',minH:'Lowest recorded',atMin:'Lowest price so far'},
  fresh:(d,h)=>`updated ${d} at ${h}`, nl:n=>`${n} offers`, prob:n=>`⚠ ${n} problem(s) in the last crawl`,
  lede:(n,s,real,fake)=>`We track <em>${n}</em> products across ${s} stores. Today <a href="#" data-go="deals">${real} discounts are real</a> and <span class="bad">${fake}</span> only look like one.`,
  ph:'Model, brand or name – e.g. OLED65C61LA, G20 Max, iPad Air',
@@ -254,25 +258,43 @@ const kc={}; function keyset(n){ if(kc[n]) return kc[n]; return kc[n]=(n.match(/
 const isM=()=>window.matchMedia('(max-width:760px)').matches;
 const uniq=a=>[...new Set(a)].filter(Boolean).sort((x,y)=>x.localeCompare(y,'sr'));
 const opt=(vals,sel,all,lab)=>`<option value="">${all}</option>`+vals.map(v=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(lab?lab(v):v)}</option>`).join('');
-const catN=c=>{ c=String(c||'').replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase(); return c?c.charAt(0).toUpperCase()+c.slice(1):''; };
+const fold=s=>String(s||'').toLowerCase().replace(/đ/g,'d').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const catN=c=>{ c=String(c||'').replace(/\.html$/,'').replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase(); return c?c.charAt(0).toUpperCase()+c.slice(1):''; };
 const X=R.map((r,i)=>{ const h=r[C.hist]||[]; return {i,r,brand:(r[2].split(/\s+/)[0]||'').toUpperCase().replace(/[^A-Z0-9-]/g,''),
   claimed:r[4]>r[3]?1-r[3]/r[4]:0, real:r[5]?1-r[3]/r[5]:null, vg:VG(r[6]), xs:(r[10]&&r[10]<r[3])?r[10]:0,
-  save:r[5]&&r[5]>r[3]?r[5]-r[3]:0, trend:h.length>1?h[h.length-1][1]/h[0][1]-1:null, since:r[C.since]||'', low:(r[0]+' '+r[1]+' '+r[2]).toLowerCase(), cat:catN(r[1].split(' · seller')[0])}; });
+  save:r[5]&&r[5]>r[3]?r[5]-r[3]:0, trend:h.length>1?h[h.length-1][1]/h[0][1]-1:null, since:r[C.since]||'', low:fold(r[0]+' '+r[1]+' '+r[2]), cat:catN(r[1].split(' · seller')[0])}; });
+// one name per category across stores: 'Robot usisivaci' and 'Robot usisivači' are the same filter
+{ const best={}; for(const x of X){ const k=fold(x.cat); if(!best[k]||(fold(best[k])===best[k].toLowerCase()&&fold(x.cat)!==x.cat.toLowerCase())) best[k]=x.cat; } for(const x of X) x.cat=best[fold(x.cat)]; }
+// stable id of an article (for links and the saved list)
+const hid=r=>{ const s=r[0]+'|'+(r[0]==='Big Bang'?'':r[C.url])+'|'+r[2]; let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return h.toString(36); };
+let HID=null; const byId=id=>{ if(!HID){ HID={}; for(const x of X) HID[hid(x.r)]=x; } return HID[id]; };
+const FAV=(()=>{ let m={}; try{ m=JSON.parse(localStorage.getItem('fav')||'{}')||{}; }catch(e){} const save=()=>{ try{ localStorage.setItem('fav',JSON.stringify(m)); }catch(e){} };
+  return {all:()=>m, has:id=>!!m[id], n:()=>Object.keys(m).length, add:x=>{ m[hid(x.r)]={p:x.r[3],d:D.date,n:x.r[2],s:x.r[0]}; save(); }, del:id=>{ delete m[id]; save(); }}; })();
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('on'),1800); }
+function setHash(){ if(location.hash==='#admin') return; const p=[]; if(cur!=='search') p.push('t='+cur); if(cur==='search'&&S.q) p.push('q='+encodeURIComponent(S.q)); if(setHash.a) p.push('a='+setHash.a);
+  try{ history.replaceState(null,'',location.pathname+location.search+(p.length?'#'+p.join('&'):'')); }catch(e){} }
+async function shareItem(k){ const x=X[k]; setHash.a=hid(x.r); setHash(); const url=location.href; if(typeof TRK==='function') TRK('share',{store:x.r[0],item:x.r[2]});
+  if(navigator.share&&isM()){ try{ await navigator.share({title:x.r[2],text:`${x.r[2]} – ${nf(x.r[3])} din (${x.r[0]})`,url}); return; }catch(e){ if(e&&e.name==='AbortError') return; } }
+  try{ await navigator.clipboard.writeText(url); }catch(e){ const ta=document.createElement('textarea'); ta.value=url; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); }catch(_){} ta.remove(); } toast(t('fv.copied')); }
+function favItem(k){ const x=X[k], id=hid(x.r); if(FAV.has(id)) FAV.del(id); else { FAV.add(x); if(typeof TRK==='function') TRK('fav',{store:x.r[0],item:x.r[2],data:{p:x.r[3]}}); }
+  const b=document.getElementById('favb'); if(b){ b.textContent=FAV.has(id)?t('fv.on'):t('fv.add'); b.classList.toggle('on',FAV.has(id)); } tabs(); if(cur==='fav') fav(); }
 function why(x){ const r=x.r, g=x.vg, l=r[5]?nf(r[5])+' din':'';
   const s=g==='real'?t('why.real')(pct(x.real),l):g==='raised'?t('why.raised')(pct(x.claimed),pct(-x.real),l):g==='fake'?t('why.fake')(pct(x.claimed),l):g==='nochange'?t('why.nochange')(l):(r[6]&&!r[5])?t('why.nolow'):'';
   return s?`<div class="why"><b>${t('why.title')}</b>${esc(s)}</div>`:''; }
-function openItem(k){ const x=X[k], r=x.r; const ks=keyset(r[2]);
+function openItem(k){ const x=X[k], r=x.r; const ks=keyset(r[2]); const hp=(r[C.hist]||[]).map(p=>p[1]).concat([r[3]]); const minH=Math.min(...hp), atMin=hp.length>=3&&r[3]<=minH&&Math.max(...hp)>r[3];
+  setHash.a=hid(r); setHash();
   const same=ks.length?X.filter(y=>y!==x && keyset(y.r[2]).some(z=>ks.includes(z))).sort((a,b)=>a.r[3]-b.r[3]).slice(0,8):[];
   sheet.innerHTML=`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])} &nbsp; ${esc(x.cat)}</div><h2>${esc(r[2])}</h2></div><button class="x" onclick="closeS()" aria-label="×">✕</button></div>
-  <div class="big"><span class="pr num">${money(r[3])}</span>${r[4]?`<span class="was num">${nf(r[4])}</span> <span class="pct bad">−${pct(x.claimed)}</span>`:''} ${vtag(r[6])} ${mtag(r[7])}</div>
+  <div class="big"><span class="pr num">${money(r[3])}</span>${r[4]?`<span class="was num">${nf(r[4])}</span> <span class="pct bad">−${pct(x.claimed)}</span>`:''} ${vtag(r[6])} ${mtag(r[7])} ${atMin?`<span class="tag good">${t('fv.atMin')}</span>`:''}</div>
   <div class="meta">${x.since?esc(t('since')(dm(x.since))):''}${r[C.seen]&&r[C.seen]!==TODAY?esc(t('seen')(dm(r[C.seen]))):''}</div>
   ${why(x)}
-  <dl class="kv num"><div><dt>${t('crossed')}</dt><dd>${f(r[4])||'–'}</dd></div><div><dt>${t('low30')}</dt><dd>${f(r[5])||'–'}</dd></div><div><dt>${t('mkt')}</dt><dd>${f(r[8])||'–'}</dd></div></dl>
-  ${r[C.url]?`<a class="btn pri" href="${esc(r[C.url])}" target="_blank" rel="noopener">${t('open')}</a>`:''}
+  <dl class="kv num"><div><dt>${t('crossed')}</dt><dd>${f(r[4])||'–'}</dd></div><div><dt>${t('low30')}</dt><dd>${f(r[5])||'–'}</dd></div><div><dt>${t('mkt')}</dt><dd>${f(r[8])||'–'}</dd></div><div><dt>${t('fv.minH')}</dt><dd>${hp.length>1?f(minH):'–'}</dd></div></dl>
+  <div class="acts">${r[C.url]?`<a class="btn pri" href="${esc(r[C.url])}" target="_blank" rel="noopener">${t('open')}</a>`:''}
+   <button class="btn ${FAV.has(hid(r))?'on':''}" id="favb" onclick="favItem(${k})">${FAV.has(hid(r))?t('fv.on'):t('fv.add')}</button><button class="btn" onclick="shareItem(${k})">${t('fv.share')}</button></div>
   <div class="sec"><h3>${t('hist')}</h3>${chart(r[C.hist])}</div>
   ${same.length?`<div class="sec"><h3>${t('same')}</h3><div class="cmp">${same.map(y=>`<a onclick="openItem(${y.i})"><span><span class="nm">${esc(y.r[2])}</span><div class="meta">${st(y.r[0])}</div></span><span class="pr num">${money(y.r[3])}</span></a>`).join('')}</div></div>`:''}`;
   ov.style.display='flex'; sheet.scrollTop=0; document.body.style.overflow='hidden'; }
-function closeS(){ ov.style.display='none'; document.body.style.overflow=''; }
+function closeS(){ ov.style.display='none'; document.body.style.overflow=''; setHash.a=''; setHash(); }
 ov.onclick=e=>{ if(e.target===ov) closeS(); }; document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeS(); closeF(); } });
 function cmp(a,b){ return typeof a==='number'&&typeof b==='number'?a-b:String(a).localeCompare(String(b),'sr'); }
 const blank=(v,c)=>v==null||v===''||(v===0&&c.z);
@@ -380,7 +402,7 @@ function search(){ const real=X.filter(x=>x.vg==='real').length, fake=X.filter(x
   <div class="resbar"><span class="cnt" id="cnt"></span><span class="sp"></span><label>${t('sortBy')} <select class="sel" id="so"></select></label></div>
   <div id="res"></div><div class="pager" id="pg"></div>`;
   main.querySelector('.lede a').onclick=e=>{ e.preventDefault(); go('deals'); };
-  let tm; q.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ S.q=q.value; S.page=0; results(); },180); });
+  let tm; q.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ S.q=q.value; S.page=0; results(); setHash(); },180); });
   so.onchange=()=>{ S.sort=so.value; S.dir=SDEF[S.sort]; S.page=0; results(); };
   mbar.style.display=''; refreshTool(); results(); }
 function refreshTool(){ const tl=document.getElementById('tool'); if(tl){ tl.innerHTML=filterControls(); bindFilters(tl,onTool); }
@@ -393,7 +415,7 @@ function bindApplied(){ ap.querySelectorAll('.ch').forEach(b=>b.onclick=()=>{ co
     S.page=0; afterChange(); refreshTool(); });
   const c=document.getElementById('clr'); if(c) c.onclick=()=>{ Object.assign(S,fresh0(),{q:S.q,sort:S.sort==='ppu'?'save':S.sort,dir:S.sort==='ppu'?-1:S.dir}); afterChange(); refreshTool(); };
   const x=document.getElementById('spx'); if(x) x.onclick=()=>{ SP.open=!SP.open; x.textContent=SP.open?t('specHide'):t('specBtn'); specPanel(); }; }
-function filtered(noSpec){ const w=S.q.toLowerCase().split(/\s+/).filter(Boolean); const sp=noSpec?[]:Object.entries(S.spec).filter(e=>e[1].length);
+function filtered(noSpec){ const w=fold(S.q).split(/\s+/).filter(Boolean); const sp=noSpec?[]:Object.entries(S.spec).filter(e=>e[1].length);
   return X.filter(x=>(!S.store.length||S.store.includes(x.r[0]))&&(!S.cat.length||S.cat.includes(x.cat))&&(!S.brand.length||S.brand.includes(x.brand))&&(!S.vg.length||S.vg.includes(x.vg))
     &&(!S.min||x.r[3]>=+S.min)&&(!S.max||x.r[3]<=+S.max)&&(!S.onlyDisc||x.claimed>0)&&(!S.onlyReal||(x.real!=null&&x.real>0))
     &&(!S.onlyXs||x.xs>0)&&(!S.onlyNew||x.since===TODAY)&&w.every(z=>x.low.includes(z))
@@ -523,11 +545,18 @@ function admin(){ mbar.style.display='none'; const stores=Object.keys(CATS.found
   let tm; aq.oninput=()=>{ clearTimeout(tm); tm=setTimeout(()=>{ AD.q=aq.value; admin(); const e=document.getElementById('aq'); e.focus(); e.setSelectionRange(e.value.length,e.value.length); },250); };
   sv.onclick=async()=>{ try{ await navigator.clipboard.writeText(json); }catch(e){ js.select(); document.execCommand('copy'); }
     cp.textContent=t('adm.copied'); window.open(`https://github.com/${D.repo}/edit/main/categories.json`,'_blank','noopener'); }; }
-const TABS=['search','deals','drops','watch','stores','report']; const FN={search,deals,drops,watch,stores,report,admin};
+function fav(){ const m=FAV.all(); const ids=Object.keys(m).sort((a,b)=>(m[b].d||'').localeCompare(m[a].d||''));
+  main.innerHTML=`<h2>${t('fv.h')}</h2><p class="sub">${t('fv.s')}</p>`+(!ids.length?`<div class="list empty">${t('fv.empty')}</div>`:`<div class="list m">${ids.map(id=>{ const x=byId(id), s=m[id];
+    const d=x?x.r[3]-s.p:0; const ch=!x?`<span class="tag neu">${t('fv.gone')}</span>`:d<0?`<span class="tag good">−${nf(-d)} din (${pct(-d/s.p)})</span>`:d>0?`<span class="tag bad">+${nf(d)} din (${pct(d/s.p)})</span>`:`<span class="tag neu">${t('fv.same')}</span>`;
+    return `<div class="it" ${x?`onclick="openItem(${x.i})"`:'style="cursor:default"'}><div class="top"><div><div class="nm">${esc(s.n)}</div><div class="meta">${st(s.s)}</div></div>
+      <div class="r">${x?`<div class="pr num">${money(x.r[3])}</div>`:''}<div class="meta num">${esc(t('fv.then')(nf(s.p)))} · ${dm((s.d||'').slice(5))}</div></div></div>
+      <div class="bot">${ch}${x?vtag(x.r[6]):''}<span class="sp"></span><button class="btn" style="padding:5px 12px;font-size:13px" onclick="event.stopPropagation();FAV.del('${id}');tabs();fav()">${t('fv.rm')}</button></div></div>`; }).join('')}</div>`);
+  mbar.style.display='none'; }
+const TABS=['search','deals','drops','fav','watch','stores','report']; const FN={search,deals,drops,fav,watch,stores,report,admin};
 let cur='search';
 function tabs(){ const list=TABS.concat(location.hash==='#admin'?['admin']:[]);
-  document.getElementById('tabs').innerHTML=list.map(k=>`<button data-t="${k}" class="${k===cur?'on':''}">${t('tabs.'+k)}</button>`).join(''); }
-function go(k){ cur=k; tabs(); FN[k](); scrollTo({top:0}); }
+  document.getElementById('tabs').innerHTML=list.map(k=>`<button data-t="${k}" class="${k===cur?'on':''}">${t('tabs.'+k)}${k==='fav'&&FAV.n()?` <b class="num">${FAV.n()}</b>`:''}</button>`).join(''); }
+function go(k){ cur=k; tabs(); FN[k](); scrollTo({top:0}); setHash(); }
 function chrome(){ document.documentElement.lang=lang; const [d,h]=D.updated.split(' '); const [,m,dd]=d.split('-'); const ds=`${+dd}. ${MON[lang][+m-1]}`;
   fresh.textContent=t('fresh')(ds,h)+((D.problems||[]).length?' · '+t('prob')(D.problems.length):''); fresh.title=(D.problems||[]).join('\n');
   foot.innerHTML=`<div><h4>${t('foot.h')}</h4><p>${t('foot.p1')}</p><p>${t('foot.p2')}</p></div><div><h4>${t('foot.h2')}</h4><p>${t('foot.p3')}</p><p>babl · ${t('fresh')(ds,h)}</p></div>`;
@@ -562,7 +591,10 @@ const TRK=(()=>{ const on=/babl\.cc$/.test(location.hostname)&&location.hash!=='
 document.addEventListener('click',e=>{ const a=e.target.closest('a[href^="http"]'); if(!a) return; let h=''; try{ h=new URL(a.href).hostname; }catch(e){}
   if(h&&!/babl\.cc$/.test(h)) TRK('out',{store:h.replace(/^www\./,''),item:(a.closest('.it,tr,.sheet,.panel,div')?.querySelector('.nm')?.textContent||a.textContent||'').trim().slice(0,150)}); },true);
 document.querySelectorAll('.lng button').forEach(b=>b.addEventListener('click',()=>TRK('lang',{data:{to:b.dataset.l}})));
-chrome(); go(location.hash==='#admin'?'admin':'search');
+chrome();
+{ const hp=new URLSearchParams(location.hash.slice(1)); const t0=hp.get('t'), q0=hp.get('q'), a0=hp.get('a');
+  if(q0) S.q=q0; go(location.hash==='#admin'?'admin':(t0&&TABS.includes(t0)?t0:'search'));
+  if(a0){ const x=byId(a0); if(x) openItem(x.i); } }
 </script>
 <!-- Cloudflare Web Analytics (cookie-free visitor counts) -->
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "fe568fc367be44488f1e84d14f62233c"}'></script></body></html>

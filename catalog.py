@@ -199,6 +199,33 @@ def full_bazzar(br, log, max_pages=60, exclude=(), known=None):
     return [dict(store="Bazzar", cat=x["cat"], cp=x.get("cp", ""), n=x["n"], u=x["u"], p=x["p"], o=x.get("o"), l=x.get("l")) for x in res["items"]], \
            [f"Bazzar {f}" for f in res["fails"]], _catinfo(res)
 
+# ------------------------------------------------------------------ Tehnomedia (own platform; one price per article, no crossed-out price)
+TM_TOP = r"^/(bela-tehnika|tv-audio-video-i-foto|it-i-gaming|mobilni-telefoni-i-tableti|mali-kucni-aparati|mali-kuhinjski-aparati|grejanje-i-hladjenje|nega-tela-lepota-i-zdravlje)(/[a-z0-9-]+){1,3}$"
+
+def full_tehnomedia(br, log, max_pages=60, exclude=(), known=None):
+    max_pages = PAGES or max_pages
+    br.go("https://www.tehnomedia.rs")
+    res = _run(br, r"""async ([top,maxPages,ex])=>{
+      const re=new RegExp(top); const fails=[];
+      const parseTM=html=>{ const d=new DOMParser().parseFromString(html,'text/html');
+        return [...d.querySelectorAll('article.tm-product-single')].map(a=>{ const l=a.querySelector('a.product-link'), pr=a.querySelector('.tm-product-price'), od=a.querySelector('.tm-product-price-old, .product-price del, .product-price s');
+          let p=pr?pN(pr.textContent):null, o=od?pN(od.textContent):null; if(o&&p&&o<=p) o=null;
+          return {n:l?l.textContent.trim().replace(/\s+/g,' '):'', u:l?new URL(l.getAttribute('href'),location.origin).href.split('?')[0]:'', p, o}; }).filter(x=>x.u&&x.p&&x.n); };
+      const h=await ft2('/'); let cats=h?linksOf(h,re):[];
+      if(!cats.length) fails.push('no categories – homepage: status '+window.__st+', '+(h?h.length:0)+' bytes, title: '+((h||'').match(/<title>([^<]{0,80})/i)||['',''])[1]);
+      const allCats=cats.slice();
+      // deepest first; a parent page stops at once when all its articles are already known from the subcategories
+      cats=cats.filter(p=>notExcluded(p,ex) && !ex.some(e=>e.startsWith(p+'/'))).sort((a,b)=>b.split('/').length-a.split('/').length);
+      const items={}; const cnt={};
+      await pool(cats,4,async c=>{ for(let p=1;p<=maxPages;p++){ if(window.__deadline && Date.now()>window.__deadline) break;
+          const t=await ft2(c+'?strana='+p); if(!t){ fails.push(c+' p'+p); break; }
+          const arr=parseTM(t); if(!arr.length) break; cnt[c]=(cnt[c]||0)+arr.length;
+          let added=0; arr.forEach(x=>{ if(!items[x.u]){ x.cat=c.split('/').pop(); x.cp=c; items[x.u]=x; added++; } });
+          if(!added||arr.length<24) break; await sleep(200);} },300);
+      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [TM_TOP, max_pages, list(exclude)])
+    log(f"Tehnomedia full: {len(res['items'])} articles from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))
+    return [dict(store="Tehnomedia", **x) for x in res["items"]], [f"Tehnomedia {f}" for f in res["fails"]], _catinfo(res)
+
 # ------------------------------------------------------------------ Big Bang
 BB_SKIP = r"^/(prijava|signup|kontakt|poslovnice|textovi|outlet|promocije|proizvodi-|korpa|cart|lista-zelja|search|pretraga|nalog|blog|brend|brands)"
 BB_ELECTRO = r"(televiz|projekt|audio|zvucn|video|tv-|laptop|tablet|racunar|monitor|bela-tehnika|frizider|ves-mas|sporet|sudov|susenje|zamrziv|aspirat|bojler|ugradn|mikrotalas|vitrin|klima|grejan|radijator|usisiv|aparati-za-kafu|kafe|mobilni|telefon|satov|gaming|konzol|kamer|foto|dron|stampac|mali-kucni|kuhinjsk|friteze|preciscivac|ovlazivac|odvlazivac|pegl|blender|mikser|soundbar|slusalic)"

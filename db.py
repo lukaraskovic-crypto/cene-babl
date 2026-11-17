@@ -9,6 +9,7 @@ promos (daily verified promos), watch (G1–G4 rows), watch_terms, drops, store_
 
     python db.py restore history.sqlite     # rebuild the local SQLite history from the database (cache was lost)
     python db.py import-sheets              # one-time copy of the old Google Sheets (needs GOOGLE_SA_JSON)
+    python db.py report --force             # send the daily back-office e-mail now (needs BREVO_API_KEY)
 """
 import json, os, sys, time, sqlite3, urllib.request, urllib.error, urllib.parse
 from pathlib import Path
@@ -143,6 +144,90 @@ def usage_summary(hours=24):
                       "• Tabs: " + fmt(c("tab", "tab")),
                       "• Came from: " + fmt(refs)])
 
+# ---------------------------------------------------------------------------------------- daily back-office e-mail
+BREVO_KEY = os.environ.get("BREVO_API_KEY", "")
+TAB_NAMES = {"search": "Pretraga", "deals": "Akcije", "drops": "Pojeftinilo", "watch": "Pratim", "stores": "Prodavnice", "report": "Izveštaj", "fav": "Sačuvano", "admin": "Admin"}
+FLAG_NAMES = {"disc": "samo na popustu", "real": "ispod 30-dnevnog minimuma", "xs": "jeftinije u drugoj radnji", "new": "cena promenjena danas"}
+SORT_NAMES = {"save": "najveća ušteda", "claimed": "navedeni popust", "price": "cena", "verdict": "ocena", "since": "cena od", "low": "najniža u 30 dana", "xs": "druge radnje", "name": "naziv", "ppu": "cena po jedinici"}
+
+def usage_report(day):
+    """Website usage for `day` (Belgrade time) with month-to-date and year-to-date totals – one database call."""
+    r, _ = _req("POST", "rpc/usage_report", {"day": day})
+    return r
+
+def report_html(u, runs=()):
+    import html as _h
+    e = lambda x: _h.escape(str(x if x is not None else ""))
+    nf = lambda n: f"{int(n or 0):,}".replace(",", ".")
+    def table(title, rows, heads, note=""):
+        if not rows: return f'<h3 style="font:600 15px Arial;margin:22px 0 6px">{e(title)}</h3><p style="font:13px Arial;color:#6b7280;margin:0">–</p>'
+        th = "".join(f'<th style="text-align:{"right" if i else "left"};padding:5px 8px;border-bottom:1px solid #d1d5db;font:600 12px Arial;color:#6b7280">{e(h)}</th>' for i, h in enumerate(heads))
+        tr = "".join("<tr>" + "".join(f'<td style="text-align:{"right" if i else "left"};padding:5px 8px;border-bottom:1px solid #eef0f2;font:13px Arial">{e(c)}</td>' for i, c in enumerate(r)) + "</tr>" for r in rows)
+        return (f'<h3 style="font:600 15px Arial;margin:22px 0 6px">{e(title)}</h3>' + (f'<p style="font:12px Arial;color:#6b7280;margin:0 0 4px">{e(note)}</p>' if note else "") +
+                f'<table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;max-width:640px"><tr>{th}</tr>{tr}</table>')
+    def tile(label, value, sub=""):
+        return (f'<td style="padding:12px 14px;background:#f3f6f4;border-radius:8px;width:25%;vertical-align:top"><div style="font:12px Arial;color:#6b7280">{e(label)}</div>'
+                f'<div style="font:700 24px Arial;color:#14532d;margin-top:2px">{e(value)}</div><div style="font:12px Arial;color:#6b7280">{e(sub)}</div></td>')
+    d, prev = u.get("users_day") or 0, u.get("users_prev") or 0
+    delta = f"{'+' if d >= prev else '−'}{abs(round((d / prev - 1) * 100))}% prema danu ranije" if prev else ""
+    c, au = u.get("counts") or {}, u.get("active_users") or {}
+    share = lambda k: f"{round(100 * (au.get(k) or 0) / d)}%" if d else "–"
+    beh = [["Koristili pretragu", nf(au.get("search")), share("search")], ["Koristili filtere", nf(au.get("filter")), share("filter")],
+           ["Otvorili bar jedan artikal", nf(au.get("item")), share("item")], ["Kliknuli ka prodavnici", nf(au.get("out")), share("out")],
+           ["Promenili karticu", nf(au.get("tab")), share("tab")], ["Sačuvali artikal", nf(au.get("fav")), share("fav")], ["Podelili link", nf(au.get("share")), share("share")],
+           ["Otišli bez ijedne akcije", "", f"{nf(u.get('bounce_pct'))}%"], ["Na telefonu", "", f"{nf(u.get('mobile_pct'))}%"],
+           ["Akcija po posetiocu (prosek)", "", str(u.get("events_per_user") or "–").replace(".", ",")]]
+    peak = sorted(u.get("hours") or [], key=lambda x: -x[1])[:3]
+    out = [f'<div style="max-width:660px;margin:0 auto;padding:8px 4px;color:#111827">',
+           f'<h2 style="font:700 20px Arial;margin:0 0 2px">babl cene – dnevni izveštaj</h2><p style="font:13px Arial;color:#6b7280;margin:0 0 14px">Dan: {e(u.get("day"))} (juče) · korisnik = jedna poseta (sesija), bez kolačića</p>',
+           '<table cellspacing="6" cellpadding="0" style="width:100%;max-width:640px"><tr>' + tile("Juče", nf(d), delta) + tile("Ovaj mesec (MTD)", nf(u.get("users_mtd"))) +
+           tile("Ova godina (YTD)", nf(u.get("users_ytd"))) + tile("Klikova ka radnjama", nf(c.get("out")), "juče") + "</tr></table>",
+           table("Ponašanje posetilaca (juče)", beh, ["", "Posetilaca", "Udeo"]),
+           table("Najčešće pretrage – juče", [[q, n] for q, n in (u.get("searches_day") or [])[:15]], ["Pojam", "Posetilaca"]),
+           table("Najčešće pretrage – ovaj mesec", [[q, n] for q, n in (u.get("searches_mtd") or [])[:15]], ["Pojam", "Posetilaca"]),
+           table("Pretrage bez rezultata (juče)", [[q, n] for q, n in (u.get("no_results") or [])[:10]], ["Pojam", "Posetilaca"], "Šta ljudi traže, a sajt nema – ideje za nove kategorije ili radnje."),
+           table("Najotvaraniji artikli (juče)", [[f"{i[:70]} · {s}", n] for i, s, n in (u.get("items") or [])[:10]], ["Artikal", "Posetilaca"]),
+           table("Kartice", [[TAB_NAMES.get(t, t), n] for t, n in u.get("tabs") or []], ["Kartica", "Posetilaca"]),
+           table("Klikovi ka prodavnicama", u.get("out") or [], ["Prodavnica", "Klikova"]),
+           table("Odakle su došli", u.get("refs") or [], ["Izvor", "Poseta"]),
+           table("Filteri: kategorije", (u.get("filter_cats") or [])[:8], ["Kategorija", "Posetilaca"]),
+           table("Filteri: prodavnice", u.get("filter_stores") or [], ["Prodavnica", "Posetilaca"]),
+           table("Filteri: prekidači i sortiranje", [[FLAG_NAMES.get(k, k), n] for k, n in u.get("filter_flags") or []] + [["sortiranje: " + SORT_NAMES.get(k, k), n] for k, n in u.get("sorts") or []], ["", "Posetilaca"]),
+           table("Poslednjih 14 dana", [[x[0], nf(x[1])] for x in u.get("last14") or []], ["Dan", "Posetilaca"]),
+           f'<p style="font:13px Arial;margin:16px 0 0">Najprometniji sati: {e(", ".join(f"{h}h ({n})" for h, n in peak) or "–")}</p>']
+    if runs:
+        out.append(table("Sistem – poslednja preuzimanja", [[f"{r['finished_at'][:16].replace('T', ' ')} UTC · {r['mode']}", f"{nf(r['articles'])} art." + (" · ⚠ " + r["problems"][:80] if r.get("problems") else " · OK")] for r in runs], ["Preuzimanje", "Rezultat"]))
+    out.append('<p style="font:12px Arial;color:#9ca3af;margin:18px 0 0">Automatski izveštaj · cene.babl.cc · šalje se uz prvo jutarnje osvežavanje cena</p></div>')
+    return "".join(out)
+
+def _brevo(method, path, body=None):
+    data = None if body is None else json.dumps(body, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request("https://api.brevo.com/v3/" + path, data=data, method=method,
+                                 headers={"api-key": BREVO_KEY, "Content-Type": "application/json", "Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            t = r.read().decode("utf-8"); return json.loads(t) if t else {}
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"Brevo {path}: HTTP {e.code} {e.read().decode('utf-8', 'ignore')[:300]}")
+
+def send_daily_report(today, hour, log=print, force=False):
+    """Once a day, with the first run after 05:00: e-mail yesterday's website usage (plus MTD / YTD) through Brevo.
+    Recipient = REPORT_EMAIL, else the Brevo account's own sender address (so no address is kept in this public repository)."""
+    if not (enabled() and BREVO_KEY): log("daily report: BREVO_API_KEY not set – skipped"); return False
+    if not force and (hour < 5 or meta_get("report_sent") == today): return False
+    import datetime as _d
+    day = (_d.date.fromisoformat(today) - _d.timedelta(days=1)).isoformat()
+    u = usage_report(day)
+    runs, _ = _req("GET", "runs?select=finished_at,mode,articles,problems&order=id.desc&limit=6")
+    senders = [s_ for s_ in _brevo("GET", "senders").get("senders", []) if s_.get("active")]
+    if not senders: raise RuntimeError("Brevo has no active sender")
+    to = os.environ.get("REPORT_EMAIL") or senders[0]["email"]
+    _brevo("POST", "smtp/email", {"sender": {"name": "babl cene", "email": senders[0]["email"]}, "to": [{"email": to}],
+                                  "subject": f"babl cene · {day}: {u.get('users_day') or 0} posetilaca (MTD {u.get('users_mtd') or 0}, YTD {u.get('users_ytd') or 0})",
+                                  "htmlContent": "<html><body>" + report_html(u, runs) + "</body></html>"})
+    meta_set("report_sent", today); log(f"daily report for {day} e-mailed")
+    return True
+
 # ---------------------------------------------------------------------------------------- restore
 def restore_history(path, log=print):
     """Rebuild history.sqlite from the database (used when the GitHub cache expired)."""
@@ -207,4 +292,7 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "restore": sys.exit(0 if restore_history(Path(sys.argv[2] if len(sys.argv) > 2 else HERE / "history.sqlite")) else 1)
     elif cmd == "import-sheets": import_sheets()
+    elif cmd == "report":       # python db.py report [--force]  – send the daily e-mail now
+        import datetime as _d; from zoneinfo import ZoneInfo
+        n = _d.datetime.now(ZoneInfo("Europe/Belgrade")); send_daily_report(n.date().isoformat(), n.hour, force="--force" in sys.argv)
     else: print(__doc__)

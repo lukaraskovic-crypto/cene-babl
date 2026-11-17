@@ -2,7 +2,7 @@
 
 Website: **https://cene.babl.cc** (Serbian by default, English toggle, works on phones).
 
-GitHub Actions crawls Gigatron, WinWin, Big Bang, Ananas, PC Practic and Eurotehna (+ Emmezeta status), checks every discount against the
+GitHub Actions crawls Gigatron, WinWin, Big Bang, Ananas, PC Practic, Eurotehna and Tehnomedia (+ Emmezeta status), checks every discount against the
 store's own legally required 30-day lowest price, compares promos with all sellers on pametno.rs, stores everything in an online
 database (Supabase) and publishes the site.
 
@@ -34,6 +34,12 @@ good specs), stores, report. Owner-only tab: **https://cene.babl.cc/#admin → K
 ## Choosing categories for the detailed crawl
 Open `#admin`, untick categories, press **Copy & open GitHub**, paste into `categories.json` and **Commit changes**.
 Only the repository owner can commit, so only you can change it. Takes effect from the next run.
+
+## Daily back-office e-mail
+With the first run after 05:00 each day the combine job e-mails yesterday's website usage: visitors yesterday / month-to-date /
+year-to-date, top searches, searches without results, most opened articles, tabs, clicks to shops, sources, filters used.
+It is sent through Brevo (secret `BREVO_API_KEY`) to the Brevo account's own sender address, or to the secret `REPORT_EMAIL`.
+The numbers come from the database function `usage_report(day)`. Send one by hand: `python db.py report --force`.
 
 ## Files
 `bf_watch.py` (crawl, verdicts, health check, `--only <store>` / `--light` / `--combine` / `--refresh`), `catalog.py` (full-catalogue

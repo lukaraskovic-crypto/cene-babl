@@ -55,10 +55,11 @@ def load(name):
 STATE = HERE / "state"; STATE.mkdir(exist_ok=True)
 STORE_KEYS = {"gigatron": ["gigatron", "full_gigatron", "emmezeta"], "winwin": ["winwin", "full_winwin"],
               "tehnomanija": ["tehnomanija", "full_tehnomanija"], "bigbang": ["bigbang", "full_bigbang"], "ananas": ["ananas", "full_ananas"],
-              "dotmarket": ["full_dotmarket"], "bazzar": ["full_bazzar"], "pcpractic": ["full_pcpractic"], "eurotehna": ["full_eurotehna"]}
+              "dotmarket": ["full_dotmarket"], "bazzar": ["full_bazzar"], "pcpractic": ["full_pcpractic"], "eurotehna": ["full_eurotehna"],
+              "tehnomedia": ["full_tehnomedia"]}
 STORE_NAME = {"gigatron": "Gigatron", "winwin": "WinWin", "tehnomanija": "Tehnomanija", "bigbang": "Big Bang", "ananas": "Ananas",
-              "dotmarket": "DOTmarket", "bazzar": "Bazzar", "pcpractic": "PC Practic", "eurotehna": "Eurotehna"}
-FULL_ONLY = ["full_dotmarket", "full_bazzar", "full_pcpractic", "full_eurotehna"]   # shops crawled only as full catalogues
+              "dotmarket": "DOTmarket", "bazzar": "Bazzar", "pcpractic": "PC Practic", "eurotehna": "Eurotehna", "tehnomedia": "Tehnomedia"}
+FULL_ONLY = ["full_dotmarket", "full_bazzar", "full_pcpractic", "full_eurotehna", "full_tehnomedia"]   # shops crawled only as full catalogues
 LOW_DAYS = CFG.get("low30_cache_days", 5)       # re-read a product page's 30-day low at least this often
 PM_DAYS = CFG.get("pametno_cache_days", 8)      # pametno.rs results are reused for this many days
 PM_RECHECK = CFG.get("pametno_recheck_days", 7)  # …and looked up again after this many days, or sooner when our price moved >3%
@@ -697,6 +698,9 @@ def main():
         except Exception as e: log("website usage summary failed:", e)
     if not a.refresh: notify(f"Store promotions – {TODAY}", (usage + "\n\n" if usage else "") + report)   # usage stays private (not on the site)
     elif problems: notify(f"Price watch problem – {TODAY}", report[:1500])
+    if not a.dry_run and db.enabled():
+        try: db.send_daily_report(TODAY, dt.datetime.now(TZ).hour, log=log)
+        except Exception as e: log("daily report e-mail failed:", e); problems.append(f"daily report e-mail failed: {str(e)[:200]}")
     log("done" + (f" with {len(problems)} problem(s): " + "; ".join(problems) if problems else ""))
     if problems: sys.exit(1)      # a failed GitHub run → GitHub e-mails the owner
 
@@ -788,6 +792,7 @@ def crawl(br, raw, fails, only=None, light=False):
                             ("full_dotmarket", "DOTmarket", lambda ex, kn: catalog.full_opencart(br, "DOTmarket", "https://www.dotmarket.rs", log, exclude=ex, known=kn)),
                             ("full_eurotehna", "Eurotehna", lambda ex, kn: catalog.full_opencart(br, "Eurotehna", "https://eurotehna.rs", log, exclude=ex, known=kn)),
                             ("full_bazzar", "Bazzar", lambda ex, kn: catalog.full_bazzar(br, log, exclude=ex, known=kn)),
+                            ("full_tehnomedia", "Tehnomedia", lambda ex, kn: catalog.full_tehnomedia(br, log, exclude=ex)),
                             ("full_pcpractic", "PC Practic", lambda ex, kn: catalog.full_magento(br, "PC Practic", "https://pcpractic.rs", log, exclude=ex, known=kn, top=catalog.PCP_TOP, conc=6))]:
             if not want(raw, key, only): continue
             sk = key.replace("full_", "")
@@ -801,7 +806,7 @@ def crawl(br, raw, fails, only=None, light=False):
                 its = []; fails.append(f"{key} crashed: {e}"); log(key, "crashed:", e)
             raw[key] = its; save("raw.json", raw)
             # specifications from product pages – only for articles not read before (kept permanently in state/specs.json)
-            if not light and sk in CFG.get("spec_stores", ["gigatron", "winwin", "ananas", "eurotehna"]) and its:
+            if not light and sk in CFG.get("spec_stores", ["gigatron", "winwin", "ananas", "eurotehna", "tehnomedia"]) and its:
                 try:
                     new = catalog.fetch_specs(br, st, its, sload("specs.json", {}) or {}, log, budget=CFG.get("spec_budget", 1500), minutes=CFG.get("spec_minutes", 12))
                     (OUT / f"specs_new_{sk}.json").write_text(json.dumps(new, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -1088,7 +1093,7 @@ def build_watch_candidates(raw, all_items=()):
     return W
 
 def write_outputs(items, watch, raw, pm, fails, all_items=(), drops=(), prev=frozenset()):
-    STORES = ["Gigatron", "WinWin", "Tehnomanija", "Big Bang", "Ananas", "DOTmarket", "Bazzar", "PC Practic", "Eurotehna", "Emmezeta"]
+    STORES = ["Gigatron", "WinWin", "Tehnomanija", "Big Bang", "Ananas", "DOTmarket", "Bazzar", "PC Practic", "Eurotehna", "Tehnomedia", "Emmezeta"]
     def r12(i):
         r = i.get("r")
         return [i["v"], i["store"], i["cat"], i["name"], i["p"], i["o"], i["claimed"], (i.get("l_used") or "") if i.get("own_src") != "our record" else f'{i["l_used"]} (our record)', "" if i["real"] is None else i["real"],
