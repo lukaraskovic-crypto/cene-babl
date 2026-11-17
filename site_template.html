@@ -21,7 +21,7 @@ a{color:var(--primary)}button,input,select{font:inherit;color:inherit}
 .hd{background:var(--surface);border-bottom:1px solid var(--border)}
 .hd .row{display:flex;align-items:center;gap:16px;height:60px}
 .wm{font-weight:800;font-size:21px;letter-spacing:-.03em;color:var(--text);text-decoration:none;display:flex;align-items:baseline;gap:6px}
-.wm b{color:var(--primary)}.wm span{font-weight:500;color:var(--muted)}
+.wm b{color:var(--primary)}.wm span{font-weight:500;color:var(--muted)}.wm .mk{font:800 15px/26px Manrope,sans-serif;font-style:normal;width:26px;height:26px;border-radius:7px;background:var(--primary);color:var(--accent);text-align:center;align-self:center;margin-right:2px}
 .hd .sp{flex:1}.fresh{font-size:13px;color:var(--muted)}
 .lng{display:flex;gap:2px;font-size:13px;font-weight:700}.lng button{border:0;background:none;padding:4px 6px;cursor:pointer;color:var(--muted);border-radius:6px}.lng button.on{color:var(--text);background:var(--alt)}
 nav.tabs{display:flex;gap:22px;overflow-x:auto;scrollbar-width:none}nav.tabs::-webkit-scrollbar{display:none}
@@ -128,6 +128,20 @@ textarea{width:100%;min-height:130px;border:1px solid var(--border);border-radiu
 #fs .rng{border-radius:10px}#fs .rng input{width:100%;padding:11px 2px}
 #fs .tgs{display:flex;flex-direction:column;gap:8px;margin-top:18px}#fs .tg{text-align:left;border-radius:10px;padding:12px 14px}
 @media (max-width:1050px){.hm{display:none}}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--border);border-radius:var(--r);background:var(--surface);margin:0 0 16px;overflow:hidden}
+.kpis>*{padding:12px 16px;border-right:1px solid var(--border);color:inherit;text-decoration:none;display:block}.kpis>*:last-child{border-right:0}
+.kpis b{display:block;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2}.kpis span{font-size:13px;color:var(--muted)}
+.kpis a.good b{color:var(--good)}.kpis a.bad b{color:var(--danger)}.kpis a:hover{background:var(--alt)}
+.ic{flex:none;vertical-align:-3px}.btn .ic,.lock .ic{margin-right:6px}.btn{display:inline-flex;align-items:center}.x .ic{vertical-align:middle}
+.x{display:inline-flex;align-items:center;justify-content:center}
+.msn{font-size:13px;color:var(--muted);margin:6px 6px 2px}
+.sel,.rng,.tg{border-radius:8px}.tg.on{background:var(--alt);border-color:var(--primary);color:var(--primary)}
+.tg[data-k]::before{content:"";display:inline-block;width:12px;height:12px;border:1.5px solid currentColor;border-radius:3px;margin-right:7px;vertical-align:-1px;opacity:.55}
+.tg.on[data-k]::before{opacity:1;background:currentColor;box-shadow:inset 0 0 0 2px var(--surface)}
+td .nm{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media (max-width:1300px){.hm{display:none}}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpis>*:nth-child(2n){border-right:0}.kpis>*:nth-child(-n+2){border-bottom:1px solid var(--border)}.kpis b{font-size:19px}.kpis>*{padding:10px 12px}}
+
 @media (max-width:760px){
  .wrap{padding:0 16px}.hd .row{height:54px}.fresh{display:none}main.wrap{padding-top:18px;padding-bottom:90px}.list td:nth-child(2){min-width:0}
  nav.tabs{gap:18px}.lede{font-size:18px}
@@ -141,7 +155,7 @@ textarea{width:100%;min-height:130px;border:1px solid var(--border);border-radiu
 }
 </style></head><body>
 <header class="hd"><div class="wrap">
- <div class="row"><a class="wm" href="./"><b>babl</b><span>cene</span></a><div class="sp"></div><div class="fresh" id="fresh"></div>
+ <div class="row"><a class="wm" href="./"><i class="mk">b</i><b>babl</b><span>cene</span></a><div class="sp"></div><div class="fresh" id="fresh"></div>
   <button class="acct" id="acct" onclick="ACC.open()"></button><div class="lng"><button data-l="sr">SR</button><button data-l="en">EN</button></div></div>
  <nav class="tabs" id="tabs"></nav></div></header>
 <main class="wrap" id="main"></main>
@@ -152,14 +166,15 @@ textarea{width:100%;min-height:130px;border:1px solid var(--border);border-radiu
 <!--DATA-->
 <script>
 "use strict";
+const IC={pin:'<svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',bell:'<svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>',map:'<svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13M15 6.5v13"/></svg>',img:'<svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m20.5 16-5-5-8 8.5"/></svg>',star:'<svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.8z"/></svg>',lock:'<svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',warn:'<svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg>',share:'<svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 13v6h14v-6"/></svg>',x:'<svg class="ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>'};
 const D=window.DATA, R=D.rows, CATS=window.CATS||{found:{},exclude:{}};
 const C=Object.fromEntries(D.cols.map((c,i)=>[c,i]));
 const DOT={'Gigatron':'#C2410C','WinWin':'#2563EB','Big Bang':'#B7791F','Ananas':'#BE185D','Tehnomanija':'#7C3AED','DOTmarket':'#E11D48','Bazzar':'#0E7490','PC Practic':'#475569','Eurotehna':'#65A30D','Tehnomedia':'#DB2777'};
 const MON={sr:['jan','feb','mar','apr','maj','jun','jul','avg','sep','okt','nov','dec'],en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']};
 const L={
 sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',fav:'Sačuvano',watch:'Pratim',stores:'Prodavnice',report:'Izveštaj',admin:'Kategorije'},
- fv:{add:'☆ Sačuvaj',on:'★ Sačuvano',share:'Podeli',copied:'Link kopiran',h:'Sačuvani artikli',s:'Artikli koje ste sačuvali ostaju u ovom pregledaču. Ovde vidite kako se cena promenila otkad ste ih sačuvali.',empty:'Još ništa niste sačuvali. Otvorite artikal i pritisnite „Sačuvaj“ – pratićemo mu cenu za vas.',then:p=>`sačuvano po ${p} din`,gone:'trenutno nije u ponudi',rm:'Ukloni',same:'bez promene',img:'🖼 Slika za Instagram / Viber',imgDone:'Slika je sačuvana – podelite je u priči ili poruci',imgNow:'cena danas',imgLow:'30-dnevni minimum',imgMin:'najniža zabeležena',imgHist:'Kretanje cene',imgNote:'Poređenje objavljenih cena. Proverite cenu kod prodavca.',minH:'Najniža zabeležena',atMin:'Najniža cena do sada'},
- fresh:(d,h)=>`osveženo ${d} u ${h}`, nl:n=>`${n} ponuda`, prob:n=>`⚠ ${n} problem(a) u poslednjem preuzimanju`,
+ fv:{add:'Sačuvaj',on:'Sačuvano',share:'Podeli',copied:'Link kopiran',h:'Sačuvani artikli',s:'Artikli koje ste sačuvali ostaju u ovom pregledaču. Ovde vidite kako se cena promenila otkad ste ih sačuvali.',empty:'Još ništa niste sačuvali. Otvorite artikal i pritisnite „Sačuvaj“ – pratićemo mu cenu za vas.',then:p=>`sačuvano po ${p} din`,gone:'trenutno nije u ponudi',rm:'Ukloni',same:'bez promene',img:'Slika za Instagram / Viber',imgDone:'Slika je sačuvana – podelite je u priči ili poruci',imgNow:'cena danas',imgLow:'30-dnevni minimum',imgMin:'najniža zabeležena',imgHist:'Kretanje cene',imgNote:'Poređenje objavljenih cena. Proverite cenu kod prodavca.',minH:'Najniža zabeležena',atMin:'Najniža cena do sada'},
+ fresh:(d,h)=>`osveženo ${d} u ${h}`, nl:n=>`${n} ponuda`, prob:n=>`${n} problem(a) u poslednjem preuzimanju`,
  lede:(n,s,real,fake)=>`Pratimo <em>${n}</em> artikala u ${s} ${s%10>=2&&s%10<=4&&(s<12||s>14)?'prodavnice':'prodavnica'}. Danas je <a href="#" data-go="deals">${real} sniženja potvrđeno</a>, a kod <span class="bad">${fake}</span> istaknuta cena nije niža od najniže cene iz poslednjih 30 dana.`,
  ph:'Model, brend ili naziv – npr. OLED65C61LA, G20 Max, iPad Air',
  store:'Prodavnica',cat:'Kategorija',brand:'Brend',verdict:'Ocena',price:'Cena',from:'od',to:'do',
@@ -169,7 +184,7 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',fav:'Sačuvano',w
  found:n=>`${n} artikala`,sortBy:'Poređaj po',page:(a,b)=>`${a} od ${b}`,prev:'Prethodna',next:'Sledeća',none:'Ništa ne odgovara ovoj pretrazi.',
  c:{store:'Radnja',name:'Proizvod',price:'Cena',claimed:'Navedeni popust',low:'Najniža u 30 dana',save:'Ušteda',verdict:'Ocena',xs:'Drugde',trend:'Kretanje',since:'Cena od'},
  sorts:{save:'Najveća ušteda',claimed:'Najveći navedeni popust',price:'Cena',since:'Najnovija promena',xs:'Jeftinije drugde',name:'Naziv'},
- find:'Pronađi…',specBtn:'Analiza po specifikacijama',specHide:'Sakrij analizu',specT:'Specifikacije u izabranim kategorijama',
+ k:{items:s=>`artikala u ${s} prodavnica`,real:'potvrđenih sniženja danas',fake:'popusta nije ispod 30-dnevnog minimuma',upd:'poslednje osvežavanje cena'},find:'Upišite naziv…',msMore:n=>`još ${n} – upišite naziv da ih vidite`,specBtn:'Analiza po specifikacijama',specHide:'Sakrij analizu',specT:'Specifikacije u izabranim kategorijama',
  specS:(a,b)=>`${a} od ${b} artikala ima prepoznate specifikacije. Čitamo ih iz naziva artikla, pa mogu biti nepotpune. Klik na vrednost filtrira rezultate.`,
  specNone:'U ovim artiklima nismo prepoznali dovoljno specifikacija.',cnt:'kom.',fromP:'od',median:'medijana',
  ppuBtn:u=>`cena po ${u}`,ppuSort:u=>`Najviše za novac (din/${u})`,
@@ -180,7 +195,7 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',fav:'Sačuvano',w
       raised:(c,p,l)=>`Uz artikal je istaknut popust od ${c}, a cena je ${p} viša od najniže cene koju prodavnica navodi za poslednjih 30 dana (${l}).`,
       fake:(c,l)=>`Uz artikal je istaknut popust od ${c}, a ista cena (${l}) je prema podacima prodavnice bila najniža i u poslednjih 30 dana.`,
       nochange:l=>`Cena je praktično ista kao najniža u poslednjih 30 dana (${l}).`,
-      nolow:'Prodavnica ne objavljuje najnižu cenu iz poslednjih 30 dana, pa popust poredimo sa ostalim prodavnicama.',title:'Zašto ova ocena'},
+      plain:'Bez ocene: prodavnica trenutno ne ističe popust za ovaj artikal, pa nema šta da se proverava. Pratimo cenu i prikazujemo njenu istoriju.',unrated:'Bez ocene: za ovaj artikal još nemamo dovoljno podataka (prodavnica ne objavljuje 30-dnevni minimum, a naša istorija cena je kraća od 7 dana).',nolow:'Prodavnica ne objavljuje najnižu cenu iz poslednjih 30 dana, pa popust poredimo sa ostalim prodavnicama.',title:'Zašto ova ocena'},
  MV:{'BUY-WORTHY':'Najbolja ponuda','BEST IN MARKET':'Najjeftinije na tržištu','GOOD':'Dobra cena','OK':'Prosečna cena','SKIP':'Ima jeftinije','SINGLE SELLER':'Samo jedan prodavac','NOT ON PAMETNO':'Nije na pametno.rs','NOT CHECKED':'Nije provereno','LISTED, NO CURRENT OFFERS':'Bez drugih ponuda','MODEL VARIANT DIFFERS':'Druga varijanta','STORAGE DIFFERS':'Druga memorija','UNCERTAIN MATCH':'Nesiguran par','LOOKUP FAILED':'Provera nije uspela'},
  crossed:'Precrtana',low30:'Najniža u 30 dana',mkt:'Najniža na tržištu',since:d=>`Ova cena važi od ${d}.`,seen:d=>` Poslednji put viđeno ${d}.`,
  open:'Otvori u prodavnici',hist:'Kretanje cene',noHist:'Istorija se tek skuplja – raste sa svakim osvežavanjem.',same:'Isti model u drugim prodavnicama',
@@ -198,8 +213,8 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',fav:'Sačuvano',w
   filter:'Pronađi kategoriju',all:'Uključi sve',none:'Isključi sve',save:'Kopiraj i otvori GitHub',copied:'Kopirano. Nalepi u GitHub editor i klikni „Commit changes".',excluded:n=>`${n} isključeno`,
   noData:'Lista se pojavljuje posle prvog punog pokretanja.',json:'Novi sadržaj categories.json',notCrawled:'nije pretraživano'}},
 en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',fav:'Saved',watch:'Watching',stores:'Stores',report:'Report',admin:'Categories'},
- fv:{add:'☆ Save',on:'★ Saved',share:'Share',copied:'Link copied',h:'Saved articles',s:'Articles you save stay in this browser. Here you can see how the price has moved since you saved them.',empty:'Nothing saved yet. Open an article and press “Save” – we will track its price for you.',then:p=>`saved at ${p} RSD`,gone:'not on offer right now',rm:'Remove',same:'no change',img:'🖼 Image for Instagram / Viber',imgDone:'Image saved – share it in a story or a message',imgNow:'price today',imgLow:'30-day low',imgMin:'lowest recorded',imgHist:'Price history',imgNote:'A comparison of published prices. Check the price with the store.',minH:'Lowest recorded',atMin:'Lowest price so far'},
- fresh:(d,h)=>`updated ${d} at ${h}`, nl:n=>`${n} offers`, prob:n=>`⚠ ${n} problem(s) in the last crawl`,
+ fv:{add:'Save',on:'Saved',share:'Share',copied:'Link copied',h:'Saved articles',s:'Articles you save stay in this browser. Here you can see how the price has moved since you saved them.',empty:'Nothing saved yet. Open an article and press “Save” – we will track its price for you.',then:p=>`saved at ${p} RSD`,gone:'not on offer right now',rm:'Remove',same:'no change',img:'Image for Instagram / Viber',imgDone:'Image saved – share it in a story or a message',imgNow:'price today',imgLow:'30-day low',imgMin:'lowest recorded',imgHist:'Price history',imgNote:'A comparison of published prices. Check the price with the store.',minH:'Lowest recorded',atMin:'Lowest price so far'},
+ fresh:(d,h)=>`updated ${d} at ${h}`, nl:n=>`${n} offers`, prob:n=>`${n} problem(s) in the last crawl`,
  lede:(n,s,real,fake)=>`We track <em>${n}</em> products across ${s} stores. Today <a href="#" data-go="deals">${real} reductions are confirmed</a>, and for <span class="bad">${fake}</span> the advertised price is not below the store's lowest price of the last 30 days.`,
  ph:'Model, brand or name – e.g. OLED65C61LA, G20 Max, iPad Air',
  store:'Store',cat:'Category',brand:'Brand',verdict:'Verdict',price:'Price',from:'from',to:'to',
@@ -209,7 +224,7 @@ en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',fav:'Saved',watch:'W
  found:n=>`${n} products`,sortBy:'Sort by',page:(a,b)=>`${a} of ${b}`,prev:'Previous',next:'Next',none:'Nothing matches this search.',
  c:{store:'Store',name:'Product',price:'Price',claimed:'Claimed discount',low:'30-day low',save:'Saving',verdict:'Verdict',xs:'Elsewhere',trend:'Trend',since:'Price since'},
  sorts:{save:'Biggest saving',claimed:'Biggest claimed discount',price:'Price',since:'Latest change',xs:'Cheaper elsewhere',name:'Name'},
- find:'Find…',specBtn:'Analyse by specs',specHide:'Hide analysis',specT:'Specs in the chosen categories',
+ k:{items:s=>`products in ${s} stores`,real:'confirmed reductions today',fake:'discounts not below the 30-day low',upd:'last price update'},find:'Type a name…',msMore:n=>`${n} more – type a name to see them`,specBtn:'Analyse by specs',specHide:'Hide analysis',specT:'Specs in the chosen categories',
  specS:(a,b)=>`${a} of ${b} products have recognised specs. They are read from the product name, so they can be incomplete. Click a value to filter.`,
  specNone:"We couldn't recognise enough specs in these products.",cnt:'pcs',fromP:'from',median:'median',
  ppuBtn:u=>`price per ${u}`,ppuSort:u=>`Best value (RSD/${u})`,
@@ -220,7 +235,7 @@ en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',fav:'Saved',watch:'W
       raised:(c,p,l)=>`A ${c} discount is advertised, and the price is ${p} above the lowest price the store states for the last 30 days (${l}).`,
       fake:(c,l)=>`A ${c} discount is advertised, and according to the store's own data the same price (${l}) was also its lowest in the last 30 days.`,
       nochange:l=>`The price is practically the same as the 30-day low (${l}).`,
-      nolow:"This store doesn't publish its 30-day lowest price, so we compare the discount with other stores.",title:'Why this verdict'},
+      plain:'No rating: the store is not advertising a discount on this product, so there is nothing to check. We track the price and show its history.',unrated:'No rating yet: the store does not publish a 30-day low and our own price history is shorter than 7 days.',nolow:"This store doesn't publish its 30-day lowest price, so we compare the discount with other stores.",title:'Why this verdict'},
  MV:{'BUY-WORTHY':'Best offer','BEST IN MARKET':'Cheapest in market','GOOD':'Good price','OK':'Average price','SKIP':'Cheaper elsewhere','SINGLE SELLER':'Only one seller','NOT ON PAMETNO':'Not on pametno.rs','NOT CHECKED':'Not checked','LISTED, NO CURRENT OFFERS':'No other offers','MODEL VARIANT DIFFERS':'Other variant','STORAGE DIFFERS':'Other storage','UNCERTAIN MATCH':'Uncertain match','LOOKUP FAILED':'Check failed'},
  crossed:'Crossed-out',low30:'30-day low',mkt:'Market low',since:d=>`This price applies since ${d}.`,seen:d=>` Last seen ${d}.`,
  open:'Open in store',hist:'Price history',noHist:'History is still building up – it grows with every refresh.',same:'Same model at other stores',
@@ -343,20 +358,20 @@ async function shareImg(k){ const x=X[k], r=x.r, W=1080, H=1920, P=84, g=x.vg;
   catch(e){ if(e&&e.name==='AbortError') return; }
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); toast(t('fv.imgDone')); }
 function favItem(k){ const x=X[k], id=hid(x.r); if(FAV.has(id)) FAV.del(id); else { FAV.add(x); if(typeof TRK==='function') TRK('fav',{store:x.r[0],item:x.r[2],data:{p:x.r[3]}}); }
-  const b=document.getElementById('favb'); if(b){ b.textContent=FAV.has(id)?t('fv.on'):t('fv.add'); b.classList.toggle('on',FAV.has(id)); } tabs(); if(cur==='fav') fav(); }
+  const b=document.getElementById('favb'); if(b){ b.querySelector('span').textContent=FAV.has(id)?t('fv.on'):t('fv.add'); b.classList.toggle('on',FAV.has(id)); } tabs(); if(cur==='fav') fav(); }
 function why(x){ const r=x.r, g=x.vg, l=r[5]?nf(r[5])+' din':'';
-  const s=g==='real'?t('why.real')(pct(x.real),l):g==='raised'?t('why.raised')(pct(x.claimed),pct(-x.real),l):g==='fake'?t('why.fake')(pct(x.claimed),l):g==='nochange'?t('why.nochange')(l):(r[6]&&!r[5])?t('why.nolow'):'';
+  const s=g==='real'?t('why.real')(pct(x.real),l):g==='raised'?t('why.raised')(pct(x.claimed),pct(-x.real),l):g==='fake'?t('why.fake')(pct(x.claimed),l):g==='nochange'?t('why.nochange')(l):(r[6]&&!r[5])?t('why.nolow'):!r[6]?t(r[4]>r[3]?'why.unrated':'why.plain'):'';
   return s?`<div class="why"><b>${t('why.title')}</b>${esc(s)}</div>`:''; }
 function openItem(k){ const x=X[k], r=x.r; const ks=keyset(r[2]); const hp=(r[C.hist]||[]).map(p=>p[1]).concat([r[3]]); const minH=Math.min(...hp), atMin=hp.length>=3&&r[3]<=minH&&Math.max(...hp)>r[3];
   setHash.a=hid(r); setHash();
   const same=ks.length?X.filter(y=>y!==x && keyset(y.r[2]).some(z=>ks.includes(z))).sort((a,b)=>a.r[3]-b.r[3]).slice(0,8):[];
-  sheet.innerHTML=`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])} &nbsp; ${esc(x.cat)}</div><h2>${esc(r[2])}</h2></div><button class="x" onclick="closeS()" aria-label="×">✕</button></div>
+  sheet.innerHTML=`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])} &nbsp; ${esc(x.cat)}</div><h2>${esc(r[2])}</h2></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div>
   <div class="big"><span class="pr num">${money(r[3])}</span>${r[4]?`<span class="was num">${nf(r[4])}</span> <span class="pct bad">−${pct(x.claimed)}</span>`:''} ${vtag(r[6])} ${mtag(r[7])} ${atMin?`<span class="tag good">${t('fv.atMin')}</span>`:''}</div>
   <div class="meta">${x.since?esc(t('since')(dm(x.since))):''}${r[C.seen]&&r[C.seen]!==TODAY?esc(t('seen')(dm(r[C.seen]))):''}</div>
   ${why(x)}
   <dl class="kv num"><div><dt>${t('crossed')}</dt><dd>${f(r[4])||'–'}</dd></div><div><dt>${t('low30')}</dt><dd>${f(r[5])||'–'}</dd></div><div><dt>${t('mkt')}</dt><dd>${f(r[8])||'–'}</dd></div><div><dt>${t('fv.minH')}</dt><dd>${hp.length>1?f(minH):'–'}</dd></div></dl>
   <div class="acts">${r[C.url]?`<a class="btn pri" href="${esc(r[C.url])}" target="_blank" rel="noopener">${t('open')}</a>`:''}
-   <button class="btn ${FAV.has(hid(r))?'on':''}" id="favb" onclick="favItem(${k})">${FAV.has(hid(r))?t('fv.on'):t('fv.add')}</button><button class="btn" onclick="shareItem(${k})">${t('fv.share')}</button><button class="btn" onclick="shareImg(${k})">${t('fv.img')}</button>${ACC.can(r[0])?`<button class="btn" onclick="ACC.stock(${k})">📍 ${ACC.t('where')}</button>`:''}</div>
+   <button class="btn ${FAV.has(hid(r))?'on':''}" id="favb" onclick="favItem(${k})">${IC.star}<span>${FAV.has(hid(r))?t('fv.on'):t('fv.add')}</span></button><button class="btn" onclick="shareItem(${k})">${IC.share}${t('fv.share')}</button><button class="btn" onclick="shareImg(${k})">${IC.img}${t('fv.img')}</button>${ACC.can(r[0])?`<button class="btn" onclick="ACC.stock(${k})">${IC.pin}${ACC.t('where')}</button>`:''}</div>
   <div class="sec"><h3>${t('hist')}</h3>${chart(r[C.hist])}</div>
   ${same.length?`<div class="sec"><h3>${t('same')}</h3><div class="cmp">${same.map(y=>`<a onclick="openItem(${y.i})"><span><span class="nm">${esc(y.r[2])}</span><div class="meta">${st(y.r[0])}</div></span><span class="pr num">${money(y.r[3])}</span></a>`).join('')}</div></div>`:''}`;
   ov.style.display='flex'; sheet.scrollTop=0; document.body.style.overflow='hidden'; }
@@ -423,23 +438,34 @@ const TOG=[['onlyReal','tReal'],['onlyDisc','tDisc'],['onlyXs','tXs'],['onlyNew'
 const MS={store:{l:'store',all:'allStores',g:x=>x.r[0]},cat:{l:'cat',all:'allCats',g:x=>x.cat},brand:{l:'brand',all:'allBrands',g:x=>x.brand},vg:{l:'verdict',all:'anyVerdict',g:x=>x.vg}};
 SC.push({k:'ppu',t:'price',n:1,v:x=>{ const v=S.ppu&&specs(x)[S.ppu]; return v?x.r[3]/v:null; }}); SDEF.ppu=1;
 const msLab=(k,v)=>k==='vg'?t('V.'+v):v;
-function msVals(k){ const base=k==='store'?X:X.filter(x=>!S.store.length||S.store.includes(x.r[0]));
-  const c={}; base.forEach(x=>{ const v=MS[k].g(x); if(v) c[v]=(c[v]||0)+1; });
-  let vals=k==='vg'?VGS.filter(v=>c[v]).map(v=>[v,c[v]]):Object.entries(c).sort(k==='store'?(a,b)=>b[1]-a[1]:(a,b)=>a[0].localeCompare(b[0],'sr'));
-  return vals.sort((a,b)=>(S[k].includes(b[0])?1:0)-(S[k].includes(a[0])?1:0)); }
+const MSC={};
+function msVals(k){ const ck=k+'|'+(k==='store'?'':S.store.join(','));
+  if(!MSC[ck]){ const base=k==='store'?X:X.filter(x=>!S.store.length||S.store.includes(x.r[0]));
+    const c={}; base.forEach(x=>{ const v=MS[k].g(x); if(v) c[v]=(c[v]||0)+1; });
+    MSC[ck]=k==='vg'?VGS.filter(v=>c[v]).map(v=>[v,c[v]]):Object.entries(c).sort(k==='cat'?(a,b)=>a[0].localeCompare(b[0],'sr'):(a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'sr')); }
+  const vals=MSC[ck].slice(); return vals.sort((a,b)=>(S[k].includes(b[0])?1:0)-(S[k].includes(a[0])?1:0)); }
+const MSMAX=60;   // long lists (thousands of brands) show the most common entries until the visitor types
+function msRows(k,q){ const f=fold(q||''); let vals=msVals(k); const total=vals.length;
+  if(f) vals=vals.filter(([v])=>S[k].includes(v)||fold(msLab(k,v)).includes(f));
+  const more=vals.length>MSMAX?vals.length-MSMAX:0; vals=vals.slice(0,MSMAX);
+  return vals.map(([v,n])=>`<label><input type="checkbox" value="${esc(v)}" ${S[k].includes(v)?'checked':''}><span>${esc(msLab(k,v))}</span><em class="num">${nf(n)}</em></label>`).join('')
+    +(!vals.length?`<p class="msn">${t('none')}</p>`:'')+(more?`<p class="msn">${t('msMore')(nf(more))}</p>`:''); }
 function msText(k){ const s=S[k]; if(!s.length) return t(MS[k].all); if(s.length<=2) return s.map(v=>msLab(k,v)).join(', '); return `${t(MS[k].l)}: ${s.length}`; }
-function msListHTML(k){ const vals=msVals(k);
-  return `${vals.length>8?`<input class="msq" placeholder="${esc(t('find'))}" autocomplete="off">`:''}<div class="msl">${vals.map(([v,n])=>`<label data-v="${esc(String(msLab(k,v)).toLowerCase())}"><input type="checkbox" value="${esc(v)}" ${S[k].includes(v)?'checked':''}><span>${esc(msLab(k,v))}</span><em class="num">${nf(n)}</em></label>`).join('')}</div>`; }
-function bindMsList(box,k){ box.querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=()=>{ const v=c.value; S[k]=c.checked?[...S[k],v]:S[k].filter(z=>z!==v); S.page=0; afterChange(k); });
-  const q=box.querySelector('.msq'); if(q){ q.oninput=()=>{ const s=q.value.toLowerCase(); box.querySelectorAll('.msl label').forEach(l=>l.style.display=l.dataset.v.includes(s)?'':'none'); }; } }
+function msListHTML(k){ return `${msVals(k).length>8?`<input class="msq" type="search" placeholder="${esc(t('find'))}" autocomplete="off">`:''}<div class="msl">${msRows(k,'')}</div>`; }
+function bindMsList(box,k){ const list=box.querySelector('.msl'), q=box.querySelector('.msq');
+  const bindBoxes=()=>list.querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=()=>{ const v=c.value; S[k]=c.checked?[...S[k],v]:S[k].filter(z=>z!==v); S.page=0; afterChange(k); });
+  bindBoxes(); if(q){ let tm; q.oninput=()=>{ clearTimeout(tm); tm=setTimeout(()=>{ list.innerHTML=msRows(k,q.value); bindBoxes(); },120); }; } }
 let popK=null;
-function openPop(btn,k){ closePop(); popK=k; const p=document.createElement('div'); p.id='pop';
+function openPop(btn,k){ const old=document.getElementById('pop'); if(old) old.remove(); popK=k;
+  btn=document.querySelector(`#tool [data-ms="${k}"]`)||btn; const p=document.createElement('div'); p.id='pop'; p.setAttribute('role','dialog');
   p.innerHTML=msListHTML(k)+`<div class="pf"><button class="clr" data-c="1">${t('clear')}</button><button class="btn pri" style="padding:6px 14px" data-d="1">${t('done')}</button></div>`;
   document.body.appendChild(p); const r=btn.getBoundingClientRect(); p.style.top=(r.bottom+window.scrollY+6)+'px'; p.style.left=Math.min(r.left+window.scrollX, window.scrollX+document.documentElement.clientWidth-p.offsetWidth-12)+'px';
   bindMsList(p,k); p.querySelector('[data-c]').onclick=()=>{ S[k]=[]; S.page=0; afterChange(k); closePop(); }; p.querySelector('[data-d]').onclick=closePop;
   const q=p.querySelector('.msq'); if(q) q.focus(); }
-function closePop(){ const p=document.getElementById('pop'); if(p){ p.remove(); popK=null; refreshTool(); } }
-document.addEventListener('mousedown',e=>{ const p=document.getElementById('pop'); if(p&&!p.contains(e.target)&&!e.target.closest('[data-ms]')) closePop(); });
+function closePop(){ const p=document.getElementById('pop'); if(p) p.remove(); popK=null; }
+document.addEventListener('pointerdown',e=>{ const p=document.getElementById('pop'); if(p&&!p.contains(e.target)&&!e.target.closest('[data-ms]')) closePop(); });
+addEventListener('resize',()=>{ if(!isM()) closePop(); });
+document.addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if(document.getElementById('pop')) closePop(); else if(fs.style.display==='flex') closeF(); else if(ov.style.display==='flex') closeS(); });
 function afterChange(k){ if(!S.cat.length){ S.spec={}; if(S.ppu){ S.ppu=''; if(S.sort==='ppu'){ S.sort='save'; S.dir=-1; } } SP.open=false; }
   document.querySelectorAll('[data-ms]').forEach(b=>{ b.textContent=msText(b.dataset.ms); b.classList.toggle('set',S[b.dataset.ms].length>0); });
   const a=document.getElementById('ap'); if(a){ a.innerHTML=appliedHTML(); bindApplied(); }
@@ -461,13 +487,16 @@ function appliedHTML(){ const a=[];
   return (a.length||spx)?`<div class="applied">${a.map(([k,v])=>`<button class="ch" data-k="${esc(k)}">${esc(v)} <i>×</i></button>`).join('')}${a.length?`<button class="clr" id="clr">${t('clear')}</button>`:''}${spx}</div>`:''; }
 function nF(){ return Object.keys(MS).reduce((n,k)=>n+S[k].length,0)+(S.min||S.max?1:0)+TOG.filter(([k])=>S[k]).length+Object.values(S.spec).reduce((n,v)=>n+v.length,0); }
 function search(){ const real=X.filter(x=>x.vg==='real').length, fake=X.filter(x=>x.vg==='fake'||x.vg==='raised').length, stores=uniq(R.map(r=>r[0])).length;
-  main.innerHTML=`<p class="lede">${t('lede')(nf(R.length),stores,nf(real),nf(fake))}</p>
+  main.innerHTML=`<div class="kpis"><div><b class="num">${nf(R.length)}</b><span>${t('k.items')(stores)}</span></div>
+   <a href="#" data-go="deals" class="good"><b class="num">${nf(real)}</b><span>${t('k.real')}</span></a>
+   <a href="#" data-go="deals" class="bad"><b class="num">${nf(fake)}</b><span>${t('k.fake')}</span></a>
+   <div><b class="num">${esc(dm(D.updated.slice(5,10)))} ${esc(D.updated.slice(11,16))}</b><span>${t('k.upd')}</span></div></div>
   <div class="q"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
    <input type="search" id="q" placeholder="${esc(t('ph'))}" value="${esc(S.q)}" autocomplete="off" enterkeyhint="search"></div>
   <div class="tool" id="tool"></div><div id="ap"></div><div id="specp"></div>
   <div class="resbar"><span class="cnt" id="cnt"></span><span class="sp"></span><label>${t('sortBy')} <select class="sel" id="so"></select></label></div>
   <div id="res"></div><div class="pager" id="pg"></div>`;
-  main.querySelector('.lede a').onclick=e=>{ e.preventDefault(); go('deals'); };
+  main.querySelectorAll('.kpis a').forEach(a=>a.onclick=e=>{ e.preventDefault(); go('deals'); });
   let tm; q.addEventListener('input',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ S.q=q.value; S.page=0; results(); setHash(); },180); });
   so.onchange=()=>{ S.sort=so.value; S.dir=SDEF[S.sort]; S.page=0; results(); };
   mbar.style.display=''; refreshTool(); results(); }
@@ -524,7 +553,7 @@ function row(x){ const r=x.r; return `<div class="it" onclick="openItem(${x.i})"
   <div class="bot">${vtag(r[6])}${x.save?`<span class="save num" style="font-size:13px">−${nf(x.save)} din</span>`:x.claimed?`<span class="pct bad num" style="font-size:13px">−${pct(x.claimed)}</span>`:''}${x.xs?`<span class="meta" style="margin:0">${esc(r[11])}: ${nf(x.xs)}</span>`:''}<span class="sp"></span><span class="dt ${x.since===TODAY?'new':''}">${dm(x.since)}</span></div></div>`; }
 function srt(k){ setSort(S,k,SDEF[k]||(['store','name','price'].includes(k)?1:-1)); results(); }
 function openF(mode){ closePop(); fs.style.display='flex'; document.body.style.overflow='hidden';
-  fs.innerHTML=`<div class="fh"><b>${mode==='sort'?t('sort'):t('filters')}</b><button class="x" onclick="closeF()">✕</button></div><div class="fb" id="fb"></div>
+  fs.innerHTML=`<div class="fh"><b>${mode==='sort'?t('sort'):t('filters')}</b><button class="x" onclick="closeF()" aria-label="Zatvori">${IC.x}</button></div><div class="fb" id="fb"></div>
    <div class="ff"><button class="btn pri" style="width:100%" onclick="closeF()" id="fgo"></button></div>`;
   if(mode==='sort'){ fb.innerHTML=`<div class="tgs">${Object.keys(SDEF).filter(k=>k!=='ppu'||S.ppu).map(k=>`<button class="tg ${S.sort===k?'on':''}" data-s="${k}">${k==='ppu'?t('ppuSort')(t('PU')[S.ppu]||''):t('sorts')[k]}</button>`).join('')}</div>`;
     fb.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{ S.sort=b.dataset.s; S.dir=SDEF[S.sort]; S.page=0; results(); closeF(); }); fgo.textContent=t('done'); return; }
@@ -612,7 +641,7 @@ function admin(){ mbar.style.display='none'; const stores=Object.keys(CATS.found
   sv.onclick=async()=>{ try{ await navigator.clipboard.writeText(json); }catch(e){ js.select(); document.execCommand('copy'); }
     cp.textContent=t('adm.copied'); window.open(`https://github.com/${D.repo}/edit/main/categories.json`,'_blank','noopener'); }; }
 function fav(){ const m=FAV.all(); const ids=Object.keys(m).sort((a,b)=>(m[b].d||'').localeCompare(m[a].d||''));
-  main.innerHTML=`<h2>${t('fv.h')}</h2><p class="sub">${t('fv.s')} ${ACC.favNote()}</p>`+(ids.length?ACC.alertBox():'')+(ids.some(id=>ACC.can(m[id].s))?`<p><button class="btn pri" onclick="ACC.savedMap()">🗺 ${ACC.t('savedMap')}</button></p>`:'')+(!ids.length?`<div class="list empty">${t('fv.empty')}</div>`:`<div class="list m">${ids.map(id=>{ const x=byId(id), s=m[id];
+  main.innerHTML=`<h2>${t('fv.h')}</h2><p class="sub">${t('fv.s')} ${ACC.favNote()}</p>`+(ids.length?ACC.alertBox():'')+(ids.some(id=>ACC.can(m[id].s))?`<p><button class="btn pri" onclick="ACC.savedMap()">${IC.map}${ACC.t('savedMap')}</button></p>`:'')+(!ids.length?`<div class="list empty">${t('fv.empty')}</div>`:`<div class="list m">${ids.map(id=>{ const x=byId(id), s=m[id];
     const d=x?x.r[3]-s.p:0; const ch=!x?`<span class="tag neu">${t('fv.gone')}</span>`:d<0?`<span class="tag good">−${nf(-d)} din (${pct(-d/s.p)})</span>`:d>0?`<span class="tag bad">+${nf(d)} din (${pct(d/s.p)})</span>`:`<span class="tag neu">${t('fv.same')}</span>`;
     return `<div class="it" ${x?`onclick="openItem(${x.i})"`:'style="cursor:default"'}><div class="top"><div><div class="nm">${esc(s.n)}</div><div class="meta">${st(s.s)}</div></div>
       <div class="r">${x?`<div class="pr num">${money(x.r[3])}</div>`:''}<div class="meta num">${esc(t('fv.then')(nf(s.p)))} · ${dm((s.d||'').slice(5))}</div></div></div>
@@ -696,7 +725,7 @@ const ACC=(()=>{
       google:'Nastavi sa Google nalogom',email:'Email adresa',send:'Pošalji link za prijavu',sent:e=>`Poslali smo link na ${e}. Otvorite ga na ovom uređaju – ili upišite kod iz emaila:`,code:'Kod iz emaila',verify:'Potvrdi kod',
       out:'Odjavi se',signed:e=>`Prijavljeni ste kao ${e}.`,savedN:n=>`Sačuvanih artikala na nalogu: ${n}.`,bad:'Nešto nije u redu – pokušajte ponovo.',needLogin:'Mapa prodavnica je dostupna samo prijavljenim korisnicima.',
       where:'Gde je na stanju',whereH:'Gde je na stanju',loading:'Proveravamo stanje u prodavnicama…',none:'Prodavnica trenutno ne prijavljuje ovaj artikal ni u jednoj radnji (moguće je da je dostupan samo online).',
-      near:'📍 Najbliže meni',area:'Samo ovo područje',all:'Svi gradovi',km:k=>`${k} km`,qty:q=>`na stanju: ${q}`,route:'Putanja',call:'Pozovi',approx:'približna lokacija',checked:(n,c)=>`${n} radnji · ${c}`,back:'← Nazad na artikal',
+      near:'Najbliže meni',area:'Samo ovo područje',all:'Svi gradovi',km:k=>`${k} km`,qty:q=>`na stanju: ${q}`,route:'Putanja',call:'Pozovi',approx:'približna lokacija',checked:(n,c)=>`${n} radnji · ${c}`,back:'← Nazad na artikal',
       noGeo:'Ne možemo da dobijemo vašu lokaciju – izaberite grad ili pomerite mapu.',err:'Prodavnica trenutno ne odgovara – pokušajte malo kasnije.',savedMap:'Mapa sačuvanih artikala',savedMapH:'Gde su vaši sačuvani artikli',
       savedMapS:(n,m)=>`Proverili smo ${n} artikala iz radnji koje prijavljuju stanje${m?` (još ${m} je iz online prodavnica)`:''}. Najbolje su radnje u kojima je najviše vaših artikala.`,has:(a,b)=>`${a} od ${b} artikala`,
       favNote:'Prijavite se da ih imate na svim uređajima.',favCloud:'Čuvaju se i na vašem babl nalogu.',
@@ -705,7 +734,7 @@ const ACC=(()=>{
       google:'Continue with Google',email:'Email address',send:'Send sign-in link',sent:e=>`We sent a link to ${e}. Open it on this device – or type the code from the email:`,code:'Code from the email',verify:'Confirm code',
       out:'Sign out',signed:e=>`Signed in as ${e}.`,savedN:n=>`Articles saved to your account: ${n}.`,bad:'Something went wrong – please try again.',needLogin:'The store map is available to signed-in users only.',
       where:'Where in stock',whereH:'Where is it in stock',loading:'Checking stock in the stores…',none:'The shop does not report this article in any physical store right now (it may be online only).',
-      near:'📍 Nearest to me',area:'Only this area',all:'All cities',km:k=>`${k} km`,qty:q=>`in stock: ${q}`,route:'Directions',call:'Call',approx:'approximate location',checked:(n,c)=>`${n} stores · ${c}`,back:'← Back to the article',
+      near:'Nearest to me',area:'Only this area',all:'All cities',km:k=>`${k} km`,qty:q=>`in stock: ${q}`,route:'Directions',call:'Call',approx:'approximate location',checked:(n,c)=>`${n} stores · ${c}`,back:'← Back to the article',
       noGeo:'We cannot get your location – pick a city or move the map.',err:'The shop is not answering right now – please try again a bit later.',savedMap:'Map of saved articles',savedMapH:'Where your saved articles are',
       savedMapS:(n,m)=>`We checked ${n} articles from shops that report store stock${m?` (${m} more are from online shops)`:''}. The best stores are the ones holding most of your articles.`,has:(a,b)=>`${a} of ${b} articles`,
       favNote:'Sign in to have them on all your devices.',favCloud:'They are also kept in your babl account.',
@@ -736,8 +765,8 @@ const ACC=(()=>{
     if(PREF&&pr.data.lang!==lang) sb.from('cene_prefs').update({lang}).eq('user_id',user.id).then(()=>{});
     tabs(); if(cur==='fav') fav(); }
   // ---- price-drop e-mails (opt-in; sent by the morning run)
-  function alertBox(){ if(!user) return `<div class="alrt"><button class="btn" onclick="ACC.open('alert')">🔔 ${esc(T('alOn'))}</button> <span class="meta">${esc(T('alNeed'))}</span></div>`;
-    return `<div class="alrt"><label><input type="checkbox" ${PREF?'checked':''} onchange="ACC.setAlert(this.checked)"> 🔔 ${esc(T('alOn'))}</label><div class="meta">${esc(T(PREF?'alYes':'alHint')(user.email||''))}</div></div>`; }
+  function alertBox(){ if(!user) return `<div class="alrt"><button class="btn" onclick="ACC.open('alert')">${IC.bell}${esc(T('alOn'))}</button> <span class="meta">${esc(T('alNeed'))}</span></div>`;
+    return `<div class="alrt"><label><input type="checkbox" ${PREF?'checked':''} onchange="ACC.setAlert(this.checked)"> ${esc(T('alOn'))}</label><div class="meta">${esc(T(PREF?'alYes':'alHint')(user.email||''))}</div></div>`; }
   async function setAlert(on){ const {error}=await sb.from('cene_prefs').upsert({user_id:user.id,price_alerts:on,lang,updated_at:new Date().toISOString()});
     if(error){ toast(T('bad')); if(cur==='fav') fav(); return; } PREF=on; ev('alert',{data:{on}}); toast(T(on?'alSet':'alOff')); if(cur==='fav') fav(); }
   const _add=FAV.add, _del=FAV.del;
@@ -746,10 +775,10 @@ const ACC=(()=>{
   // ---- sign-in sheet
   function sheetOpen(html){ sheet.innerHTML=html; ov.style.display='flex'; sheet.scrollTop=0; document.body.style.overflow='hidden'; }
   async function open(reason){ try{ await load(); }catch(e){ toast(T('bad')); return; }
-    if(user){ sheetOpen(`<div class="sh"><div><h2>${esc(T('acct'))}</h2></div><button class="x" onclick="closeS()">✕</button></div>
+    if(user){ sheetOpen(`<div class="sh"><div><h2>${esc(T('acct'))}</h2></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div>
       <p class="sub" style="margin-top:12px">${esc(T('signed')(user.email||''))}<br>${esc(T('savedN')(FAV.n()))}</p><button class="btn" onclick="ACC.logout()">${T('out')}</button>`); return; }
-    sheetOpen(`<div class="sh"><div><h2>${esc(T('h'))}</h2></div><button class="x" onclick="closeS()">✕</button></div>
-      ${reason==='map'?`<p class="lock">🔒 ${esc(T('needLogin'))}</p>`:reason==='alert'?`<p class="lock">🔔 ${esc(T('needAlert'))}</p>`:''}<p class="sub" style="margin-top:10px">${esc(T('s'))}</p>
+    sheetOpen(`<div class="sh"><div><h2>${esc(T('h'))}</h2></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div>
+      ${reason==='map'?`<p class="lock">${IC.lock}${esc(T('needLogin'))}</p>`:reason==='alert'?`<p class="lock">${IC.bell}${esc(T('needAlert'))}</p>`:''}<p class="sub" style="margin-top:10px">${esc(T('s'))}</p>
       <div class="lgn"><button class="btn pri" onclick="ACC.google()">${T('google')}</button><div class="or">ili / or</div>
        <input type="email" id="lem" placeholder="${esc(T('email'))}" autocomplete="email"><button class="btn" onclick="ACC.email()">${T('send')}</button><div id="lmsg"></div></div>`); }
   async function google(){ sessionStorage.setItem('ret',location.hash||''); ev('login',{data:{via:'google'}});
@@ -770,20 +799,20 @@ const ACC=(()=>{
   const dir=s=>`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}`;
   async function gate(){ if(!hasSession()&&!user){ open('map'); return false; } try{ await load(); }catch(e){ toast(T('bad')); return false; } if(!user){ open('map'); return false; } return true; }
   async function stock(k){ if(!await gate()) return; const x=X[k], r=x.r; ev('stock',{store:r[0],item:r[2]});
-    sheetOpen(`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])}</div><h2>${esc(T('whereH'))}</h2><div class="meta">${esc(r[2])}</div></div><button class="x" onclick="closeS()">✕</button></div><p class="sub" style="margin-top:14px">${esc(T('loading'))}</p>`);
+    sheetOpen(`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])}</div><h2>${esc(T('whereH'))}</h2><div class="meta">${esc(r[2])}</div></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div><p class="sub" style="margin-top:14px">${esc(T('loading'))}</p>`);
     let stores; try{ stores=await call(r[0],r[C.url],r[2]); }catch(e){ if(e.message==='login'){ open('map'); return; } sheet.querySelector('.sub').textContent=T('err'); return; }
     render({title:T('whereH'),sub:r[2],chain:r[0],back:k,stores:stores.map(s=>Object.assign(s,{items:[x]}))}); }
   async function savedMap(){ if(!await gate()) return; const m=FAV.all(); const ids=Object.keys(m); const sup=ids.filter(id=>CHAINS.includes(m[id].s)&&(m[id].u||byId(id)));
-    sheetOpen(`<div class="sh"><div><h2>${esc(T('savedMapH'))}</h2></div><button class="x" onclick="closeS()">✕</button></div><p class="sub" style="margin-top:14px">${esc(T('loading'))}</p>`);
+    sheetOpen(`<div class="sh"><div><h2>${esc(T('savedMapH'))}</h2></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div><p class="sub" style="margin-top:14px">${esc(T('loading'))}</p>`);
     const by={}; let done=0; ev('stock',{data:{saved:sup.length}});
     for(const id of sup.slice(0,15)){ const v=m[id], x=byId(id); const url=x?x.r[C.url]:v.u; try{ for(const s of await call(v.s,url,v.n)){ const kk=s.chain+'|'+s.label; (by[kk]=by[kk]||Object.assign(s,{items:[]})).items.push(x||{r:[v.s,'',v.n,v.p],i:null}); } }catch(e){} done++;
       const p=sheet.querySelector('.sub'); if(p) p.textContent=T('loading')+` ${done}/${Math.min(15,sup.length)}`; }
     render({title:T('savedMapH'),sub:T('savedMapS')(Math.min(15,sup.length),ids.length-sup.length),stores:Object.values(by),total:Math.min(15,sup.length)}); }
-  async function render(o){ const head=`<div class="sh"><div>${o.chain?`<div class="meta" style="margin:0 0 6px">${st(o.chain)}</div>`:''}<h2>${esc(o.title)}</h2><div class="meta">${esc(o.sub||'')}</div></div><button class="x" onclick="closeS()">✕</button></div>`;
+  async function render(o){ const head=`<div class="sh"><div>${o.chain?`<div class="meta" style="margin:0 0 6px">${st(o.chain)}</div>`:''}<h2>${esc(o.title)}</h2><div class="meta">${esc(o.sub||'')}</div></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div>`;
     const back=o.back!=null?`<p style="margin:10px 0 0"><button class="btn" onclick="openItem(${o.back})">${T('back')}</button></p>`:'';
     if(!o.stores.length){ sheetOpen(head+`<p class="sub" style="margin-top:14px">${esc(T('none'))}</p>`+back); return; }
     const cities=uniq(o.stores.map(s=>s.city));
-    sheetOpen(head+`<div class="mapbar" style="margin-top:12px"><button class="btn" id="mnear">${T('near')}</button><select class="sel" id="mcity">${opt(cities,'',T('all'))}</select>
+    sheetOpen(head+`<div class="mapbar" style="margin-top:12px"><button class="btn" id="mnear">${IC.pin}${T('near')}</button><select class="sel" id="mcity">${opt(cities,'',T('all'))}</select>
       <label class="meta" style="margin:0"><input type="checkbox" id="marea"> ${esc(T('area'))}</label></div><div id="smap"></div><div class="meta" id="mcnt"></div><div class="list m stl" id="mlist"></div>`+back);
     let Lf; try{ Lf=await leaflet(); }catch(e){ document.getElementById('smap').style.display='none'; }
     const pts=o.stores.filter(s=>s.lat!=null);

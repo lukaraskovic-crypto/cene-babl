@@ -154,9 +154,14 @@ window.parseBZ = html => { const d=new DOMParser().parseFromString(html,'text/ht
     let p=pr?pN(pr.textContent):null, o=od?pN(od.textContent):null; if(o&&p&&o<=p) o=null;
     return {n:h?h.textContent.trim().replace(/\s+/g,' '):'', u:new URL(a.getAttribute('href'),location.origin).href.split('?')[0], p, o, s:sl?sl.textContent.trim():''}; }).filter(x=>x.u&&x.p&&x.n); };
 window.parseBB = t => { const out=[]; const parts=t.split(/\{\s*\\?"?item_id\\?"?\s*:/);
- for(let i=1;i<parts.length;i++){ const b=parts[i].slice(0,1500);
+ // item_name is read as a whole JSON string (names contain commas: "DELL Pro 16 (FHD+ IPS 300nits, Intel …)");
+ // the page has it either as plain JSON ("item_name":"…") or escaped inside a script (\"item_name\":\"…\")
+ const un=v=>v.replace(/\\\\/g,'\\').replace(/\\u([0-9a-fA-F]{4})/g,(m,h)=>String.fromCharCode(parseInt(h,16))).replace(/\\"/g,'"').replace(/\\\//g,'/').replace(/\s+/g,' ').trim();
+ const str=(b,k)=>{ let m=b.match(new RegExp('\\\\"'+k+'\\\\"\\s*:\\s*\\\\"(.*?)\\\\"(?=\\s*[,}])')); if(m) return un(m[1]);
+   m=b.match(new RegExp('(?:^|[{,\\s])"?'+k+'"?\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"')); return m?un(m[1]):null; };
+ for(let i=1;i<parts.length;i++){ const b=parts[i].slice(0,2500);
   const g=k=>{ const m=b.match(new RegExp('\\\\?"?'+k+'\\\\?"?\\s*:\\s*\\\\?["\']?([^"\',}\\\\]*)')); return m?m[1].trim():null; };
-  out.push({id:(b.match(/^\s*\\?["']?([^"',\\]+)/)||[])[1], n:(g('item_name')||'').replace(/\\u0026/g,'&'), c:g('item_category2'), p:+g('price'), d:+(g('discount')||0)}); }
+  out.push({id:(b.match(/^\s*\\?["']?([^"',\\]+)/)||[])[1], n:str(b,'item_name')||(g('item_name')||'').replace(/\\u0026/g,'&'), c:str(b,'item_category2')||g('item_category2'), p:+g('price'), d:+(g('discount')||0)}); }
  return out; };
 window.parseAn = html => { const d=new DOMParser().parseFromString(html,'text/html'); const out=[];
  for(const h2 of d.querySelectorAll('h2')){ let el=h2, card=null;
