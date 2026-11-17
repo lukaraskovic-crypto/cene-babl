@@ -65,6 +65,15 @@ the phone's share sheet (or downloads it on a computer). `seo.py` writes plain-H
 up to 5,000 article pages (`p/`), category and store pages, `popusti.html`, `crni-petak.html`, `sitemap.xml`, `robots.txt`.
 Submit `https://cene.babl.cc/sitemap.xml` once in Google Search Console.
 
+## Website analytics (anonymous)
+Events go to the `events` table through the `log_events` RPC: visits, tabs, searches (with result count), filters, opened articles, clicks to
+shops, saves, shares, share images, sign-ins, alerts, stock checks, time on site / scroll depth (`leave`), JavaScript errors, and page views of
+the search-engine pages (`page`, via `/t.js`). No cookies, no IP addresses, no persistent visitor id: the id lives for one browser-tab session;
+the browser keeps only the dates of its first and last visit and a visit counter, and sends "new / returning, nth visit, days since last".
+Device facts are coarse (phone/tablet/desktop, OS and browser family, in-app browser). Do Not Track / Global Privacy Control and the footer
+switch turn tracking off. Tag the links you post with `?utm_source=reddit&utm_campaign=crni-petak` (or `?ref=…`) to see campaigns.
+The daily e-mail adds these from the `usage_extra(day)` RPC (service role only).
+
 ## Wording of the verdicts
 Verdicts only compare published prices (today's price vs the lowest price the store states for the previous 30 days, which shops
 must show since the 2026 amendments of the Zakon o trgovini). They are worded as facts ("Nije niže od 30 dana", "Iznad 30-dnevnog

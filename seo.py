@@ -101,6 +101,21 @@ ul.l{list-style:none;padding:0;margin:0}ul.l li{background:var(--s);border:1px s
 ul.l .n{font-weight:600}ul.l .m{font-size:13px;color:var(--m)}ul.l .p{font-weight:800;white-space:nowrap}.cl{columns:2 220px;font-size:15px}.cl a{display:block;padding:2px 0}
 table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid var(--b);padding:6px 4px;text-align:left}footer{border-top:1px solid var(--b);color:var(--m);font-size:13px;padding:18px 0 40px}"""
 
+# anonymous page-view log for these static pages (same rules as the main site: no cookies, no IPs, no persistent id; DNT/GPC respected)
+TJS = r"""(()=>{ try{ if(!/babl\.cc$/.test(location.hostname)||localStorage.getItem('notrack')==='1'||navigator.doNotTrack==='1'||navigator.globalPrivacyControl) return; }catch(e){ return; }
+let sid=''; try{ sid=sessionStorage.getItem('sid')||''; }catch(e){}
+if(!sid){ sid=(Math.random().toString(36).slice(2)+Date.now().toString(36)).replace(/[^a-z0-9]/g,'').slice(0,24); try{ sessionStorage.setItem('sid',sid); }catch(e){} }
+let ref=''; try{ ref=document.referrer?new URL(document.referrer).hostname:''; }catch(e){}
+const pth=location.pathname, kind=pth.startsWith('/p/')?'p':pth.startsWith('/k/')?'k':pth.startsWith('/prodavnica/')?'store':pth.replace(/^\/|\.html$/g,'')||'home';
+let fs=null; try{ fs=localStorage.getItem('fs'); if(!fs) localStorage.setItem('fs',new Date().toISOString().slice(0,10)); }catch(e){}
+const send=rows=>{ try{ fetch('https://hxtdrtsqigvuvhaszxna.supabase.co/rest/v1/rpc/log_events',{method:'POST',keepalive:true,headers:{apikey:'sb_publishable_DPAXHrrEuhxB1ABfXQ7UrQ_azF6yuZ5','Content-Type':'application/json'},body:JSON.stringify({rows})}).catch(()=>{}); }catch(e){} };
+const m=matchMedia('(max-width:760px)').matches, t0=Date.now();
+send([{sid,ev:'page',q:pth.slice(0,120),ref:ref||'direct',lang:'sr',mobile:m,item:(document.querySelector('h1')||{}).textContent?.slice(0,150),data:{kind,new:!fs}}]);
+let done=false; const leave=()=>{ if(done) return; done=true; send([{sid,ev:'leave',q:pth.slice(0,120),lang:'sr',mobile:m,data:{sec:Math.min(3600,Math.round((Date.now()-t0)/1000)),kind}}]); };
+addEventListener('pagehide',leave); addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') leave(); });
+document.addEventListener('click',e=>{ const a=e.target.closest('a[href^="http"]'); if(!a) return; let h=''; try{ h=new URL(a.href).hostname; }catch(_){}
+  if(h&&!/babl\.cc$/.test(h)) send([{sid,ev:'out',store:h.replace(/^www\./,''),item:(document.querySelector('h1')||{}).textContent?.slice(0,150),lang:'sr',mobile:m,data:{from:kind}}]); },true); })();"""
+
 def page(title, desc, path, body, crumbs=(), ld=None, og_type="website"):
     url = BASE + "/" + path
     bc = ('<div class="bc"><a href="/">babl cene</a>' + "".join(f' › <a href="{e(h)}">{e(t)}</a>' if h else f" › {e(t)}" for t, h in crumbs) + "</div>") if crumbs else ""
@@ -113,7 +128,7 @@ def page(title, desc, path, body, crumbs=(), ld=None, og_type="website"):
     return f"""<!doctype html><html lang="sr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}"><link rel="canonical" href="{e(url)}">
 <meta property="og:type" content="{og_type}"><meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:url" content="{e(url)}"><meta property="og:site_name" content="babl cene"><meta property="og:locale" content="sr_RS">
-<meta name="theme-color" content="#1F6B45"><link rel="stylesheet" href="/seo.css">{ldh}</head><body>
+<meta name="theme-color" content="#1F6B45"><link rel="stylesheet" href="/seo.css">{ldh}<script defer src="/t.js"></script></head><body>
 <header><div class="w"><a class="wm" href="/">babl <b>cene</b></a><nav><a href="/popusti.html">Potvrđena sniženja</a><a href="/crni-petak.html">Crni petak</a></nav></div></header>
 <main class="w">{bc}{body}</main><footer class="w">{e(NOTE)} <a href="/">Pretraga svih artikala</a> · <a href="/sitemap.xml">Mapa sajta</a></footer></body></html>"""
 
@@ -154,6 +169,7 @@ def build(site, log=print):
         (site / d).mkdir(parents=True, exist_ok=True)
         for f in (site / d).glob("*.html"): f.unlink()
     (site / "seo.css").write_text(CSS, encoding="utf-8")
+    (site / "t.js").write_text(TJS, encoding="utf-8")
     urls = [(BASE + "/", data["date"])]
     W = lambda path, s: ((site / path).write_text(s, encoding="utf-8"), urls.append((BASE + "/" + path, data["date"])))
 

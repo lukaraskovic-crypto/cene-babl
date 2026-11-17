@@ -162,7 +162,13 @@ def usage_report(day):
     r, _ = _req("POST", "rpc/usage_report", {"day": day})
     return r
 
-def report_html(u, runs=()):
+def usage_extra(day):
+    """Newer anonymous signals: new vs returning, engagement time, sources, devices, funnels, search pages, errors."""
+    try: r, _ = _req("POST", "rpc/usage_extra", {"day": day}); return r or {}
+    except Exception: return {}
+
+def report_html(u, runs=(), x=None):
+    x = x or {}
     import html as _h
     e = lambda x: _h.escape(str(x if x is not None else ""))
     nf = lambda n: f"{int(n or 0):,}".replace(",", ".")
@@ -202,6 +208,35 @@ def report_html(u, runs=()):
            table("Filteri: prekidači i sortiranje", [[FLAG_NAMES.get(k, k), n] for k, n in u.get("filter_flags") or []] + [["sortiranje: " + SORT_NAMES.get(k, k), n] for k, n in u.get("sorts") or []], ["", "Posetilaca"]),
            table("Poslednjih 14 dana", [[x[0], nf(x[1])] for x in u.get("last14") or []], ["Dan", "Posetilaca"]),
            f'<p style="font:13px Arial;margin:16px 0 0">Najprometniji sati: {e(", ".join(f"{h}h ({n})" for h, n in peak) or "–")}</p>']
+    if x.get("visits_tagged"):
+        pc = lambda a, b: f"{round(100 * a / b)}%" if b else "–"
+        vt, f = x["visits_tagged"], x.get("funnel") or {}
+        sec = lambda v: "–" if v is None else (f"{int(v)} s" if v < 90 else f"{int(v) // 60} min {int(v) % 60:02d} s")
+        ENT = {"home": "početna strana", "item": "link ka artiklu (deljen)", "search": "link ka pretrazi", "tab": "link ka kartici"}
+        out += [table("Novi i povratni posetioci (juče)", [["Novi", nf(x.get("new")), pc(x.get("new") or 0, vt)], ["Vratili su se", nf(x.get("returning")), pc(x.get("returning") or 0, vt)]]
+                      + [[f"Poseta po redu: {b}", nf(n), pc(n, vt)] for b, n in x.get("nth") or []] + [[f"Prethodna poseta: {b}", nf(n), ""] for b, n in x.get("since") or []],
+                      ["", "Poseta", "Udeo"], "Bez ID-ja: pregledač pamti samo datum prve i poslednje posete i šalje „nov / povratni“."),
+                table("Povratni posetioci – poslednjih 7 dana", [[d, f"{nf(r)} od {nf(t)}", pc(r, t)] for d, r, t in x.get("returning_7d") or []], ["Dan", "Povratnih", "Udeo"]),
+                table("Angažovanost (juče)", [["Vreme na sajtu – prosek", sec(x.get("eng_avg"))], ["Vreme na sajtu – medijana", sec(x.get("eng_median"))],
+                                              ["Prosečna dubina skrolovanja", f"{x.get('depth_avg') or '–'}%"]] + [[f"Trajanje {b}", f"{nf(n)} ({pc(n, x.get('eng_n') or 0)})"] for b, n in x.get("eng_buckets") or []],
+                      ["", ""], "Računa se samo vreme dok je sajt vidljiv na ekranu."),
+                table("Put kroz sajt (juče)", [["Pretražili → otvorili artikal", f"{nf(f.get('search_item'))} od {nf(f.get('search'))}", pc(f.get("search_item") or 0, f.get("search") or 0)],
+                                               ["Otvorili artikal → kliknuli ka radnji", f"{nf(f.get('item_out'))} od {nf(f.get('item'))}", pc(f.get("item_out") or 0, f.get("item") or 0)],
+                                               ["Kliknuli ka radnji (od svih)", f"{nf(f.get('out'))} od {nf(f.get('sessions'))}", pc(f.get("out") or 0, f.get("sessions") or 0)]], ["", "Sesija", "Stopa"]),
+                table("Ulazna tačka", [[ENT.get(b, b), nf(n), pc(n, vt)] for b, n in x.get("entry") or []], ["", "Poseta", "Udeo"]),
+                table("Kampanje (utm / ?ref=)", [[b, nf(n)] for b, n in x.get("src") or []], ["Izvor / medij / kampanja", "Poseta"], "Dodajte npr. ?utm_source=reddit&utm_campaign=crni-petak na linkove koje objavljujete."),
+                table("Otvoreno iz aplikacije", [[b, nf(n)] for b, n in x.get("app") or []], ["Aplikacija", "Poseta"]),
+                table("Uređaji", [["Uređaj: " + str(b), nf(n)] for b, n in x.get("dev") or []] + [["Sistem: " + str(b), nf(n)] for b, n in x.get("os") or []]
+                      + [["Pregledač: " + str(b), nf(n)] for b, n in x.get("br") or []] + [["Tamna tema", f"{x.get('dark_pct') or 0}%"]], ["", "Poseta"]),
+                table("Brzina učitavanja", [["Medijana do prikaza podataka", f"{int(x['load_median'])} ms" if x.get("load_median") is not None else "–"],
+                                            ["Sporije od 5 s", f"{x.get('load_slow_pct') or 0}%"]], ["", ""])]
+    if x.get("seo_views"):
+        out += [table("Stranice za pretraživače (juče)", [["Pregleda", nf(x.get("seo_views"))], ["Sesija", nf(x.get("seo_sessions"))], ["Nastavili na glavni sajt", nf(x.get("seo_to_site"))]]
+                      + [["Vrsta: " + {"p": "artikal", "k": "kategorija", "store": "prodavnica"}.get(b, b), nf(n)] for b, n in x.get("seo_kinds") or []], ["", ""]),
+                table("Najposećenije stranice za pretraživače", [[str(b)[:70], nf(n)] for b, n in x.get("seo_pages") or []], ["Stranica", "Pregleda"]),
+                table("Odakle na stranice za pretraživače", [[b, nf(n)] for b, n in x.get("seo_refs") or []], ["Izvor", "Pregleda"])]
+    if x.get("errors"):
+        out.append(table("Greške na sajtu (JavaScript)", [[str(b)[:90], nf(n)] for b, n in x["errors"]], ["Poruka", "Sesija"], "Ako se ovde nešto pojavi, javite – verovatno je nešto pokvareno."))
     if runs:
         out.append(table("Sistem – poslednja preuzimanja", [[f"{r['finished_at'][:16].replace('T', ' ')} UTC · {r['mode']}", f"{nf(r['articles'])} art." + (" · ⚠ " + r["problems"][:80] if r.get("problems") else " · OK")] for r in runs], ["Preuzimanje", "Rezultat"]))
     out.append('<p style="font:12px Arial;color:#9ca3af;margin:18px 0 0">Automatski izveštaj · cene.babl.cc · šalje se uz prvo jutarnje osvežavanje cena</p></div>')
@@ -231,7 +266,7 @@ def send_daily_report(today, hour, log=print, force=False):
     to = os.environ.get("REPORT_EMAIL") or senders[0]["email"]
     _brevo("POST", "smtp/email", {"sender": {"name": "babl cene", "email": senders[0]["email"]}, "to": [{"email": to}],
                                   "subject": f"babl cene · {day}: {u.get('users_day') or 0} posetilaca (MTD {u.get('users_mtd') or 0}, YTD {u.get('users_ytd') or 0})",
-                                  "htmlContent": "<html><body>" + report_html(u, runs) + "</body></html>"})
+                                  "htmlContent": "<html><body>" + report_html(u, runs, usage_extra(day)) + "</body></html>"})
     meta_set("report_sent", today); log(f"daily report for {day} e-mailed")
     return True
 

@@ -625,15 +625,19 @@ function tabs(){ const list=TABS.concat(location.hash==='#admin'?['admin']:[]);
 function go(k){ cur=k; tabs(); FN[k](); scrollTo({top:0}); setHash(); }
 function chrome(){ document.documentElement.lang=lang; const [d,h]=D.updated.split(' '); const [,m,dd]=d.split('-'); const ds=`${+dd}. ${MON[lang][+m-1]}`;
   fresh.textContent=t('fresh')(ds,h)+((D.problems||[]).length?' · '+t('prob')(D.problems.length):''); fresh.title=(D.problems||[]).join('\n');
-  foot.innerHTML=`<div><h4>${t('foot.h')}</h4><p>${t('foot.p1')}</p><p>${t('foot.p2')}</p></div><div><h4>${t('foot.h2')}</h4><p>${t('foot.p3')}</p><p>babl · ${t('fresh')(ds,h)}</p><p><a href="/popusti.html">${lang==='sr'?'Potvrđena sniženja danas':'Confirmed reductions today'}</a> · <a href="/crni-petak.html">${lang==='sr'?'Crni petak':'Black Friday'}</a> · <a href="/sitemap.xml">${lang==='sr'?'Mapa sajta':'Sitemap'}</a></p></div>`;
+  foot.innerHTML=`<div><h4>${t('foot.h')}</h4><p>${t('foot.p1')}</p><p>${t('foot.p2')}</p></div><div><h4>${t('foot.h2')}</h4><p>${t('foot.p3')}</p><p>babl · ${t('fresh')(ds,h)}</p><p class="meta">${lang==='sr'?'Privatnost: statistika je anonimna – bez kolačića, bez IP adresa i bez ličnih podataka; pregledač pamti samo datum vaše prve i poslednje posete.':'Privacy: statistics are anonymous – no cookies, no IP addresses, no personal data; your browser only keeps the date of your first and last visit.'} <a href="#" onclick="event.preventDefault();trackSwitch()">${(()=>{ let o=false; try{ o=localStorage.getItem('notrack')==='1'; }catch(e){} return lang==='sr'?(o?'Uključi statistiku':'Isključi statistiku'):(o?'Turn statistics on':'Turn statistics off'); })()}</a></p><p><a href="/popusti.html">${lang==='sr'?'Potvrđena sniženja danas':'Confirmed reductions today'}</a> · <a href="/crni-petak.html">${lang==='sr'?'Crni petak':'Black Friday'}</a> · <a href="/sitemap.xml">${lang==='sr'?'Mapa sajta':'Sitemap'}</a></p></div>`;
   document.querySelectorAll('.lng button').forEach(b=>b.classList.toggle('on',b.dataset.l===lang)); }
 document.getElementById('tabs').onclick=e=>{ const k=e.target.closest('button')?.dataset.t; if(k) go(k); };
 document.querySelectorAll('.lng button').forEach(b=>b.onclick=()=>{ lang=b.dataset.l; try{ localStorage.setItem('lang',lang); }catch(e){} chrome(); go(cur); });
 window.addEventListener('hashchange',()=>{ if(location.hash==='#admin') go('admin'); else tabs(); });
 let wasM=isM(); window.addEventListener('resize',()=>{ const m=isM(); if(m!==wasM){ wasM=m; FN[cur](); } });
-// ------------------------------------------------------------------ anonymous usage log (no cookies, no personal data):
-// a random id per browser tab session + what was searched/filtered/opened, sent in small batches to our own database
-const TRK=(()=>{ const on=/babl\.cc$/.test(location.hostname)&&location.hash!=='#admin';
+// ------------------------------------------------------------------ anonymous usage log
+// Privacy: no cookies, no IP addresses, no persistent visitor id. A random id lives only for one browser-tab session.
+// The browser keeps only the date of its first and last visit and a visit counter (localStorage, never sent as an id) –
+// what is sent is "new / returning, nth visit, days since last visit". Coarse device facts only (phone/tablet/desktop, OS family,
+// browser family, in-app browser). Do Not Track / Global Privacy Control or the footer switch turn all of it off.
+const TRK=(()=>{ let off=false; try{ off=localStorage.getItem('notrack')==='1'; }catch(e){}
+  const on=/babl\.cc$/.test(location.hostname)&&location.hash!=='#admin'&&!off&&navigator.doNotTrack!=='1'&&!navigator.globalPrivacyControl;
   const U='https://hxtdrtsqigvuvhaszxna.supabase.co/rest/v1/rpc/log_events', K='sb_publishable_DPAXHrrEuhxB1ABfXQ7UrQ_azF6yuZ5';
   let sid=''; try{ sid=sessionStorage.getItem('sid')||''; }catch(e){}
   if(!sid){ sid=(Math.random().toString(36).slice(2)+Date.now().toString(36)).replace(/[^a-z0-9]/g,'').slice(0,24); try{ sessionStorage.setItem('sid',sid); }catch(e){} }
@@ -641,10 +645,34 @@ const TRK=(()=>{ const on=/babl\.cc$/.test(location.hostname)&&location.hash!=='
   const flush=()=>{ if(!on||!q.length) return; const rows=q.splice(0,30);
     try{ fetch(U,{method:'POST',keepalive:true,headers:{apikey:K,'Content-Type':'application/json'},body:JSON.stringify({rows})}).catch(()=>{}); }catch(e){} };
   const ev=(e,o={})=>{ if(!on||n++>300) return; q.push(Object.assign({sid,ev:e,tab:cur,lang,mobile:isM()},o)); if(q.length>=25) flush(); };
-  setInterval(flush,8000); addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') flush(); }); addEventListener('pagehide',flush);
+  // ---- engagement: visible seconds, deepest scroll, articles opened – sent once when the tab is hidden / closed
+  let vis=document.visibilityState==='visible'?Date.now():0, eng=0, depth=0, opened=0, left=false;
+  addEventListener('scroll',()=>{ const h=document.documentElement; const d=Math.round(100*(scrollY+innerHeight)/Math.max(h.scrollHeight,1)); if(d>depth) depth=Math.min(100,d); },{passive:true});
+  const leave=()=>{ if(vis){ eng+=Date.now()-vis; vis=0; } if(!left&&eng>0){ left=true; ev('leave',{data:{sec:Math.min(3600,Math.round(eng/1000)),depth,opened}}); } flush(); };
+  addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') leave(); else { vis=Date.now(); left=false; } });
+  addEventListener('pagehide',leave); setInterval(flush,8000);
+  // ---- a few JavaScript errors per session (message only), so broken features show up in the report
+  let errs=0; addEventListener('error',e=>{ if(errs++<3) ev('error',{q:String(e.message||'').slice(0,110),data:{line:e.lineno||0}}); });
+  // ---- one 'visit' per tab session
   let fresh=true; try{ fresh=!sessionStorage.getItem('sv'); sessionStorage.setItem('sv','1'); }catch(e){}
-  if(fresh){ let ref=''; try{ ref=document.referrer?new URL(document.referrer).hostname:''; }catch(e){} ev('visit',{ref:ref||'direct',data:{w:innerWidth}}); }
-  return ev; })();
+  if(fresh&&on){ let ref=''; try{ ref=document.referrer?new URL(document.referrer).hostname:''; }catch(e){}
+    const today=new Date().toISOString().slice(0,10), dd=(a,b)=>Math.round((Date.parse(a)-Date.parse(b))/864e5);
+    let fs=null, ls=null, nv=0; try{ fs=localStorage.getItem('fs'); ls=localStorage.getItem('ls'); nv=+localStorage.getItem('nv')||0;
+      if(!fs) localStorage.setItem('fs',today); localStorage.setItem('ls',today); localStorage.setItem('nv',String(nv+1)); }catch(e){}
+    const ua=navigator.userAgent||'', sp=new URLSearchParams(location.search), hp=new URLSearchParams(location.hash.slice(1));
+    const os=/Android/.test(ua)?'Android':/iPhone|iPad|iPod/.test(ua)?'iOS':/Windows/.test(ua)?'Windows':/Mac OS X/.test(ua)?'macOS':/Linux|CrOS/.test(ua)?'Linux':'other';
+    const br=/SamsungBrowser/.test(ua)?'Samsung':/Edg\//.test(ua)?'Edge':/OPR\/|Opera/.test(ua)?'Opera':/Firefox|FxiOS/.test(ua)?'Firefox':/Chrome|CriOS/.test(ua)?'Chrome':/Safari/.test(ua)?'Safari':'other';
+    const app=/Reddit/i.test(ua)?'reddit':/Instagram/.test(ua)?'instagram':/FBAN|FBAV|FB_IAB/.test(ua)?'facebook':/Viber/i.test(ua)?'viber':/TikTok|musical_ly|Bytedance/i.test(ua)?'tiktok':/Telegram/i.test(ua)?'telegram':'';
+    const dev=matchMedia('(pointer:coarse)').matches?(Math.min(screen.width,screen.height)>=600?'tablet':'phone'):'desktop';
+    const nav=performance.getEntriesByType?performance.getEntriesByType('navigation')[0]:null;
+    const utm=k=>(sp.get('utm_'+k)||'').toLowerCase().replace(/[^a-z0-9_.-]/g,'').slice(0,40)||undefined;
+    ev('visit',{ref:ref||'direct',data:{w:innerWidth,new:!fs||(fs===today&&!nv),nth:nv+1,since:ls?dd(today,ls):null,age:fs?dd(today,fs):0,
+      entry:hp.get('a')?'item':hp.get('q')?'search':hp.get('t')?'tab':'home',src:utm('source')||(sp.get('ref')||'').slice(0,40)||undefined,med:utm('medium'),camp:utm('campaign'),
+      dev,os,br,app:app||undefined,dark:matchMedia('(prefers-color-scheme:dark)').matches||undefined,net:(navigator.connection&&navigator.connection.effectiveType)||undefined,
+      load:Math.round(performance.now()/100)*100,ttfb:nav?Math.round(nav.responseStart):undefined}}); }
+  const api=(e,o)=>{ if(e==='item') opened++; ev(e,o); }; api.off=()=>!on;
+  return api; })();
+function trackSwitch(){ let off=false; try{ off=localStorage.getItem('notrack')==='1'; localStorage.setItem('notrack',off?'0':'1'); }catch(e){} toast(lang==='sr'?(off?'Anonimna statistika je uključena':'Anonimna statistika je isključena za ovaj pregledač'):(off?'Anonymous statistics on':'Anonymous statistics off for this browser')); chrome(); }
 { const _go=go; go=function(k){ if(k!==cur) TRK('tab',{tab:k}); return _go(k); }; }
 { const _oi=openItem; openItem=function(k){ const x=X[k]; if(x) TRK('item',{store:x.r[0],item:x.r[2],data:{p:x.r[3],v:x.r[6]||''}}); return _oi(k); }; }
 { let tm=null, lastQ='', lastF=''; const _res=results;
