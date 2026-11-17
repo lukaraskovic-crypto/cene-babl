@@ -434,10 +434,17 @@ def analyse(items, pm):
         it["claimed"] = round(1 - P / it["o"], 4) if it.get("o") else 0
         own = it.get("l")
         it["own_src"] = "store"
-        if not own and it.get("l_obs") and it.get("obs_days", 0) >= CFG.get("min_history_days", 7):
-            own = it["l_obs"]; it["own_src"] = "our record"
-        elif own and it.get("l_obs") and it.get("obs_days", 0) >= 3 and it["l_obs"] < own * 0.98:
-            own = it["l_obs"]; it["own_src"] = "our record"      # we saw a lower price in the last 30 days than the store states
+        # Our own record only counts for the time BEFORE the current price began (that is the legal reference for a reduction):
+        #  - store states a 30-day low, but we saw a clearly lower price in the 30 days before this price began -> use ours
+        #  - store states none: use the lowest price we saw before this price began; or, if the price has not moved for 30 days
+        #    in our record, the price itself (a permanent "discount" is no reduction); otherwise we cannot tell -> unverified
+        pre, run = it.get("pre_low"), it.get("run_days", 0)
+        if own and pre and pre < own * 0.98:
+            own = pre; it["own_src"] = "our record"
+        elif not own and pre:
+            own = pre; it["own_src"] = "our record"
+        elif not own and run >= 30:
+            own = P; it["own_src"] = "our record"
         it["l_used"] = own
         it["real"] = round(1 - P / own, 4) if own else None
         r = pm.get(it["term"])
@@ -936,6 +943,7 @@ def assemble(raw):
     obs = {ikey(a_): (a_["l_obs"], a_["obs_days"]) for a_ in all_items}
     for it in items:
         it["l_obs"], it["obs_days"] = obs.get(ikey(it), (None, 0))
+        it["pre_low"], it["run_days"] = hist_db.pre_run(TODAY, it["store"], it.get("u", ""), it["name"], it["p"])
         if not it.get("term"): it["term"] = term_for(it["name"])
     hist_db.save(TODAY, all_items)          # history is kept per listing (URL), before duplicates are merged
     for a_ in all_items:

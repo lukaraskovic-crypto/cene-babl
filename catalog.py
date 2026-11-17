@@ -343,6 +343,26 @@ class History:
             self.db.execute("""INSERT INTO seen VALUES(?,?,?,?,?) ON CONFLICT(store,url,name) DO UPDATE SET
                                last=MAX(last,excluded.last), first=MIN(first,excluded.first)""", (*k, date, date))
         self.db.commit()
+    def pre_run(self, date, store, url, name, price, days=30):
+        """What our own record says about the period BEFORE the current price began (the legal reference for a discount is the
+        lowest price in the 30 days before the reduction, not the discounted days themselves).
+        Returns (lowest price in the 30 days before the current price began, or None if the current price was already there when
+        our record started; days the current price has been in force in our record)."""
+        k = (store, url, name)
+        pts = self.db.execute("SELECT date, price FROM points WHERE store=? AND url=? AND name=? AND date<? ORDER BY date", (*k, date)).fetchall()
+        if not pts: return None, 0
+        i = len(pts)
+        while i > 0 and pts[i - 1][1] == price: i -= 1
+        d0 = dt.date.fromisoformat(date)
+        if i == len(pts): run_start = d0                                   # the price changed today
+        else: run_start = dt.date.fromisoformat(pts[i][0])
+        before = pts[:i]
+        if not before: return None, (d0 - run_start).days                 # no record from before the current price
+        start = (run_start - dt.timedelta(days=days)).isoformat()
+        win = [p for d, p in before if d >= start]
+        carry = [p for d, p in before if d < start][-1:]                   # the price in force when the window opened
+        cands = [p for p in win + carry if p]
+        return (min(cands) if cands else None), (d0 - run_start).days
     def observed(self, date, store, url, name, days=30):
         """(lowest price in the previous `days` days excluding today, last price before today, days of history)."""
         start = (dt.date.fromisoformat(date) - dt.timedelta(days=days)).isoformat()
