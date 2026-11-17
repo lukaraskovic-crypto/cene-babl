@@ -47,7 +47,7 @@ NOTE = ("Ocene su samo poređenje javno objavljenih cena (današnja cena i najni
 def why(a):
     g, l = a["g"], (nf(a["low30"]) + " din" if a["low30"] else "")
     pc = lambda x: f"{round(x * 100)}%"
-    if g == "real" and a["low30"]: return f"Cena je {pc(1 - a['price'] / a['low30'])} niža od najniže cene ove prodavnice u poslednjih 30 dana ({l})."
+    if g == "real" and a["low30"]: return f"Cena je {pc(1 - a['price'] / a['low30'])} niža od najniže cene ove prodavnice u 30 dana pre sniženja ({l})."
     if g == "raised" and a["low30"]: return f"Uz artikal je istaknut popust od {pc(a['claimed'])}, a cena je {pc(a['price'] / a['low30'] - 1)} viša od najniže cene koju prodavnica navodi za poslednjih 30 dana ({l})."
     if g == "fake" and a["low30"]: return f"Uz artikal je istaknut popust od {pc(a['claimed'])}, a ista cena ({l}) je prema podacima prodavnice bila najniža i u poslednjih 30 dana."
     if g == "nochange" and a["low30"]: return f"Cena je praktično ista kao najniža u poslednjih 30 dana ({l})."
@@ -128,8 +128,8 @@ def page(title, desc, path, body, crumbs=(), ld=None, og_type="website"):
     return f"""<!doctype html><html lang="sr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}"><link rel="canonical" href="{e(url)}">
 <meta property="og:type" content="{og_type}"><meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:url" content="{e(url)}"><meta property="og:site_name" content="babl cene"><meta property="og:locale" content="sr_RS">
-<meta name="theme-color" content="#1F6B45"><link rel="stylesheet" href="/seo.css">{ldh}<script defer src="/t.js"></script></head><body>
-<header><div class="w"><a class="wm" href="/">babl <b>cene</b></a><nav><a href="/popusti.html">Potvrđena sniženja</a><a href="/crni-petak.html">Crni petak</a></nav></div></header>
+<meta name="theme-color" content="#1F6B45"><link rel="alternate" type="application/rss+xml" title="babl cene – stvarna sniženja" href="/rss.xml"><link rel="stylesheet" href="/seo.css">{ldh}<script defer src="/t.js"></script></head><body>
+<header><div class="w"><a class="wm" href="/">babl <b>cene</b></a><nav><a href="/top10.html">Top 10</a><a href="/popusti.html">Potvrđena sniženja</a><a href="/crni-petak.html">Crni petak</a></nav></div></header>
 <main class="w">{bc}{body}</main><footer class="w">{e(NOTE)} <a href="/">Pretraga svih artikala</a> · <a href="/sitemap.xml">Mapa sajta</a></footer></body></html>"""
 
 def li(a, link=True):
@@ -137,6 +137,27 @@ def li(a, link=True):
     nm = f'<a href="/{a["path"]}">{e(a["name"])}</a>' if link and a.get("path") else f'<a href="/#a={a["id"]}">{e(a["name"])}</a>'
     old = f' <s>{nf(a["old"])}</s>' if a["old"] > a["price"] else ""
     return f'<li><div><div class="n">{nm}</div><div class="m">{e(a["store"])}{(" · " + e(a["cat"])) if a["cat"] else ""}{tag}</div></div><div class="p">{nf(a["price"])} din<span class="m">{old}</span></div></li>'
+
+def raised_before(a, today):
+    """The price went up >= 8% in the last 30 days and the "sale" price is not really below the earlier low."""
+    if not a["old"] > a["price"]: return False
+    pts = [(today - d).days for d, _ in year_dates(a["hist"], today)]
+    lo, peak = None, 0
+    for (d, p), ago in zip(year_dates(a["hist"], today), pts):
+        if ago > 30: continue
+        if lo is None or p < lo: lo, peak = p, 0
+        elif p > peak: peak = p
+    return bool(lo and peak >= lo * 1.08 and a["price"] >= lo * 0.97)
+
+def top_deals(arts, today, n):
+    seen, out = set(), []
+    for a in sorted([a for a in arts if a["g"] == "real" and a["low30"] and a["price"] >= 5000 and not (a["xs"] and a["xs"] < a["price"] * 0.98)
+                     and not raised_before(a, today)], key=lambda a: -(a["low30"] - a["price"])):
+        k = re.sub(r"[^a-z0-9]", "", fold(a["name"]))[:40]
+        if k in seen: continue
+        seen.add(k); out.append(a)
+        if len(out) >= n: break
+    return out
 
 def build(site, log=print):
     site = Path(site)
@@ -170,6 +191,12 @@ def build(site, log=print):
         for f in (site / d).glob("*.html"): f.unlink()
     (site / "seo.css").write_text(CSS, encoding="utf-8")
     (site / "t.js").write_text(TJS, encoding="utf-8")
+    # install on the phone's home screen (icons are committed in static/)
+    import shutil
+    for f in (Path(__file__).resolve().parent / "static").glob("*"): shutil.copy(f, site / f.name)
+    (site / "manifest.webmanifest").write_text(json.dumps({"name": "babl cene – provera popusta", "short_name": "babl cene", "start_url": "/?utm_source=pwa",
+        "display": "standalone", "background_color": "#F6F7F3", "theme_color": "#1F6B45", "lang": "sr",
+        "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}]}, ensure_ascii=False), encoding="utf-8")
     urls = [(BASE + "/", data["date"])]
     W = lambda path, s: ((site / path).write_text(s, encoding="utf-8"), urls.append((BASE + "/" + path, data["date"])))
 
@@ -250,6 +277,21 @@ def build(site, log=print):
             '<p><a class="btn pri" href="/popusti.html">Sva potvrđena sniženja</a><a class="btn" href="/">Pretraga</a></p>')
     W("crni-petak.html", page(f"Crni petak {today.year} – provera popusta (Gigatron, WinWin, Big Bang…) | babl cene",
                               f"Da li je popust za Crni petak {today.year} stvaran? Poredimo cene sa najnižom cenom iz prethodnih 30 dana za 100.000 artikala.", "crni-petak.html", body, [(f"Crni petak {today.year}", "")]))
+
+    # ---- weekly Top 10 (also the RSS feed for Telegram/Viber channels and the text for the owner's morning e-mail)
+    top = top_deals(arts, today, 10)
+    body = (f"<h1>Top 10 stvarnih sniženja</h1><p>Deset najvećih popusta koji su zaista ispod najniže cene iz 30 dana pre sniženja – bez artikala "
+            f"kojima je cena prvo podignuta i bez onih koji su jeftiniji u drugoj prodavnici. Ažurirano {e(upd)}.</p><ol class='l' style='padding:0'>"
+            + "".join(li(a).replace("<li>", "<li>", 1) for a in top) + "</ol><p><a class='btn pri' href='/popusti.html'>Sva potvrđena sniženja</a></p>")
+    W("top10.html", page(f"Top 10 stvarnih sniženja danas | babl cene", "Deset najvećih stvarnih popusta danas u Gigatronu, WinWinu, Big Bangu, Ananasu i drugim prodavnicama.",
+                         "top10.html", body, [("Top 10", "")]))
+    items_xml = "".join(
+        f"<item><title>{e(a['name'][:90])} – {nf(a['price'])} din (−{round((1 - a['price'] / a['low30']) * 100)}%, {e(a['store'])})</title>"
+        f"<link>{BASE}/{(a['path'] + '?utm_source=rss') if a.get('path') else ('?utm_source=rss#a=' + a['id'])}</link><guid isPermaLink=\"false\">{a['id']}-{a['price']}</guid>"
+        f"<description>{e(why(a))}</description><pubDate>{dt.datetime.now(dt.timezone.utc).strftime('%a, %d %b %Y %H:%M:%S +0000')}</pubDate></item>" for a in top_deals(arts, today, 20))
+    (site / "rss.xml").write_text(f'<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>babl cene – stvarna sniženja</title>'
+                                  f'<link>{BASE}/</link><description>Najveći stvarni popusti u Srbiji, svakog dana.</description><language>sr</language>{items_xml}</channel></rss>', encoding="utf-8")
+    (site / "top10.json").write_text(json.dumps([{k: a[k] for k in ("store", "name", "price", "low30", "url", "id")} | {"path": a.get("path", "")} for a in top], ensure_ascii=False), encoding="utf-8")
 
     sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     sm += [f"<url><loc>{e(u)}</loc><lastmod>{d}</lastmod></url>" for u, d in urls] + ["</urlset>"]

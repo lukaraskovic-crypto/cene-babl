@@ -266,9 +266,65 @@ def send_daily_report(today, hour, log=print, force=False):
     to = os.environ.get("REPORT_EMAIL") or senders[0]["email"]
     _brevo("POST", "smtp/email", {"sender": {"name": "babl cene", "email": senders[0]["email"]}, "to": [{"email": to}],
                                   "subject": f"babl cene · {day}: {u.get('users_day') or 0} posetilaca (MTD {u.get('users_mtd') or 0}, YTD {u.get('users_ytd') or 0})",
-                                  "htmlContent": "<html><body>" + report_html(u, runs, usage_extra(day)) + "</body></html>"})
+                                  "htmlContent": "<html><body>" + report_html(u, runs, usage_extra(day)) + owner_extras(day) + "</body></html>"})
     meta_set("report_sent", today); log(f"daily report for {day} e-mailed")
     return True
+
+def _top10():
+    try: return json.loads((HERE / "site" / "top10.json").read_text(encoding="utf-8"))
+    except Exception: return []
+
+def owner_extras(day):
+    """For the owner's morning e-mail: visitor error reports, and a ready-to-post text (Viber / Telegram / Reddit) with today's real deals."""
+    esc = lambda x: str(x or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    out = ['<div style="max-width:660px;margin:0 auto;padding:8px 4px;font:14px Arial;color:#111827">']
+    try:
+        fb, _ = _req("GET", f"feedback?select=ts,kind,store,item,url,msg&ts=gte.{day}T00:00:00&order=ts.desc&limit=30")
+    except Exception: fb = []
+    out.append('<h3 style="font:600 15px Arial;margin:22px 0 6px">Prijave posetilaca (greške, predlozi)</h3>')
+    out.append("".join(f'<p style="margin:0 0 8px"><b>{esc(f.get("store"))} · {esc((f.get("item") or "")[:70])}</b><br>{esc(f.get("msg"))}'
+                       + (f'<br><a href="{esc(f.get("url"))}">{esc(f.get("url"))}</a>' if f.get("url") else "") + "</p>" for f in fb or []) or '<p style="color:#6b7280">–</p>')
+    top = _top10()[:5]
+    if top:
+        lines = ["Stvarna sniženja danas (proverili smo cene iz 30 dana pre akcije):"]
+        for a in top:
+            pct = round((1 - a["price"] / a["low30"]) * 100) if a.get("low30") else 0
+            lines.append(f"• {a['name'][:70]} – {_nf(a['price'])} din umesto {_nf(a['low30'])} (−{pct}%), {a['store']}")
+        lines.append(f"Sve: {SITE}/top10.html?utm_source=viber&utm_campaign=top10")
+        out.append('<h3 style="font:600 15px Arial;margin:22px 0 6px">Za objavu (Viber / Telegram / Reddit)</h3><p style="color:#6b7280;margin:0 0 6px">Kopirajte i objavite; '
+                   'za Reddit promenite utm_source=reddit.</p><pre style="white-space:pre-wrap;background:#f3f6f4;border-radius:8px;padding:12px;font:13px/1.5 Arial">'
+                   + esc("\n".join(lines)) + "</pre>")
+    out.append("</div>")
+    return "".join(out)
+
+WEEK_TXT = {"sr": dict(subj="babl cene · 10 stvarnih sniženja ove nedelje", hi="Deset najvećih popusta koji su zaista ispod najniže cene iz 30 dana pre akcije:",
+                       btn="Svi stvarni popusti", foot="Ovaj nedeljni pregled ste uključili na cene.babl.cc (kartica „Sačuvano”). Isključite ga tamo, jednim klikom. Cene se menjaju – proverite cenu kod prodavca pre kupovine."),
+            "en": dict(subj="babl cene · 10 real reductions this week", hi="The ten biggest discounts that are really below the lowest price of the 30 days before the sale:",
+                       btn="All real discounts", foot="You turned on this weekly summary on cene.babl.cc (“Saved” tab). Turn it off there with one click. Prices change – check the price with the store before buying.")}
+
+def send_weekly(today, log=print, force=False):
+    """Mondays, with the morning run: the week's Top 10 real reductions to babl users who opted in."""
+    import datetime as _d
+    if not (enabled() and BREVO_KEY): return 0
+    if not force and (_d.date.fromisoformat(today).weekday() != 0 or meta_get("weekly_sent") == today): return 0
+    top = _top10()
+    if not top: log("weekly: no Top 10 yet"); return 0
+    users = [u for u in _alerts({"action": "list"}).get("users", []) if u.get("weekly")]
+    senders = [s_ for s_ in _brevo("GET", "senders").get("senders", []) if s_.get("active")]
+    sent = 0
+    for u in users:
+        T = WEEK_TXT.get(u.get("lang"), WEEK_TXT["sr"])
+        rows = "".join(f'<div style="border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;margin:8px 0"><div style="font-size:12px;color:#6b7280">{_esc(a["store"])}</div>'
+                       f'<a href="{SITE}/{a["path"] or ("#a=" + a["id"])}" style="color:#111;font-weight:700;text-decoration:none">{_esc(a["name"])}</a>'
+                       f'<div><b style="color:#16a34a">{_nf(a["price"])} RSD</b> <span style="color:#6b7280">umesto {_nf(a["low30"])} · −{round((1 - a["price"] / a["low30"]) * 100)}%</span></div></div>' for a in top)
+        html = (f'<div style="font:15px/1.45 Arial;max-width:600px"><p style="font:700 20px Arial;margin:0 0 4px">babl <span style="color:#16a34a">cene</span></p><p>{T["hi"]}</p>{rows}'
+                f'<p><a href="{SITE}/top10.html?utm_source=email&utm_campaign=weekly" style="color:#2563eb">{T["btn"]}</a></p><p style="font-size:12px;color:#9ca3af">{T["foot"]}</p></div>')
+        try:
+            _brevo("POST", "smtp/email", {"sender": {"name": "babl cene", "email": senders[0]["email"]}, "to": [{"email": u["email"]}], "subject": T["subj"], "htmlContent": f"<html><body>{html}</body></html>"})
+            sent += 1
+        except Exception as e: log("weekly e-mail failed:", e)
+    meta_set("weekly_sent", today); log(f"weekly: {sent} e-mail(s)")
+    return sent
 
 # ---------------------------------------------------------------------------------------- price-drop alerts
 ALERTS_URL = os.environ.get("ALERTS_URL") or _CFG.get("alerts_url") or "https://miikcfemhoayjyujkftk.supabase.co/functions/v1/cene-alerts"

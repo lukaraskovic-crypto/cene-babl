@@ -21,6 +21,70 @@ def _history(db_path, days=120):
     h = cat.History(db_path)
     return h.series(days), h.meta()
 
+# ---------------------------------------------------------------- the same product in different shops
+CODE_JUNK = re.compile(r"^(\d+(GB|TB|MB|MAH|W|WH|L|BTU|KG|HZ|MHZ|GHZ|MM|CM|V|PA|K|MP|INCH|RPM|DB)|\d+GB\d+(GB|TB)?|\d+(GB|TB)?\d+(GB|TB)|\d+X\d+|(I[3579]|U[579]|R[3579]|C[357])\d+[A-Z]*|\d+|DDR\d.*|USB\d.*|WIFI\d*|PCIE\d*|RTX\d+|GTX\d+|RX\d+)$")
+GENERIC = set("""LAPTOP NB NOTEBOOK SBS FRIZIDER FRIŽIDER KOMBINOVANI MASINA MAŠINA ZA PRANJE SUSENJE SUŠENJE SUDOVA VESA VEŠA TELEVIZOR TV SMART LED QLED OLED
+MOBILNI TELEFON TABLET MONITOR GAMING GEJMING BEZICNI BEŽIČNI BEZICNE BEŽIČNE ZICNI ŽIČNI USISIVAC USISIVAČ ROBOT STAPNI ŠTAPNI APARAT KAFU ESPRESSO MIKSER UGRADNA UGRADNI
+RERNA PLOCA PLOČA SPORET ŠPORET KLIMA UREDJAJ UREĐAJ INVERTER BOJLER SLUSALICE SLUŠALICE ZVUCNIK ZVUČNIK B-ROBA BROBA KUCISTE KUĆIŠTE STAMPAC ŠTAMPAČ RACUNAR RAČUNAR
+DESKTOP PC ALL-IN-ONE AIO SET PAMETNI SAT NOVO NOVI NOVA REFURBISHED OUTLET MIKROTALASNA FRITEZA BLENDER PEGLA PARNA GREJALICA RADIJATOR PRECISCIVAC PREČIŠĆIVAČ
+VAZDUHA ODVLAZIVAC ODVLAŽIVAČ KAMERA AKCIONA DRON KONZOLA IGRA SSD HDD MIS MIŠ TASTATURA PROJEKTOR SOUNDBAR ZAMRZIVAC ZAMRZIVAČ VINSKA VITRINA NAPA SUDOMASINA SUDOMAŠINA
+KAFE APARATI DUAL INCH""".split())
+def _brand(n):
+    for t in re.findall(r"[A-Za-zČĆŽŠĐčćžšđ0-9-]+", n)[:4]:
+        u = t.upper()
+        if u in GENERIC or re.search(r"\d", u) or len(u) < 2: continue
+        return u
+    return ""
+def _codes(n):     # model codes: letters + digits, at least 6 characters; "/" separates (i7/16/512GB/5060 is four specs, not a code)
+    out = set()
+    for t in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-.+]*", n):
+        c = re.sub(r"[^A-Za-z0-9]", "", t).upper()
+        if len(c) >= 6 and re.search(r"[A-Z]", c) and len(re.findall(r"\d", c)) >= 2 and not CODE_JUNK.match(c): out.add(c)
+    return out
+
+def match_groups(allit):
+    """Group listings that are the same product: same model code (or one code = the other plus a short region/colour suffix,
+    QE55Q80DATXXH ~ QE55Q80DAT), and no conflicting brand. Returns (group id per item, 0 = no match; cheapest offer at another shop)."""
+    codes = [_codes(a["name"]) for a in allit]; brands = [_brand(a["name"]) for a in allit]
+    full, pref = {}, {}
+    for i, cs in enumerate(codes):
+        for c in cs:
+            full.setdefault(c, []).append(i)
+            if len(c) >= 9:
+                for L in range(max(8, len(c) - 4), len(c)): pref.setdefault(c[:L], []).append(i)
+    par = list(range(len(allit)))
+    def find(x):
+        while par[x] != x: par[x] = par[par[x]]; x = par[x]
+        return x
+    for i, cs in enumerate(codes):
+        for c in cs:
+            cand = list(full.get(c, ())) + list(pref.get(c, ()))
+            for L in range(max(8, len(c) - 4), len(c)): cand += full.get(c[:L], ())
+            if len(cand) > 60: continue                       # a code shared by that many listings is not a model code
+            for j in cand:
+                if j == i: continue
+                if brands[i] and brands[j] and brands[i] != brands[j]: continue
+                a, b = find(i), find(j)
+                if a != b: par[a] = b
+    roots = [find(i) for i in range(len(allit))]
+    size = {}
+    for r in roots: size[r] = size.get(r, 0) + 1
+    gid, mg = {}, []
+    for r in roots:
+        if size[r] < 2 or size[r] > 80: mg.append(0); continue    # huge groups are chained mistakes – drop them
+        mg.append(gid.setdefault(r, len(gid) + 1))
+    by = {}
+    for i, g in enumerate(mg):
+        if g: by.setdefault(g, []).append(i)
+    cheaper = []
+    for i, a in enumerate(allit):
+        g = mg[i]; best = None
+        for j in by.get(g, ()):
+            b = allit[j]
+            if b["store"] != a["store"] and b["p"] and (best is None or b["p"] < best[0]): best = (b["p"], b["store"])
+        cheaper.append(best if best and best[0] < a["p"] else None)
+    return mg, cheaper
+
 def build(run_dir, date):
     run_dir = Path(run_dir)
     load = lambda n, d=None: json.loads((run_dir / n).read_text(encoding="utf-8")) if (run_dir / n).exists() else d
@@ -34,23 +98,12 @@ def build(run_dir, date):
     try: pspecs = json.loads((HERE / "state" / "specs.json").read_text(encoding="utf-8"))   # specifications read from product pages
     except Exception: pspecs = {}
 
-    # cheapest price per model code across stores
-    JUNK = re.compile(r"^(\d+(GB|TB|MB|MAH|W|WH|L|BTU|KG|HZ|MHZ|GHZ|MM|CM|V|PA|K|MP|INCH|RPM|DB)|\d+GB\d+(GB|TB)?|\d+(GB|TB)?\d+(GB|TB)|\d+X\d+|(I[3579]|U[579]|R[3579]|C[357])\d+[A-Z]*|\d+)$")
-    brand = lambda n: re.sub(r"[^A-Z0-9-]", "", (n.split() or [""])[0].upper())
-    def keys(n):      # (brand, model code) – memory sizes, resolutions etc. are not model codes
-        b = brand(n)
-        return {(b, c) for c in (re.sub(r"[^A-Za-z0-9]", "", t).upper() for t in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-.+]*", n))
-                if len(c) >= 6 and re.search(r"[A-Z]", c) and re.search(r"\d", c) and not JUNK.match(c)}
-    best = {}
-    for a in allit:
-        for k in keys(a["name"]):
-            if k not in best or a["p"] < best[k][0]: best[k] = (a["p"], a["store"])
-
+    groups, cheaper = match_groups(allit)     # same product across shops (and listings of one shop) by brand + model code
     short = lambda d: d[5:] if d else ""
     rows = []
-    for a in allit:
+    for n_, a in enumerate(allit):
         i = promo.get(ik(a), {})
-        cheapest = min((best[k] for k in keys(a["name"]) if k in best), default=None)
+        cheapest = cheaper[n_]
         key = f"{a['store']}|{a.get('u','')}|{a['name']}"
         h = hist.get(key, [])
         since, seen = (meta.get(key) or [date, date])
@@ -59,12 +112,13 @@ def build(run_dir, date):
             i.get("v", ""), i.get("mv", ""), (i.get("mkt") or 0), a.get("u", ""),
             cheapest[0] if cheapest and cheapest[1] != a["store"] else 0, cheapest[1] if cheapest and cheapest[1] != a["store"] else "",
             h[-60:], short(since), short(seen), a.get("nl") or 0, {k: v for k, v in (pspecs.get(a.get("u", "")) or {}).items() if not k.startswith("_")} or 0,
+            groups[n_],
         ])
     now = dt.datetime.now(ZoneInfo("Europe/Belgrade"))
     data = {"date": date, "updated": now.strftime("%Y-%m-%d %H:%M"), "repo": REPO,
             "summary": extra.get("summary", []), "problems": extra.get("problems", []), "watch": extra.get("watch", []), "drops": extra.get("drops", []),
             "report": (run_dir / "report.txt").read_text(encoding="utf-8") if (run_dir / "report.txt").exists() else "",
-            "cols": ["store", "cat", "name", "price", "old", "low30", "verdict", "market_verdict", "market_low", "url", "xs_price", "xs_store", "hist", "since", "seen", "listings", "specs"]}
+            "cols": ["store", "cat", "name", "price", "old", "low30", "verdict", "market_verdict", "market_low", "url", "xs_price", "xs_store", "hist", "since", "seen", "listings", "specs", "mg"]}
     SITE.mkdir(parents=True, exist_ok=True)
     for old_ in SITE.glob("data*.js"): old_.unlink()
     rows_ = rows; CH = 15000

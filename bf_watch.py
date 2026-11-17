@@ -718,6 +718,9 @@ def main():
         if not raw.get("_partial"):
             try: db.send_price_alerts(all_full, log=log)
             except Exception as e: log("price alerts failed:", e); problems.append(f"price alerts failed: {str(e)[:200]}")
+            if dt.datetime.now(TZ).hour >= 6:
+                try: db.send_weekly(TODAY, log=log)
+                except Exception as e: log("weekly e-mail failed:", e); problems.append(f"weekly e-mail failed: {str(e)[:200]}")
     log("done" + (f" with {len(problems)} problem(s): " + "; ".join(problems) if problems else ""))
     if problems: sys.exit(1)      # a failed GitHub run → GitHub e-mails the owner
 
@@ -960,7 +963,8 @@ def assemble(raw):
 COLOURS = re.compile(r"\b(crn[aoie]?|bel[aoie]?|siv[aoie]?|tamnosiv[aoi]?|svetlosiv[aoi]?|crven[aoi]?|zelen[aoi]?|svetlozelen[aoi]?|tamnozelen[aoi]?|plav[aoi]?|tamnoplav[aoi]?|"
                      r"svetloplav[aoi]?|krem|bež|bez|roz[aei]?|ljubičast[aoi]?|ljubicast[aoi]?|žut[aoi]?|zut[aoi]?|narandžast[aoi]?|srebrn[aoi]?|srebrne boje|zlatn[aoi]?|bakarn[aoi]?|"
                      r"barkarn[aoi]?|hrom|inox|teget|grafit|black|white|gr[ae]y|blue|green|red|pink|purple|silver|gold|graphite|midnight|starlight|navy|mint|cream|beige|"
-                     r"matte?|empire red|pistachio|almond cream|ink blue|space gr[ae]y|titanium|natural)\b", re.I)
+                     r"matte?|empire red|pistachio|almond cream|ink blue|space gr[ae]y|titanium|natural|violet|lavender|lavanda|lilac|orange|yellow|coral|teal|sage|olive|sand|ivory|"
+                     r"onyx|obsidian|porcelain|frost|ocean|sky|aqua|peach|lime|turquoise|tirkizn[aoi]?|maslinast[aoi]?|smeđ[aoi]?|smedj[aoi]?|brown|platinum)\b", re.I)
 CODE_JUNK = re.compile(r"^(\d+([.,]\d+)?(GB|TB|W|L|MAH|HZ|PA|V|K|BTU|KG|MM|CM|BARA?|RPM|IN)|\d+/\d+(GB|TB)?|[0-9]K|[45]G|USB\d.*|WIFI\d*|DDR\d|LPDDR\d.*)$", re.I)
 
 def family(name):
@@ -979,6 +983,7 @@ def family(name):
     n = re.sub(r"\(.*?\)", " ", name)
     m = re.search(r"\b\d{1,2}\s*/\s*\d{2,4}\s*(GB|TB)?\b", n, re.I)
     if m: n = n[:m.end()]
+    n = re.sub(r"\s[-–]\s[^\d,()/]{2,30}$", " ", n)        # "Xiaomi 17T 256 GB - Violet": a trailing " - <word(s)>" is the colour
     n = COLOURS.sub(" ", n)
     return "n:" + re.sub(r"[^0-9a-zčćžšđ]+", "", n.lower())
 

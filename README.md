@@ -74,6 +74,18 @@ Device facts are coarse (phone/tablet/desktop, OS and browser family, in-app bro
 switch turn tracking off. Tag the links you post with `?utm_source=reddit&utm_campaign=crni-petak` (or `?ref=…`) to see campaigns.
 The daily e-mail adds these from the `usage_extra(day)` RPC (service role only).
 
+## Buying advice, matching, weekly Top 10, feedback
+* **Same product in other shops** (`pw_site.match_groups`): brand + model code (codes that differ only by a short region/colour suffix match,
+  QE55Q80DATXXH ~ QE55Q80DAT; memory sizes, resolutions, CPUs are never codes). Column `mg` = match group; "cheapest elsewhere" comes from it.
+* **One-line advice** on every article (browser, from the price history): cheaper elsewhere · price raised before the sale · price rising
+  (≥10% in 14 days) · real reduction / lowest recorded / lowest among shops · discount not real. Deals tab has "Podignuto pa sniženo" and "Poskupelo".
+* **30-day low**: the shop's stated low is the legal reference (lowest price in the 30 days *before* the reduction). Our own record replaces
+  it only with data from before the current price began (`History.pre_run`); a price unchanged for 30 days with a crossed-out price is not a reduction.
+* **Weekly Top 10**: `/top10.html`, `/rss.xml` (for Telegram/Viber channel auto-posting), opt-in Monday e-mail for signed-in users
+  (`cene_prefs.weekly`, `db.send_weekly`), and a ready-to-post text in the owner's morning e-mail.
+* **Report a mistake**: button on every article + footer link → table `feedback` (RPC `log_feedback`, message only, rate-limited) → morning e-mail.
+* **Install on phone**: `manifest.webmanifest`, icons in `static/`.
+
 ## Wording of the verdicts
 Verdicts only compare published prices (today's price vs the lowest price the store states for the previous 30 days, which shops
 must show since the 2026 amendments of the Zakon o trgovini). They are worded as facts ("Nije niže od 30 dana", "Iznad 30-dnevnog
