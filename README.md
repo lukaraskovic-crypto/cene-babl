@@ -41,6 +41,15 @@ year-to-date, top searches, searches without results, most opened articles, tabs
 It is sent through Brevo (secret `BREVO_API_KEY`) to the Brevo account's own sender address, or to the secret `REPORT_EMAIL`.
 The numbers come from the database function `usage_report(day)`. Send one by hand: `python db.py report --force`.
 
+## babl account, saved articles and the store map
+Visitors can sign in with their babl account (same login as babl.cc: Google or an e-mail link; Supabase project "babl").
+Saved articles (★) are then kept in the account (table `cene_saved`, each user sees only their own rows) and synced between devices.
+Signed-in users get "📍 Gde je na stanju" on Gigatron and WinWin articles and a map of all saved articles: the edge function
+`cene-stock` (babl project, source in `supabase/functions/cene-stock`) asks the shop which stores have the article
+(Gigatron's per-store API; WinWin's store list on the product page) and returns them with coordinates
+(WinWin store locations: table `cene_store_geo`). The map (Leaflet + OpenStreetMap) sorts stores by distance from the visitor
+or limits them to a city / the visible area. Tehnomedia refuses requests from the server, so it is not offered.
+
 ## Files
 `bf_watch.py` (crawl, verdicts, health check, `--only <store>` / `--light` / `--combine` / `--refresh`), `catalog.py` (full-catalogue
 crawlers, spec reader, price history), `specs_js.js` (product-page specifications), `db.py` (database), `pw_site.py` +

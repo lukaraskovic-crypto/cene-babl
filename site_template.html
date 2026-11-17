@@ -79,6 +79,14 @@ tbody tr{cursor:pointer}tbody tr:hover td{background:var(--alt)}
 .sh{display:flex;gap:14px;align-items:flex-start;justify-content:space-between}.sh h2{font-size:20px;line-height:1.3}
 .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 0}.btn.on{background:var(--alt)}
 #toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--text,#111);color:var(--bg,#fff);padding:9px 16px;border-radius:999px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99}#toast.on{opacity:.94}
+.acct{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:5px 12px;font:700 13px inherit;cursor:pointer;margin-right:8px;color:var(--text);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct.in{background:var(--accent);border-color:var(--accent)}
+.lgn{display:grid;gap:10px;margin-top:14px}.lgn input{border:1px solid var(--border);border-radius:10px;padding:11px 12px;font:15px inherit;background:var(--surface);color:var(--text);width:100%;box-sizing:border-box}
+.lgn .btn{width:100%;text-align:center}.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}.or:before,.or:after{content:"";flex:1;border-top:1px solid var(--border)}
+#smap{height:340px;border-radius:12px;border:1px solid var(--border);margin:12px 0;z-index:0}.mapbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.mapbar .sel{max-width:180px}
+.stl .it{cursor:default}.stl .d{font-weight:800;white-space:nowrap}.pin{background:var(--primary);color:var(--onp);border-radius:999px;font:800 12px/24px sans-serif;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.pin.me{background:#2563EB}.lock{font-size:13px;color:var(--muted);margin-top:6px}
+@media(max-width:760px){.acct{padding:4px 9px;max-width:96px;margin-right:4px}#smap{height:280px}}
 .x{border:0;background:var(--alt);border-radius:999px;width:34px;height:34px;cursor:pointer;flex:none;font-size:16px}
 .big{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:18px 0 6px}.big .pr{font-size:30px}
 .why{background:var(--alt);border-radius:var(--r);padding:12px 14px;margin:14px 0;font-size:14px}.why b{display:block;margin-bottom:2px}
@@ -131,7 +139,7 @@ textarea{width:100%;min-height:130px;border:1px solid var(--border);border-radiu
 </style></head><body>
 <header class="hd"><div class="wrap">
  <div class="row"><a class="wm" href="./"><b>babl</b><span>cene</span></a><div class="sp"></div><div class="fresh" id="fresh"></div>
-  <div class="lng"><button data-l="sr">SR</button><button data-l="en">EN</button></div></div>
+  <button class="acct" id="acct" onclick="ACC.open()"></button><div class="lng"><button data-l="sr">SR</button><button data-l="en">EN</button></div></div>
  <nav class="tabs" id="tabs"></nav></div></header>
 <main class="wrap" id="main"></main>
 <footer><div class="wrap cols" id="foot"></div></footer>
@@ -269,7 +277,7 @@ const X=R.map((r,i)=>{ const h=r[C.hist]||[]; return {i,r,brand:(r[2].split(/\s+
 const hid=r=>{ const s=r[0]+'|'+(r[0]==='Big Bang'?'':r[C.url])+'|'+r[2]; let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return h.toString(36); };
 let HID=null; const byId=id=>{ if(!HID){ HID={}; for(const x of X) HID[hid(x.r)]=x; } return HID[id]; };
 const FAV=(()=>{ let m={}; try{ m=JSON.parse(localStorage.getItem('fav')||'{}')||{}; }catch(e){} const save=()=>{ try{ localStorage.setItem('fav',JSON.stringify(m)); }catch(e){} };
-  return {all:()=>m, has:id=>!!m[id], n:()=>Object.keys(m).length, add:x=>{ m[hid(x.r)]={p:x.r[3],d:D.date,n:x.r[2],s:x.r[0]}; save(); }, del:id=>{ delete m[id]; save(); }}; })();
+  return {all:()=>m, has:id=>!!m[id], n:()=>Object.keys(m).length, add:x=>{ m[hid(x.r)]={p:x.r[3],d:D.date,n:x.r[2],s:x.r[0],u:x.r[C.url]||''}; save(); }, del:id=>{ delete m[id]; save(); }, put:(id,v)=>{ m[id]=v; save(); }}; })();
 function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('on'),1800); }
 function setHash(){ if(location.hash==='#admin') return; const p=[]; if(cur!=='search') p.push('t='+cur); if(cur==='search'&&S.q) p.push('q='+encodeURIComponent(S.q)); if(setHash.a) p.push('a='+setHash.a);
   try{ history.replaceState(null,'',location.pathname+location.search+(p.length?'#'+p.join('&'):'')); }catch(e){} }
@@ -290,7 +298,7 @@ function openItem(k){ const x=X[k], r=x.r; const ks=keyset(r[2]); const hp=(r[C.
   ${why(x)}
   <dl class="kv num"><div><dt>${t('crossed')}</dt><dd>${f(r[4])||'–'}</dd></div><div><dt>${t('low30')}</dt><dd>${f(r[5])||'–'}</dd></div><div><dt>${t('mkt')}</dt><dd>${f(r[8])||'–'}</dd></div><div><dt>${t('fv.minH')}</dt><dd>${hp.length>1?f(minH):'–'}</dd></div></dl>
   <div class="acts">${r[C.url]?`<a class="btn pri" href="${esc(r[C.url])}" target="_blank" rel="noopener">${t('open')}</a>`:''}
-   <button class="btn ${FAV.has(hid(r))?'on':''}" id="favb" onclick="favItem(${k})">${FAV.has(hid(r))?t('fv.on'):t('fv.add')}</button><button class="btn" onclick="shareItem(${k})">${t('fv.share')}</button></div>
+   <button class="btn ${FAV.has(hid(r))?'on':''}" id="favb" onclick="favItem(${k})">${FAV.has(hid(r))?t('fv.on'):t('fv.add')}</button><button class="btn" onclick="shareItem(${k})">${t('fv.share')}</button>${ACC.can(r[0])?`<button class="btn" onclick="ACC.stock(${k})">📍 ${ACC.t('where')}</button>`:''}</div>
   <div class="sec"><h3>${t('hist')}</h3>${chart(r[C.hist])}</div>
   ${same.length?`<div class="sec"><h3>${t('same')}</h3><div class="cmp">${same.map(y=>`<a onclick="openItem(${y.i})"><span><span class="nm">${esc(y.r[2])}</span><div class="meta">${st(y.r[0])}</div></span><span class="pr num">${money(y.r[3])}</span></a>`).join('')}</div></div>`:''}`;
   ov.style.display='flex'; sheet.scrollTop=0; document.body.style.overflow='hidden'; }
@@ -546,7 +554,7 @@ function admin(){ mbar.style.display='none'; const stores=Object.keys(CATS.found
   sv.onclick=async()=>{ try{ await navigator.clipboard.writeText(json); }catch(e){ js.select(); document.execCommand('copy'); }
     cp.textContent=t('adm.copied'); window.open(`https://github.com/${D.repo}/edit/main/categories.json`,'_blank','noopener'); }; }
 function fav(){ const m=FAV.all(); const ids=Object.keys(m).sort((a,b)=>(m[b].d||'').localeCompare(m[a].d||''));
-  main.innerHTML=`<h2>${t('fv.h')}</h2><p class="sub">${t('fv.s')}</p>`+(!ids.length?`<div class="list empty">${t('fv.empty')}</div>`:`<div class="list m">${ids.map(id=>{ const x=byId(id), s=m[id];
+  main.innerHTML=`<h2>${t('fv.h')}</h2><p class="sub">${t('fv.s')} ${ACC.favNote()}</p>`+(ids.some(id=>ACC.can(m[id].s))?`<p><button class="btn pri" onclick="ACC.savedMap()">🗺 ${ACC.t('savedMap')}</button></p>`:'')+(!ids.length?`<div class="list empty">${t('fv.empty')}</div>`:`<div class="list m">${ids.map(id=>{ const x=byId(id), s=m[id];
     const d=x?x.r[3]-s.p:0; const ch=!x?`<span class="tag neu">${t('fv.gone')}</span>`:d<0?`<span class="tag good">−${nf(-d)} din (${pct(-d/s.p)})</span>`:d>0?`<span class="tag bad">+${nf(d)} din (${pct(d/s.p)})</span>`:`<span class="tag neu">${t('fv.same')}</span>`;
     return `<div class="it" ${x?`onclick="openItem(${x.i})"`:'style="cursor:default"'}><div class="top"><div><div class="nm">${esc(s.n)}</div><div class="meta">${st(s.s)}</div></div>
       <div class="r">${x?`<div class="pr num">${money(x.r[3])}</div>`:''}<div class="meta num">${esc(t('fv.then')(nf(s.p)))} · ${dm((s.d||'').slice(5))}</div></div></div>
@@ -591,6 +599,128 @@ const TRK=(()=>{ const on=/babl\.cc$/.test(location.hostname)&&location.hash!=='
 document.addEventListener('click',e=>{ const a=e.target.closest('a[href^="http"]'); if(!a) return; let h=''; try{ h=new URL(a.href).hostname; }catch(e){}
   if(h&&!/babl\.cc$/.test(h)) TRK('out',{store:h.replace(/^www\./,''),item:(a.closest('.it,tr,.sheet,.panel,div')?.querySelector('.nm')?.textContent||a.textContent||'').trim().slice(0,150)}); },true);
 document.querySelectorAll('.lng button').forEach(b=>b.addEventListener('click',()=>TRK('lang',{data:{to:b.dataset.l}})));
+</script>
+<script>
+"use strict";
+// ------------------------------------------------------------------ babl account (same login as babl.cc) + store-stock map
+const ACC=(()=>{
+  const SB='https://miikcfemhoayjyujkftk.supabase.co', KEY='sb_publishable_Cd4wJJRhZaan3NfzHlToLg_hjC6rdv4', SKEY='sb-miikcfemhoayjyujkftk-auth-token';
+  const CHAINS=['Gigatron','WinWin'];
+  const TX={sr:{login:'Prijava',acct:'Nalog',h:'Prijavite se babl nalogom',s:'Isti nalog kao na babl.cc. Sačuvani artikli se čuvaju na vašem nalogu (na svim uređajima), a mapa prodavnica sa stanjem artikla dostupna je samo prijavljenima.',
+      google:'Nastavi sa Google nalogom',email:'Email adresa',send:'Pošalji link za prijavu',sent:e=>`Poslali smo link na ${e}. Otvorite ga na ovom uređaju – ili upišite kod iz emaila:`,code:'Kod iz emaila',verify:'Potvrdi kod',
+      out:'Odjavi se',signed:e=>`Prijavljeni ste kao ${e}.`,savedN:n=>`Sačuvanih artikala na nalogu: ${n}.`,bad:'Nešto nije u redu – pokušajte ponovo.',needLogin:'Mapa prodavnica je dostupna samo prijavljenim korisnicima.',
+      where:'Gde je na stanju',whereH:'Gde je na stanju',loading:'Proveravamo stanje u prodavnicama…',none:'Prodavnica trenutno ne prijavljuje ovaj artikal ni u jednoj radnji (moguće je da je dostupan samo online).',
+      near:'📍 Najbliže meni',area:'Samo ovo područje',all:'Svi gradovi',km:k=>`${k} km`,qty:q=>`na stanju: ${q}`,route:'Putanja',call:'Pozovi',approx:'približna lokacija',checked:(n,c)=>`${n} radnji · ${c}`,back:'← Nazad na artikal',
+      noGeo:'Ne možemo da dobijemo vašu lokaciju – izaberite grad ili pomerite mapu.',err:'Prodavnica trenutno ne odgovara – pokušajte malo kasnije.',savedMap:'Mapa sačuvanih artikala',savedMapH:'Gde su vaši sačuvani artikli',
+      savedMapS:(n,m)=>`Proverili smo ${n} artikala iz radnji koje prijavljuju stanje${m?` (još ${m} je iz online prodavnica)`:''}. Najbolje su radnje u kojima je najviše vaših artikala.`,has:(a,b)=>`${a} od ${b} artikala`,
+      favNote:'Prijavite se da ih imate na svim uređajima.',favCloud:'Čuvaju se i na vašem babl nalogu.'},
+    en:{login:'Sign in',acct:'Account',h:'Sign in with your babl account',s:'The same account as on babl.cc. Saved articles are kept in your account (on all your devices), and the store map with stock is available to signed-in users only.',
+      google:'Continue with Google',email:'Email address',send:'Send sign-in link',sent:e=>`We sent a link to ${e}. Open it on this device – or type the code from the email:`,code:'Code from the email',verify:'Confirm code',
+      out:'Sign out',signed:e=>`Signed in as ${e}.`,savedN:n=>`Articles saved to your account: ${n}.`,bad:'Something went wrong – please try again.',needLogin:'The store map is available to signed-in users only.',
+      where:'Where in stock',whereH:'Where is it in stock',loading:'Checking stock in the stores…',none:'The shop does not report this article in any physical store right now (it may be online only).',
+      near:'📍 Nearest to me',area:'Only this area',all:'All cities',km:k=>`${k} km`,qty:q=>`in stock: ${q}`,route:'Directions',call:'Call',approx:'approximate location',checked:(n,c)=>`${n} stores · ${c}`,back:'← Back to the article',
+      noGeo:'We cannot get your location – pick a city or move the map.',err:'The shop is not answering right now – please try again a bit later.',savedMap:'Map of saved articles',savedMapH:'Where your saved articles are',
+      savedMapS:(n,m)=>`We checked ${n} articles from shops that report store stock${m?` (${m} more are from online shops)`:''}. The best stores are the ones holding most of your articles.`,has:(a,b)=>`${a} of ${b} articles`,
+      favNote:'Sign in to have them on all your devices.',favCloud:'They are also kept in your babl account.'}};
+  const T=k=>TX[lang][k]??k;
+  let sb=null, user=null, loading=null, pos=null;
+  const hasSession=()=>{ try{ return !!localStorage.getItem(SKEY); }catch(e){ return false; } };
+  function load(){ if(loading) return loading;
+    loading=new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
+      sc.onload=async()=>{ sb=supabase.createClient(SB,KEY,{auth:{flowType:'pkce',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}});
+        sb.auth.onAuthStateChange((ev,ses)=>{ const was=user; user=ses?.user||null; paint(); if(user&&!was) setTimeout(syncSaved,0); });
+        const {data}=await sb.auth.getSession(); user=data.session?.user||null; paint(); if(user) syncSaved();
+        if(/[?&]code=/.test(location.search)){ const ret=sessionStorage.getItem('ret')||''; history.replaceState(null,'',location.pathname+ret); sessionStorage.removeItem('ret'); }
+        res(sb); };
+      sc.onerror=()=>{ loading=null; rej(new Error('load')); }; document.head.appendChild(sc); });
+    return loading; }
+  function paint(){ const b=document.getElementById('acct'); if(!b) return; b.classList.toggle('in',!!user);
+    b.textContent=user?((user.user_metadata?.full_name||user.user_metadata?.name||user.email||'').split(/[\s@]/)[0]||T('acct')):T('login'); }
+  const ev=(e,o)=>{ if(typeof TRK==='function') TRK(e,o||{}); };
+  // ---- saved articles live in the account as well
+  async function syncSaved(){ if(!sb||!user) return;
+    const {data,error}=await sb.from('cene_saved').select('id,store,name,url,price_saved,saved_at'); if(error) return;
+    const m=FAV.all(), cloud=new Set(data.map(r=>r.id));
+    const up=Object.entries(m).filter(([id])=>!cloud.has(id)).map(([id,v])=>({id,store:v.s,name:v.n,url:v.u||null,price_saved:v.p}));
+    if(up.length) await sb.from('cene_saved').upsert(up);
+    for(const r of data) if(!m[r.id]) FAV.put(r.id,{p:r.price_saved,d:(r.saved_at||'').slice(0,10),n:r.name,s:r.store,u:r.url||''});
+    tabs(); if(cur==='fav') fav(); }
+  const _add=FAV.add, _del=FAV.del;
+  FAV.add=x=>{ _add(x); if(sb&&user) sb.from('cene_saved').upsert({id:hid(x.r),store:x.r[0],name:x.r[2],url:x.r[C.url]||null,price_saved:x.r[3]}).then(()=>{}); };
+  FAV.del=id=>{ _del(id); if(sb&&user) sb.from('cene_saved').delete().eq('id',id).then(()=>{}); };
+  // ---- sign-in sheet
+  function sheetOpen(html){ sheet.innerHTML=html; ov.style.display='flex'; sheet.scrollTop=0; document.body.style.overflow='hidden'; }
+  async function open(reason){ try{ await load(); }catch(e){ toast(T('bad')); return; }
+    if(user){ sheetOpen(`<div class="sh"><div><h2>${esc(T('acct'))}</h2></div><button class="x" onclick="closeS()">✕</button></div>
+      <p class="sub" style="margin-top:12px">${esc(T('signed')(user.email||''))}<br>${esc(T('savedN')(FAV.n()))}</p><button class="btn" onclick="ACC.logout()">${T('out')}</button>`); return; }
+    sheetOpen(`<div class="sh"><div><h2>${esc(T('h'))}</h2></div><button class="x" onclick="closeS()">✕</button></div>
+      ${reason==='map'?`<p class="lock">🔒 ${esc(T('needLogin'))}</p>`:''}<p class="sub" style="margin-top:10px">${esc(T('s'))}</p>
+      <div class="lgn"><button class="btn pri" onclick="ACC.google()">${T('google')}</button><div class="or">ili / or</div>
+       <input type="email" id="lem" placeholder="${esc(T('email'))}" autocomplete="email"><button class="btn" onclick="ACC.email()">${T('send')}</button><div id="lmsg"></div></div>`); }
+  async function google(){ sessionStorage.setItem('ret',location.hash||''); ev('login',{data:{via:'google'}});
+    const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}}); if(error) toast(T('bad')); }
+  async function email(){ const e=(document.getElementById('lem').value||'').trim(); if(!/^\S+@\S+\.\S+$/.test(e)) return; sessionStorage.setItem('ret',location.hash||''); ev('login',{data:{via:'email'}});
+    const {error}=await sb.auth.signInWithOtp({email:e,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
+    document.getElementById('lmsg').innerHTML=error?`<p class="sub">${esc(T('bad'))}</p>`:`<p class="sub">${esc(T('sent')(e))}</p><input id="lcode" inputmode="numeric" autocomplete="one-time-code" placeholder="${esc(T('code'))}"><button class="btn" style="margin-top:8px" onclick="ACC.code('${esc(e)}')">${T('verify')}</button>`; }
+  async function code(e){ const c=(document.getElementById('lcode').value||'').replace(/\D/g,''); if(c.length<6) return;
+    const {error}=await sb.auth.verifyOtp({email:e,token:c,type:'email'}); if(error){ toast(T('bad')); return; } closeS(); }
+  async function logout(){ await sb.auth.signOut(); user=null; paint(); closeS(); }
+  // ---- stock in physical stores (signed-in users only)
+  let LL=null; function leaflet(){ if(LL) return LL; LL=new Promise((res,rej)=>{ const css=document.createElement('link'); css.rel='stylesheet'; css.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
+      const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; sc.onload=()=>res(window.L); sc.onerror=()=>{ LL=null; rej(); }; document.head.appendChild(sc); }); return LL; }
+  async function call(store,url,name){ const {data}=await sb.auth.getSession(); const tok=data.session?.access_token; if(!tok) throw new Error('login');
+    const r=await fetch(SB+'/functions/v1/cene-stock',{method:'POST',headers:{Authorization:'Bearer '+tok,apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({store,url,name})});
+    const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'shop'); return j.stores||[]; }
+  const km=(a,b)=>{ const R=6371, r=Math.PI/180, dl=(b.lat-a.lat)*r, dn=(b.lng-a.lng)*r; const h=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)**2; return 2*R*Math.asin(Math.sqrt(h)); };
+  const dir=s=>`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}`;
+  async function gate(){ if(!hasSession()&&!user){ open('map'); return false; } try{ await load(); }catch(e){ toast(T('bad')); return false; } if(!user){ open('map'); return false; } return true; }
+  async function stock(k){ if(!await gate()) return; const x=X[k], r=x.r; ev('stock',{store:r[0],item:r[2]});
+    sheetOpen(`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])}</div><h2>${esc(T('whereH'))}</h2><div class="meta">${esc(r[2])}</div></div><button class="x" onclick="closeS()">✕</button></div><p class="sub" style="margin-top:14px">${esc(T('loading'))}</p>`);
+    let stores; try{ stores=await call(r[0],r[C.url],r[2]); }catch(e){ if(e.message==='login'){ open('map'); return; } sheet.querySelector('.sub').textContent=T('err'); return; }
+    render({title:T('whereH'),sub:r[2],chain:r[0],back:k,stores:stores.map(s=>Object.assign(s,{items:[x]}))}); }
+  async function savedMap(){ if(!await gate()) return; const m=FAV.all(); const ids=Object.keys(m); const sup=ids.filter(id=>CHAINS.includes(m[id].s)&&(m[id].u||byId(id)));
+    sheetOpen(`<div class="sh"><div><h2>${esc(T('savedMapH'))}</h2></div><button class="x" onclick="closeS()">✕</button></div><p class="sub" style="margin-top:14px">${esc(T('loading'))}</p>`);
+    const by={}; let done=0; ev('stock',{data:{saved:sup.length}});
+    for(const id of sup.slice(0,15)){ const v=m[id], x=byId(id); const url=x?x.r[C.url]:v.u; try{ for(const s of await call(v.s,url,v.n)){ const kk=s.chain+'|'+s.label; (by[kk]=by[kk]||Object.assign(s,{items:[]})).items.push(x||{r:[v.s,'',v.n,v.p],i:null}); } }catch(e){} done++;
+      const p=sheet.querySelector('.sub'); if(p) p.textContent=T('loading')+` ${done}/${Math.min(15,sup.length)}`; }
+    render({title:T('savedMapH'),sub:T('savedMapS')(Math.min(15,sup.length),ids.length-sup.length),stores:Object.values(by),total:Math.min(15,sup.length)}); }
+  async function render(o){ const head=`<div class="sh"><div>${o.chain?`<div class="meta" style="margin:0 0 6px">${st(o.chain)}</div>`:''}<h2>${esc(o.title)}</h2><div class="meta">${esc(o.sub||'')}</div></div><button class="x" onclick="closeS()">✕</button></div>`;
+    const back=o.back!=null?`<p style="margin:10px 0 0"><button class="btn" onclick="openItem(${o.back})">${T('back')}</button></p>`:'';
+    if(!o.stores.length){ sheetOpen(head+`<p class="sub" style="margin-top:14px">${esc(T('none'))}</p>`+back); return; }
+    const cities=uniq(o.stores.map(s=>s.city));
+    sheetOpen(head+`<div class="mapbar" style="margin-top:12px"><button class="btn" id="mnear">${T('near')}</button><select class="sel" id="mcity">${opt(cities,'',T('all'))}</select>
+      <label class="meta" style="margin:0"><input type="checkbox" id="marea"> ${esc(T('area'))}</label></div><div id="smap"></div><div class="meta" id="mcnt"></div><div class="list m stl" id="mlist"></div>`+back);
+    let Lf; try{ Lf=await leaflet(); }catch(e){ document.getElementById('smap').style.display='none'; }
+    const pts=o.stores.filter(s=>s.lat!=null);
+    let map=null, me=null, mk=[];
+    if(Lf&&pts.length){ map=Lf.map('smap',{scrollWheelZoom:false}); Lf.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map);
+      for(const s of pts){ const n=o.total?s.items.length:''; const ic=Lf.divIcon({className:'',html:`<div class="pin" style="width:${n?28:24}px;height:${n?28:24}px;line-height:${n?24:20}px">${n||'•'}</div>`,iconSize:[n?28:24,n?28:24]});
+        mk.push(Lf.marker([s.lat,s.lng],{icon:ic}).addTo(map).bindPopup(`<b>${esc(s.chain)} ${esc(s.label)}</b><br>${esc(s.address)}, ${esc(s.city)}${s.qty?`<br>${esc(T('qty')(s.qty))}`:''}${o.total?`<br>${esc(T('has')(s.items.length,o.total))}`:''}<br><a href="${dir(s)}" target="_blank" rel="noopener">${T('route')}</a>`)); }
+      map.fitBounds(Lf.latLngBounds(pts.map(s=>[s.lat,s.lng])),{padding:[24,24],maxZoom:13}); map.on('moveend',list); }
+    function list(){ let rows=o.stores.slice(); const c=document.getElementById('mcity').value, area=document.getElementById('marea').checked;
+      if(c) rows=rows.filter(s=>s.city===c); if(area&&map){ const b=map.getBounds(); rows=rows.filter(s=>s.lat!=null&&b.contains([s.lat,s.lng])); }
+      rows.forEach(s=>s.d=pos&&s.lat!=null?km(pos,s):null);
+      rows.sort((a,b)=>(o.total?b.items.length-a.items.length:0)||((a.d??1e9)-(b.d??1e9))||String(a.city).localeCompare(String(b.city),'sr'));
+      document.getElementById('mcnt').textContent=T('checked')(rows.length,new Date().toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit'}));
+      document.getElementById('mlist').innerHTML=rows.slice(0,60).map(s=>`<div class="it"><div class="top"><div><div class="nm">${esc(s.city)} · ${esc(s.address)}</div>
+        <div class="meta">${st(s.chain)} ${esc(s.label)}${s.approx?` · ${esc(T('approx'))}`:''}${s.hours?` · ${esc(s.hours)}`:''}</div>
+        ${o.total?`<div class="meta">${esc(T('has')(s.items.length,o.total))}: ${s.items.map(i=>esc((i.r[2]||'').slice(0,40))).join(' · ')}</div>`:''}</div>
+        <div class="r">${s.d!=null?`<div class="d num">${esc(T('km')(s.d<10?s.d.toFixed(1).replace('.',','):Math.round(s.d)))}</div>`:''}${s.qty?`<div class="meta">${esc(T('qty')(s.qty))}</div>`:''}</div></div>
+        <div class="bot">${s.lat!=null?`<a class="btn" style="padding:5px 12px;font-size:13px" href="${dir(s)}" target="_blank" rel="noopener">${T('route')}</a>`:''}${s.phone?`<a class="btn" style="padding:5px 12px;font-size:13px" href="tel:${esc(s.phone.replace(/\s/g,''))}">${T('call')}</a>`:''}</div></div>`).join(''); }
+    document.getElementById('mcity').onchange=e=>{ const c=e.target.value; const p=pts.filter(s=>!c||s.city===c); if(map&&p.length) map.fitBounds(Lf.latLngBounds(p.map(s=>[s.lat,s.lng])),{padding:[24,24],maxZoom:14}); list(); };
+    document.getElementById('marea').onchange=list;
+    document.getElementById('mnear').onclick=()=>{ if(!navigator.geolocation){ toast(T('noGeo')); return; }
+      navigator.geolocation.getCurrentPosition(p=>{ pos={lat:p.coords.latitude,lng:p.coords.longitude};
+        if(map){ if(me) me.remove(); me=Lf.marker([pos.lat,pos.lng],{icon:Lf.divIcon({className:'',html:'<div class="pin me" style="width:16px;height:16px"></div>',iconSize:[16,16]})}).addTo(map);
+          const near=pts.map(s=>[km(pos,s),s]).sort((a,b)=>a[0]-b[0]).slice(0,3).map(z=>[z[1].lat,z[1].lng]); map.fitBounds(Lf.latLngBounds(near.concat([[pos.lat,pos.lng]])),{padding:[30,30],maxZoom:14}); }
+        list(); },()=>toast(T('noGeo')),{enableHighAccuracy:false,timeout:10000,maximumAge:600000}); };
+    list(); setTimeout(()=>map&&map.invalidateSize(),150); }
+  // start: restore the session (or finish a sign-in that came back from Google / the email link)
+  if(hasSession()||/[?&]code=/.test(location.search)) load().catch(()=>{});
+  setTimeout(paint,0);
+  return {open,google,email,code,logout,stock,savedMap,can:s=>CHAINS.includes(String(s).split(' (')[0]),t:T,
+    favNote:()=>user?T('favCloud'):T('favNote')};
+})();
 chrome();
 { const hp=new URLSearchParams(location.hash.slice(1)); const t0=hp.get('t'), q0=hp.get('q'), a0=hp.get('a');
   if(q0) S.q=q0; go(location.hash==='#admin'?'admin':(t0&&TABS.includes(t0)?t0:'search'));
