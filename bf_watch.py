@@ -436,6 +436,8 @@ def analyse(items, pm):
         it["own_src"] = "store"
         if not own and it.get("l_obs") and it.get("obs_days", 0) >= CFG.get("min_history_days", 7):
             own = it["l_obs"]; it["own_src"] = "our record"
+        elif own and it.get("l_obs") and it.get("obs_days", 0) >= 3 and it["l_obs"] < own * 0.98:
+            own = it["l_obs"]; it["own_src"] = "our record"      # we saw a lower price in the last 30 days than the store states
         it["l_used"] = own
         it["real"] = round(1 - P / own, 4) if own else None
         r = pm.get(it["term"])
@@ -457,7 +459,7 @@ def analyse(items, pm):
 def code_keys(name):
     """Model-code tokens used to match the same article across stores."""
     out = set()
-    for t in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-/\.+]*", name):
+    for t in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-\.+]*", name):      # '/' separates: "i7/16/512GB/5060" is specs, not a code
         t2 = nz(t).upper()
         if len(t2) >= 6 and re.search(r"[A-Z]", t2) and re.search(r"\d", t2) and not JUNK.match(t2):
             out.add(t2)

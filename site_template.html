@@ -195,7 +195,7 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',fav:'Sačuvano',w
       raised:(c,p,l)=>`Uz artikal je istaknut popust od ${c}, a cena je ${p} viša od najniže cene koju prodavnica navodi za poslednjih 30 dana (${l}).`,
       fake:(c,l)=>`Uz artikal je istaknut popust od ${c}, a ista cena (${l}) je prema podacima prodavnice bila najniža i u poslednjih 30 dana.`,
       nochange:l=>`Cena je praktično ista kao najniža u poslednjih 30 dana (${l}).`,
-      plain:'Bez ocene: prodavnica trenutno ne ističe popust za ovaj artikal, pa nema šta da se proverava. Pratimo cenu i prikazujemo njenu istoriju.',unrated:'Bez ocene: za ovaj artikal još nemamo dovoljno podataka (prodavnica ne objavljuje 30-dnevni minimum, a naša istorija cena je kraća od 7 dana).',nolow:'Prodavnica ne objavljuje najnižu cenu iz poslednjih 30 dana, pa popust poredimo sa ostalim prodavnicama.',title:'Zašto ova ocena'},
+      store:'prema podacima prodavnice',rec:'prema našoj istoriji cena',ours:'30-dnevni minimum ovde računamo iz naše istorije cena: u poslednjih 30 dana zabeležili smo nižu cenu od one koju prodavnica navodi (ili je prodavnica ne objavljuje).',plain:'Bez ocene: prodavnica trenutno ne ističe popust za ovaj artikal, pa nema šta da se proverava. Pratimo cenu i prikazujemo njenu istoriju.',unrated:'Bez ocene: za ovaj artikal još nemamo dovoljno podataka (prodavnica ne objavljuje 30-dnevni minimum, a naša istorija cena je kraća od 7 dana).',nolow:'Prodavnica ne objavljuje najnižu cenu iz poslednjih 30 dana, pa popust poredimo sa ostalim prodavnicama.',title:'Zašto ova ocena'},
  MV:{'BUY-WORTHY':'Najbolja ponuda','BEST IN MARKET':'Najjeftinije na tržištu','GOOD':'Dobra cena','OK':'Prosečna cena','SKIP':'Ima jeftinije','SINGLE SELLER':'Samo jedan prodavac','NOT ON PAMETNO':'Nije na pametno.rs','NOT CHECKED':'Nije provereno','LISTED, NO CURRENT OFFERS':'Bez drugih ponuda','MODEL VARIANT DIFFERS':'Druga varijanta','STORAGE DIFFERS':'Druga memorija','UNCERTAIN MATCH':'Nesiguran par','LOOKUP FAILED':'Provera nije uspela'},
  crossed:'Precrtana',low30:'Najniža u 30 dana',mkt:'Najniža na tržištu',since:d=>`Ova cena važi od ${d}.`,seen:d=>` Poslednji put viđeno ${d}.`,
  open:'Otvori u prodavnici',hist:'Kretanje cene',noHist:'Istorija se tek skuplja – raste sa svakim osvežavanjem.',same:'Isti model u drugim prodavnicama',
@@ -235,7 +235,7 @@ en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',fav:'Saved',watch:'W
       raised:(c,p,l)=>`A ${c} discount is advertised, and the price is ${p} above the lowest price the store states for the last 30 days (${l}).`,
       fake:(c,l)=>`A ${c} discount is advertised, and according to the store's own data the same price (${l}) was also its lowest in the last 30 days.`,
       nochange:l=>`The price is practically the same as the 30-day low (${l}).`,
-      plain:'No rating: the store is not advertising a discount on this product, so there is nothing to check. We track the price and show its history.',unrated:'No rating yet: the store does not publish a 30-day low and our own price history is shorter than 7 days.',nolow:"This store doesn't publish its 30-day lowest price, so we compare the discount with other stores.",title:'Why this verdict'},
+      store:'according to the store',rec:'according to our price history',ours:'Here the 30-day low comes from our own price history: in the last 30 days we recorded a lower price than the store states (or the store does not publish one).',plain:'No rating: the store is not advertising a discount on this product, so there is nothing to check. We track the price and show its history.',unrated:'No rating yet: the store does not publish a 30-day low and our own price history is shorter than 7 days.',nolow:"This store doesn't publish its 30-day lowest price, so we compare the discount with other stores.",title:'Why this verdict'},
  MV:{'BUY-WORTHY':'Best offer','BEST IN MARKET':'Cheapest in market','GOOD':'Good price','OK':'Average price','SKIP':'Cheaper elsewhere','SINGLE SELLER':'Only one seller','NOT ON PAMETNO':'Not on pametno.rs','NOT CHECKED':'Not checked','LISTED, NO CURRENT OFFERS':'No other offers','MODEL VARIANT DIFFERS':'Other variant','STORAGE DIFFERS':'Other storage','UNCERTAIN MATCH':'Uncertain match','LOOKUP FAILED':'Check failed'},
  crossed:'Crossed-out',low30:'30-day low',mkt:'Market low',since:d=>`This price applies since ${d}.`,seen:d=>` Last seen ${d}.`,
  open:'Open in store',hist:'Price history',noHist:'History is still building up – it grows with every refresh.',same:'Same model at other stores',
@@ -282,7 +282,7 @@ function chart(h){ if(!h||h.length<2) return `<p class="sub">${t('noHist')}</p>`
   s+=`<text x="${Lm}" y="${H-5}" font-size="11" fill="currentColor">${dm(h[0][0])}</text><text x="${W-10}" y="${H-5}" font-size="11" text-anchor="end" fill="currentColor">${dm(h[h.length-1][0])}</text></svg>`; return s; }
 // model codes only: memory sizes, resolutions, power etc. ("12/256GB", "2560X1600", "3200MHZ", "I7-1355U") are not model codes
 const JUNK=/^(\d+(GB|TB|MB|MAH|W|WH|L|BTU|KG|HZ|MHZ|GHZ|MM|CM|V|PA|K|MP|INCH|RPM|DB)|\d+GB\d+(GB|TB)?|\d+(GB|TB)?\d+(GB|TB)|\d+X\d+|(I[3579]|U[579]|R[3579]|C[357])\d+[A-Z]*|\d+)$/;
-const kc={}; function keyset(n){ if(kc[n]) return kc[n]; return kc[n]=(n.match(/[A-Za-z0-9][A-Za-z0-9\-\/.+]*/g)||[]).map(z=>z.replace(/[^A-Za-z0-9]/g,'').toUpperCase()).filter(z=>z.length>=6&&/[A-Z]/.test(z)&&/\d/.test(z)&&!JUNK.test(z)); }
+const kc={}; function keyset(n){ if(kc[n]) return kc[n]; return kc[n]=(n.match(/[A-Za-z0-9][A-Za-z0-9\-.+]*/g)||[]).map(z=>z.replace(/[^A-Za-z0-9]/g,'').toUpperCase()).filter(z=>z.length>=6&&/[A-Z]/.test(z)&&/\d/.test(z)&&!JUNK.test(z)); }
 const isM=()=>window.matchMedia('(max-width:760px)').matches;
 const uniq=a=>[...new Set(a)].filter(Boolean).sort((x,y)=>x.localeCompare(y,'sr'));
 const opt=(vals,sel,all,lab)=>`<option value="">${all}</option>`+vals.map(v=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(lab?lab(v):v)}</option>`).join('');
@@ -363,7 +363,8 @@ function favItem(k){ const x=X[k], id=hid(x.r); if(FAV.has(id)) FAV.del(id); els
   const b=document.getElementById('favb'); if(b){ b.querySelector('span').textContent=FAV.has(id)?t('fv.on'):t('fv.add'); b.classList.toggle('on',FAV.has(id)); } tabs(); if(cur==='fav') fav(); }
 function why(x){ const r=x.r, g=x.vg, l=r[5]?nf(r[5])+' din':'';
   const s=g==='real'?t('why.real')(pct(x.real),l):g==='raised'?t('why.raised')(pct(x.claimed),pct(-x.real),l):g==='fake'?t('why.fake')(pct(x.claimed),l):g==='nochange'?t('why.nochange')(l):(r[6]&&!r[5])?t('why.nolow'):!r[6]?t(r[4]>r[3]?'why.unrated':'why.plain'):'';
-  return s?`<div class="why"><b>${t('why.title')}</b>${esc(s)}</div>`:''; }
+  const ours=/our own/.test(r[6]||'')&&g!=='none'&&g!=='unverified';
+  return s?`<div class="why"><b>${t('why.title')}</b>${esc(ours?s.replace(t('why.store'),t('why.rec')):s)}${ours?`<div class="meta" style="margin-top:6px">${esc(t('why.ours'))}</div>`:''}</div>`:''; }
 function openItem(k){ const x=X[k], r=x.r; const ks=keyset(r[2]); const hp=(r[C.hist]||[]).map(p=>p[1]).concat([r[3]]); const minH=Math.min(...hp), atMin=hp.length>=3&&r[3]<=minH&&Math.max(...hp)>r[3];
   setHash.a=hid(r); setHash();
   const same=ks.length?X.filter(y=>y!==x && y.brand===x.brand && keyset(y.r[2]).some(z=>ks.includes(z))).sort((a,b)=>a.r[3]-b.r[3]).slice(0,8):[];

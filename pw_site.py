@@ -39,7 +39,7 @@ def build(run_dir, date):
     brand = lambda n: re.sub(r"[^A-Z0-9-]", "", (n.split() or [""])[0].upper())
     def keys(n):      # (brand, model code) – memory sizes, resolutions etc. are not model codes
         b = brand(n)
-        return {(b, c) for c in (re.sub(r"[^A-Za-z0-9]", "", t).upper() for t in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-/.+]*", n))
+        return {(b, c) for c in (re.sub(r"[^A-Za-z0-9]", "", t).upper() for t in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-.+]*", n))
                 if len(c) >= 6 and re.search(r"[A-Z]", c) and re.search(r"\d", c) and not JUNK.match(c)}
     best = {}
     for a in allit:
@@ -55,7 +55,7 @@ def build(run_dir, date):
         h = hist.get(key, [])
         since, seen = (meta.get(key) or [date, date])
         rows.append([
-            a["store"], a.get("cat", ""), a["name"], a["p"], a.get("o") or 0, a.get("l") or i.get("l_used") or 0,
+            a["store"], a.get("cat", ""), a["name"], a["p"], a.get("o") or 0, i.get("l_used") or a.get("l") or 0,
             i.get("v", ""), i.get("mv", ""), (i.get("mkt") or 0), a.get("u", ""),
             cheapest[0] if cheapest and cheapest[1] != a["store"] else 0, cheapest[1] if cheapest and cheapest[1] != a["store"] else "",
             h[-60:], short(since), short(seen), a.get("nl") or 0, {k: v for k, v in (pspecs.get(a.get("u", "")) or {}).items() if not k.startswith("_")} or 0,
