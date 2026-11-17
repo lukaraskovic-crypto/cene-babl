@@ -701,6 +701,9 @@ def main():
     if not a.dry_run and db.enabled():
         try: db.send_daily_report(TODAY, dt.datetime.now(TZ).hour, log=log)
         except Exception as e: log("daily report e-mail failed:", e); problems.append(f"daily report e-mail failed: {str(e)[:200]}")
+        if not raw.get("_partial"):
+            try: db.send_price_alerts(all_full, log=log)
+            except Exception as e: log("price alerts failed:", e); problems.append(f"price alerts failed: {str(e)[:200]}")
     log("done" + (f" with {len(problems)} problem(s): " + "; ".join(problems) if problems else ""))
     if problems: sys.exit(1)      # a failed GitHub run → GitHub e-mails the owner
 
@@ -1163,15 +1166,15 @@ def write_outputs(items, watch, raw, pm, fails, all_items=(), drops=(), prev=fro
              [f"pametno.rs lookups: {pm_done}/{len(set(i['term'] for i in items))}"], ["Failures: " + ("; ".join(fails) if fails else "none")]]
     # ---- text report
     def fmt(n): return f"{int(n):,}".replace(",", ".")
-    lines = [f"Store promotions – {TODAY}", "", "Biggest real cuts:"]
+    lines = [f"Store promotions – {TODAY}", "", "Biggest confirmed reductions (vs the store's own 30-day low):"]
     for i in sorted(real, key=lambda i: -(i["l_used"] - i["p"]))[:8]:
         new = "" if (i["store"], i["name"]) in prev else " · NEW"
         lines.append(f"• {i['name'][:60]} · {i['store']} · {fmt(i['p'])} · −{i['real']*100:.0f}% (−{fmt(i['l_used']-i['p'])}) · {i['mv']}{new}")
     lines += ["", "Cheaper than the rest of the market:"]
     for i in sorted([i for i in items if i["mv"] in ("BUY-WORTHY", "BEST IN MARKET")], key=lambda i: i["p"] / i["mkt"])[:8]:
-        flag = " (own discount fake)" if i["v"].startswith(("FAKE", "No real")) else ""
+        flag = " (not below its own 30-day low)" if i["v"].startswith(("FAKE", "No real")) else ""
         lines.append(f"• {i['name'][:55]} · {i['store']} · {fmt(i['p'])} · {i['mv']}{flag}")
-    lines += ["", "Real deals (real cut + cheapest in market):"]
+    lines += ["", "Confirmed reduction + cheapest in market:"]
     rd = [i for i in real if i["mv"] in ("BUY-WORTHY", "BEST IN MARKET")]
     lines += [f"• {i['name'][:55]} · {i['store']} · {fmt(i['p'])}" for i in rd[:8]] or ["• none today"]
     lines += ["", "Watch items:"]
@@ -1180,15 +1183,15 @@ def write_outputs(items, watch, raw, pm, fails, all_items=(), drops=(), prev=fro
     for g in ("G2", "G3", "G4"):
         for w in [w for w in wrows if w[0].startswith(g)][:3]:
             lines.append(f"• {g}: {w[2][:50]} · {w[1]} · {fmt(w[4])} · {w[3]}")
-    lines += ["", "Inflated discounts:"]
-    for i in raised[:3]: lines.append(f"• {i['name'][:50]} · {i['store']} · claims −{i['claimed']*100:.0f}% but {abs(i['real'])*100:.0f}% ABOVE own 30-day low")
+    lines += ["", "Advertised discounts above the store's own 30-day low:"]
+    for i in raised[:3]: lines.append(f"• {i['name'][:50]} · {i['store']} · advertised −{i['claimed']*100:.0f}%, price {abs(i['real'])*100:.0f}% above its stated 30-day low")
     ov = sorted([i for i in items if i["mkt"]], key=lambda i: -(i["p"] / i["mkt"]))[:3]
     for i in ov: lines.append(f"• {i['name'][:50]} · {i['store']} · +{(i['p']/i['mkt']-1)*100:.0f}% vs market best")
     lines += ["", f"Price drops vs last run (all articles ≥{MIN_PRICE:,}): {len(drops)}"]
     for d in sorted(drops, key=lambda d: -(d["last"] - d["p"]))[:5]:
         lines.append(f"• {d['name'][:50]} · {d['store']} · {fmt(d['last'])} → {fmt(d['p'])}")
     lines += ["", "Per store:"]
-    for s in summ: lines.append(f"• {s[0]}: {cat_counts.get(s[0], 0)} articles crawled / {s[1]} promos ≥15k / {s[4]} real cuts / {s[6]} raised")
+    for s in summ: lines.append(f"• {s[0]}: {cat_counts.get(s[0], 0)} articles crawled / {s[1]} promos ≥15k / {s[4]} confirmed reductions / {s[6]} above 30-day low")
     lines.append(f"• {raw.get('emmezeta','')}")
     lines += ["", f"Status: pametno {pm_done}/{len(set(i['term'] for i in items))}; failures: {'; '.join(fails[:15]) if fails else 'none'}"] + \
              ([f"Website: {CFG['site_url']}"] if CFG.get("site_url") else [])

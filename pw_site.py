@@ -4,7 +4,7 @@ Serbian (latinica) by default, English toggle; works on phones; no server needed
 
     python3 pw_site.py            # rebuild from the latest run folder
 """
-import json, re, os, datetime as dt
+import json, re, os, importlib.util, datetime as dt
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -76,6 +76,10 @@ def build(run_dir, date):
     (SITE / "cats.js").write_text("window.CATS=" + json.dumps({"found": cats, "exclude": excl}, ensure_ascii=False, separators=(",", ":")) + ";", encoding="utf-8")
     page = PAGE.replace("<!--DATA-->", '<script src="data.js"></script>' + "".join(f'<script src="data-{k}.js"></script>' for k in range(len(parts))) + '<script src="cats.js"></script>')
     (SITE / "index.html").write_text(page, encoding="utf-8")
+    try:     # search-engine pages (p/, k/, prodavnica/, sitemap.xml) – never block the website itself
+        sspec = importlib.util.spec_from_file_location("seo", HERE / "seo.py"); seo = importlib.util.module_from_spec(sspec); sspec.loader.exec_module(seo)
+        seo.build(SITE)
+    except Exception as e: print("seo pages failed:", e)
     return SITE / "index.html"
 
 PAGE = (HERE / "site_template.html").read_text(encoding="utf-8") if (HERE / "site_template.html").exists() else ""

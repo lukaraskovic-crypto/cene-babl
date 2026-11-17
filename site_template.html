@@ -1,6 +1,8 @@
 <!doctype html><html lang="sr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>babl cene – prave i lažne akcije u Beogradu</title>
-<meta name="description" content="Da li je popust stvaran? Svakog dana poredimo cene u Gigatronu, WinWinu, Big Bangu, PC Practicu, Eurotehni i na Ananasu sa njihovom najnižom cenom iz poslednjih 30 dana.">
+<title>babl cene – provera popusta i istorija cena u Srbiji</title>
+<meta name="description" content="Da li je popust stvaran? Svakog dana poredimo cene u Gigatronu, WinWinu, Big Bangu, PC Practicu, Eurotehni, Tehnomediji i na Ananasu sa njihovom najnižom cenom iz poslednjih 30 dana.">
+<link rel="canonical" href="https://cene.babl.cc/"><meta property="og:type" content="website"><meta property="og:site_name" content="babl cene"><meta property="og:locale" content="sr_RS"><meta property="og:url" content="https://cene.babl.cc/"><meta property="og:title" content="babl cene – da li je popust stvaran?"><meta property="og:description" content="Svakog dana poredimo cene oko 100.000 artikala sa najnižom cenom iz prethodnih 30 dana. Istorija cena, potvrđena sniženja i obaveštenja kad cena padne.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"babl cene","url":"https://cene.babl.cc/","inLanguage":"sr","potentialAction":{"@type":"SearchAction","target":"https://cene.babl.cc/#q={search_term_string}","query-input":"required name=search_term_string"}}</script>
 <meta name="theme-color" content="#1F6B45">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F6B45'/%3E%3Ctext x='16' y='22.5' font-family='Arial' font-weight='700' font-size='17' fill='%23CDEBD9' text-anchor='middle'%3Eb%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -85,6 +87,7 @@ tbody tr{cursor:pointer}tbody tr:hover td{background:var(--alt)}
 .lgn .btn{width:100%;text-align:center}.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}.or:before,.or:after{content:"";flex:1;border-top:1px solid var(--border)}
 #smap{height:340px;border-radius:12px;border:1px solid var(--border);margin:12px 0;z-index:0}.mapbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.mapbar .sel{max-width:180px}
 .stl .it{cursor:default}.stl .d{font-weight:800;white-space:nowrap}.pin{background:var(--primary);color:var(--onp);border-radius:999px;font:800 12px/24px sans-serif;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.alrt{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin:10px 0 14px}.alrt label{font-weight:600;cursor:pointer;display:flex;gap:8px;align-items:center}.alrt .meta{margin:4px 0 0}
 .pin.me{background:#2563EB}.lock{font-size:13px;color:var(--muted);margin-top:6px}
 @media(max-width:760px){.acct{padding:4px 9px;max-width:96px;margin-right:4px}#smap{height:280px}}
 .x{border:0;background:var(--alt);border-radius:999px;width:34px;height:34px;cursor:pointer;flex:none;font-size:16px}
@@ -142,7 +145,7 @@ textarea{width:100%;min-height:130px;border:1px solid var(--border);border-radiu
   <button class="acct" id="acct" onclick="ACC.open()"></button><div class="lng"><button data-l="sr">SR</button><button data-l="en">EN</button></div></div>
  <nav class="tabs" id="tabs"></nav></div></header>
 <main class="wrap" id="main"></main>
-<footer><div class="wrap cols" id="foot"></div></footer>
+<footer><div class="wrap cols" id="foot"></div><noscript><div class="wrap"><a href="/popusti.html">Potvrđena sniženja danas</a> · <a href="/crni-petak.html">Crni petak</a> · <a href="/sitemap.xml">Mapa sajta</a></div></noscript></footer>
 <div class="mbar" id="mbar"><button id="mbf"></button><button id="mbs"></button></div>
 <div id="fs"></div>
 <div id="ov"><div id="sheet"></div></div><div id="toast"></div>
@@ -155,9 +158,9 @@ const DOT={'Gigatron':'#C2410C','WinWin':'#2563EB','Big Bang':'#B7791F','Ananas'
 const MON={sr:['jan','feb','mar','apr','maj','jun','jul','avg','sep','okt','nov','dec'],en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']};
 const L={
 sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',fav:'Sačuvano',watch:'Pratim',stores:'Prodavnice',report:'Izveštaj',admin:'Kategorije'},
- fv:{add:'☆ Sačuvaj',on:'★ Sačuvano',share:'Podeli',copied:'Link kopiran',h:'Sačuvani artikli',s:'Artikli koje ste sačuvali ostaju u ovom pregledaču. Ovde vidite kako se cena promenila otkad ste ih sačuvali.',empty:'Još ništa niste sačuvali. Otvorite artikal i pritisnite „Sačuvaj“ – pratićemo mu cenu za vas.',then:p=>`sačuvano po ${p} din`,gone:'trenutno nije u ponudi',rm:'Ukloni',same:'bez promene',minH:'Najniža zabeležena',atMin:'Najniža cena do sada'},
+ fv:{add:'☆ Sačuvaj',on:'★ Sačuvano',share:'Podeli',copied:'Link kopiran',h:'Sačuvani artikli',s:'Artikli koje ste sačuvali ostaju u ovom pregledaču. Ovde vidite kako se cena promenila otkad ste ih sačuvali.',empty:'Još ništa niste sačuvali. Otvorite artikal i pritisnite „Sačuvaj“ – pratićemo mu cenu za vas.',then:p=>`sačuvano po ${p} din`,gone:'trenutno nije u ponudi',rm:'Ukloni',same:'bez promene',img:'🖼 Slika za Instagram / Viber',imgDone:'Slika je sačuvana – podelite je u priči ili poruci',imgNow:'cena danas',imgLow:'30-dnevni minimum',imgMin:'najniža zabeležena',imgHist:'Kretanje cene',imgNote:'Poređenje objavljenih cena. Proverite cenu kod prodavca.',minH:'Najniža zabeležena',atMin:'Najniža cena do sada'},
  fresh:(d,h)=>`osveženo ${d} u ${h}`, nl:n=>`${n} ponuda`, prob:n=>`⚠ ${n} problem(a) u poslednjem preuzimanju`,
- lede:(n,s,real,fake)=>`Pratimo <em>${n}</em> artikala u ${s} ${s%10>=2&&s%10<=4&&(s<12||s>14)?'prodavnice':'prodavnica'}. Danas je <a href="#" data-go="deals">${real} popusta stvarno</a>, a <span class="bad">${fake}</span> samo deluje kao popust.`,
+ lede:(n,s,real,fake)=>`Pratimo <em>${n}</em> artikala u ${s} ${s%10>=2&&s%10<=4&&(s<12||s>14)?'prodavnice':'prodavnica'}. Danas je <a href="#" data-go="deals">${real} sniženja potvrđeno</a>, a kod <span class="bad">${fake}</span> istaknuta cena nije niža od najniže cene iz poslednjih 30 dana.`,
  ph:'Model, brend ili naziv – npr. OLED65C61LA, G20 Max, iPad Air',
  store:'Prodavnica',cat:'Kategorija',brand:'Brend',verdict:'Ocena',price:'Cena',from:'od',to:'do',
  allStores:'Sve prodavnice',allCats:'Sve kategorije',allBrands:'Svi brendovi',anyVerdict:'Sve ocene',
@@ -172,32 +175,32 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',fav:'Sačuvano',w
  ppuBtn:u=>`cena po ${u}`,ppuSort:u=>`Najviše za novac (din/${u})`,
  PU:{inch:'inču',ram:'GB RAM',vram:'GB VRAM',sto:'GB',hz:'Hz',kg:'kg',rpm:'o/min',lit:'litru',btu:'BTU',watt:'W'},
  SPN:{inch:'Dijagonala',ram:'RAM',vram:'Grafička memorija',sto:'Memorija',hz:'Osvežavanje',res:'Rezolucija',panel:'Panel / ekran',cpu:'Procesor',gpu:'Grafika',kg:'Kapacitet',rpm:'Centrifuga',lit:'Zapremina',btu:'Snaga hlađenja',watt:'Snaga',net:'Mreža',energy:'Energetska klasa'},
- V:{real:'Pravi popust',raised:'Cena podignuta',fake:'Lažni popust',nochange:'Bez promene',below:'Ispod tržišta',at:'Na tržišnom minimumu',above:'Skuplje od tržišta',unverified:'Neprovereno',none:'Redovna cena'},
+ V:{real:'Potvrđeno sniženje',raised:'Iznad 30-dnevnog minimuma',fake:'Nije niže od 30 dana',nochange:'Blizu 30-dnevnog minimuma',below:'Ispod tržišta',at:'Na tržišnom minimumu',above:'Skuplje od tržišta',unverified:'Neprovereno',none:'Redovna cena'},
  why:{real:(p,l)=>`Cena je ${p} niža od najniže cene ove prodavnice u poslednjih 30 dana (${l}).`,
-      raised:(c,p,l)=>`Prodavnica navodi popust od ${c}, ali je cena ${p} viša od njene najniže cene u poslednjih 30 dana (${l}).`,
-      fake:(c,l)=>`Precrtana cena sugeriše ${c} popusta, ali je ${l} već bila najniža cena u poslednjih 30 dana.`,
+      raised:(c,p,l)=>`Uz artikal je istaknut popust od ${c}, a cena je ${p} viša od najniže cene koju prodavnica navodi za poslednjih 30 dana (${l}).`,
+      fake:(c,l)=>`Uz artikal je istaknut popust od ${c}, a ista cena (${l}) je prema podacima prodavnice bila najniža i u poslednjih 30 dana.`,
       nochange:l=>`Cena je praktično ista kao najniža u poslednjih 30 dana (${l}).`,
       nolow:'Prodavnica ne objavljuje najnižu cenu iz poslednjih 30 dana, pa popust poredimo sa ostalim prodavnicama.',title:'Zašto ova ocena'},
  MV:{'BUY-WORTHY':'Najbolja ponuda','BEST IN MARKET':'Najjeftinije na tržištu','GOOD':'Dobra cena','OK':'Prosečna cena','SKIP':'Ima jeftinije','SINGLE SELLER':'Samo jedan prodavac','NOT ON PAMETNO':'Nije na pametno.rs','NOT CHECKED':'Nije provereno','LISTED, NO CURRENT OFFERS':'Bez drugih ponuda','MODEL VARIANT DIFFERS':'Druga varijanta','STORAGE DIFFERS':'Druga memorija','UNCERTAIN MATCH':'Nesiguran par','LOOKUP FAILED':'Provera nije uspela'},
  crossed:'Precrtana',low30:'Najniža u 30 dana',mkt:'Najniža na tržištu',since:d=>`Ova cena važi od ${d}.`,seen:d=>` Poslednji put viđeno ${d}.`,
  open:'Otvori u prodavnici',hist:'Kretanje cene',noHist:'Istorija se tek skuplja – raste sa svakim osvežavanjem.',same:'Isti model u drugim prodavnicama',
- deals:{both:'Najbolje ponude',bothS:'Stvarni popust i najniža cena na tržištu.',real:'Pravi popusti',realS:'Ispod najniže cene iz poslednjih 30 dana.',
-        raised:'Podignute cene',raisedS:'„Popust" na cenu koja je viša nego pre mesec dana.',fake:'Lažni popusti',fakeS:'Precrtana cena, a ista cena kao i do sada.'},
+ deals:{both:'Najbolje ponude',bothS:'Potvrđeno sniženje i najniža cena na tržištu.',real:'Potvrđena sniženja',realS:'Ispod najniže cene iz poslednjih 30 dana.',
+        raised:'Iznad 30-dnevnog minimuma',raisedS:'Istaknut popust, a cena je viša od najniže cene iz poslednjih 30 dana.',fake:'Nije niže od 30 dana',fakeS:'Istaknut popust, a cena je ista kao najniža cena iz poslednjih 30 dana.'},
  more:n=>`Prikazano prvih ${n}. Suzi izbor filterima.`,
  drops:'Pojeftinilo od juče',dropsS:'Artikli od 15.000 din. kojima je cena pala bar 3%.',
  G:{G1:'Xiaomi G20 Max',G1s:'Štapni usisivač – gde je trenutno najjeftiniji.',G2:'Tableti sa SIM karticom',G2s:'Najjeftiniji tableti sa LTE ili 5G.',G3:'Tablet za posao: 8 GB+ RAM i SIM',G3s:'Dobre specifikacije za uloženi novac. Prvo stvarna sniženja.',G4:'Laptop za studenta arhitekture',G4s:'Najmanje 32 GB RAM i 12 GB grafičke memorije (za 3D, render i CAD). Memoriju grafike procenjujemo po modelu kartice kad je naziv ne navodi. Prvo stvarna sniženja, pa najviše za novac.'},
  mktBest:'najniža na tržištu',noWatch:'Nema artikala za praćenje u ovom krugu.',
- storesT:'Prodavnice',storesS:'Koliko artikala pratimo i koliko su popusti iskreni.',st:{n:'Artikala',promos:'Akcija od 15.000 din.',real:'Pravi',fake:'Lažni',raised:'Podignuti',avg:'Prosečan navedeni popust'},
+ storesT:'Prodavnice',storesS:'Koliko artikala pratimo i kako se istaknuti popusti odnose prema najnižoj ceni iz poslednjih 30 dana.',st:{n:'Artikala',promos:'Akcija od 15.000 din.',real:'Potvrđeni',fake:'Nisu niži',raised:'Iznad minimuma',avg:'Prosečan navedeni popust'},
  reportS:'Isti tekst koji stiže u jutarnjem obaveštenju (na engleskom).',
- foot:{h:'Kako ocenjujemo popuste',p1:'Prodavnice u Srbiji su dužne da uz sniženje navedu najnižu cenu iz prethodnih 30 dana. Mi tu cenu poredimo sa današnjom: ako je današnja bar 5% niža, popust je pravi. Ako je ista, popust je lažan, a ako je viša – cena je podignuta pre „sniženja".',
-  p2:'Cene sa drugim prodavnicama poredimo preko pametno.rs i po šifri modela. Podaci se osvežavaju četiri puta dnevno.',h2:'Podaci',p3:'Gigatron, WinWin, Big Bang, PC Practic, Eurotehna i Ananas (sa svim prodavcima). Sajt nije povezan ni sa jednom prodavnicom.'},
+ foot:{h:'Kako ocenjujemo popuste',p1:'Uz sniženje prodavnice navode najnižu cenu iz prethodnog perioda (najmanje 30 dana). Mi automatski poredimo tu, javno objavljenu cenu sa današnjom: ako je današnja bar 5% niža, sniženje je potvrđeno; ako je ista, cena nije niža od 30-dnevnog minimuma; ako je viša, cena je iznad 30-dnevnog minimuma. Ocene su samo poređenje objavljenih cena, ne tvrdnja o namerama prodavca niti pravna ocena. Podaci mogu kasniti ili sadržati greške – pre kupovine proverite cenu kod prodavca.',
+  p2:'Cene sa drugim prodavnicama poredimo preko pametno.rs i po šifri modela. Podaci se osvežavaju četiri puta dnevno.',h2:'Podaci',p3:'Gigatron, WinWin, Big Bang, PC Practic, Eurotehna, Tehnomedia i Ananas (sa svim prodavcima). Sajt nije povezan ni sa jednom prodavnicom.'},
  adm:{title:'Kategorije za detaljnu pretragu',intro:'Štikliraj šta ulazi u punu pretragu. Dugme ispod kopira novu listu i otvara GitHub – tamo nalepi (Cmd/Ctrl+A, pa Cmd/Ctrl+V) i klikni „Commit changes". Samo vlasnik repozitorijuma može da sačuva izmenu. Važi od sledećeg pokretanja.',
   filter:'Pronađi kategoriju',all:'Uključi sve',none:'Isključi sve',save:'Kopiraj i otvori GitHub',copied:'Kopirano. Nalepi u GitHub editor i klikni „Commit changes".',excluded:n=>`${n} isključeno`,
   noData:'Lista se pojavljuje posle prvog punog pokretanja.',json:'Novi sadržaj categories.json',notCrawled:'nije pretraživano'}},
 en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',fav:'Saved',watch:'Watching',stores:'Stores',report:'Report',admin:'Categories'},
- fv:{add:'☆ Save',on:'★ Saved',share:'Share',copied:'Link copied',h:'Saved articles',s:'Articles you save stay in this browser. Here you can see how the price has moved since you saved them.',empty:'Nothing saved yet. Open an article and press “Save” – we will track its price for you.',then:p=>`saved at ${p} RSD`,gone:'not on offer right now',rm:'Remove',same:'no change',minH:'Lowest recorded',atMin:'Lowest price so far'},
+ fv:{add:'☆ Save',on:'★ Saved',share:'Share',copied:'Link copied',h:'Saved articles',s:'Articles you save stay in this browser. Here you can see how the price has moved since you saved them.',empty:'Nothing saved yet. Open an article and press “Save” – we will track its price for you.',then:p=>`saved at ${p} RSD`,gone:'not on offer right now',rm:'Remove',same:'no change',img:'🖼 Image for Instagram / Viber',imgDone:'Image saved – share it in a story or a message',imgNow:'price today',imgLow:'30-day low',imgMin:'lowest recorded',imgHist:'Price history',imgNote:'A comparison of published prices. Check the price with the store.',minH:'Lowest recorded',atMin:'Lowest price so far'},
  fresh:(d,h)=>`updated ${d} at ${h}`, nl:n=>`${n} offers`, prob:n=>`⚠ ${n} problem(s) in the last crawl`,
- lede:(n,s,real,fake)=>`We track <em>${n}</em> products across ${s} stores. Today <a href="#" data-go="deals">${real} discounts are real</a> and <span class="bad">${fake}</span> only look like one.`,
+ lede:(n,s,real,fake)=>`We track <em>${n}</em> products across ${s} stores. Today <a href="#" data-go="deals">${real} reductions are confirmed</a>, and for <span class="bad">${fake}</span> the advertised price is not below the store's lowest price of the last 30 days.`,
  ph:'Model, brand or name – e.g. OLED65C61LA, G20 Max, iPad Air',
  store:'Store',cat:'Category',brand:'Brand',verdict:'Verdict',price:'Price',from:'from',to:'to',
  allStores:'All stores',allCats:'All categories',allBrands:'All brands',anyVerdict:'All verdicts',
@@ -212,25 +215,25 @@ en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',fav:'Saved',watch:'W
  ppuBtn:u=>`price per ${u}`,ppuSort:u=>`Best value (RSD/${u})`,
  PU:{inch:'inch',ram:'GB RAM',vram:'GB VRAM',sto:'GB',hz:'Hz',kg:'kg',rpm:'rpm',lit:'litre',btu:'BTU',watt:'W'},
  SPN:{inch:'Screen size',ram:'RAM',vram:'Graphics memory',sto:'Storage',hz:'Refresh rate',res:'Resolution',panel:'Panel / screen',cpu:'Processor',gpu:'Graphics',kg:'Capacity',rpm:'Spin speed',lit:'Volume',btu:'Cooling power',watt:'Power',net:'Network',energy:'Energy class'},
- V:{real:'Real discount',raised:'Price raised',fake:'Fake discount',nochange:'No change',below:'Below market',at:'At market low',above:'Above market',unverified:'Unverified',none:'Regular price'},
+ V:{real:'Confirmed reduction',raised:'Above 30-day low',fake:'Not below 30-day low',nochange:'Close to 30-day low',below:'Below market',at:'At market low',above:'Above market',unverified:'Unverified',none:'Regular price'},
  why:{real:(p,l)=>`The price is ${p} below this store's lowest price of the last 30 days (${l}).`,
-      raised:(c,p,l)=>`The store claims ${c} off, but the price is ${p} above its own lowest price of the last 30 days (${l}).`,
-      fake:(c,l)=>`The crossed-out price suggests ${c} off, but ${l} was already the lowest price in the last 30 days.`,
+      raised:(c,p,l)=>`A ${c} discount is advertised, and the price is ${p} above the lowest price the store states for the last 30 days (${l}).`,
+      fake:(c,l)=>`A ${c} discount is advertised, and according to the store's own data the same price (${l}) was also its lowest in the last 30 days.`,
       nochange:l=>`The price is practically the same as the 30-day low (${l}).`,
       nolow:"This store doesn't publish its 30-day lowest price, so we compare the discount with other stores.",title:'Why this verdict'},
  MV:{'BUY-WORTHY':'Best offer','BEST IN MARKET':'Cheapest in market','GOOD':'Good price','OK':'Average price','SKIP':'Cheaper elsewhere','SINGLE SELLER':'Only one seller','NOT ON PAMETNO':'Not on pametno.rs','NOT CHECKED':'Not checked','LISTED, NO CURRENT OFFERS':'No other offers','MODEL VARIANT DIFFERS':'Other variant','STORAGE DIFFERS':'Other storage','UNCERTAIN MATCH':'Uncertain match','LOOKUP FAILED':'Check failed'},
  crossed:'Crossed-out',low30:'30-day low',mkt:'Market low',since:d=>`This price applies since ${d}.`,seen:d=>` Last seen ${d}.`,
  open:'Open in store',hist:'Price history',noHist:'History is still building up – it grows with every refresh.',same:'Same model at other stores',
- deals:{both:'Best offers',bothS:'A real discount and the lowest price in the market.',real:'Real discounts',realS:'Below the lowest price of the last 30 days.',
-        raised:'Raised prices',raisedS:'A "discount" on a price higher than a month ago.',fake:'Fake discounts',fakeS:'Crossed-out price, but the same price as before.'},
+ deals:{both:'Best offers',bothS:'A confirmed reduction and the lowest price in the market.',real:'Confirmed reductions',realS:'Below the lowest price of the last 30 days.',
+        raised:'Above 30-day low',raisedS:'A discount is advertised, but the price is above the lowest price of the last 30 days.',fake:'Not below 30-day low',fakeS:'A discount is advertised, but the price equals the lowest price of the last 30 days.'},
  more:n=>`Showing the first ${n}. Narrow it down with filters.`,
  drops:'Cheaper since yesterday',dropsS:'Products from 15,000 RSD whose price fell at least 3%.',
  G:{G1:'Xiaomi G20 Max',G1s:'Stick vacuum – where it is cheapest right now.',G2:'Tablets with a SIM card',G2s:'The cheapest LTE or 5G tablets.',G3:'Work tablet: 8 GB+ RAM and SIM',G3s:'Good specs for the money. Real price cuts first.',G4:'Laptop for an architecture student',G4s:'At least 32 GB RAM and 12 GB of graphics memory (for 3D, rendering and CAD). Graphics memory is inferred from the GPU model when the name doesn\'t state it. Real price cuts first, then best value.'},
  mktBest:'market low',noWatch:'No watched products in this run.',
- storesT:'Stores',storesS:'How many products we track and how honest the discounts are.',st:{n:'Products',promos:'Deals from 15,000 RSD',real:'Real',fake:'Fake',raised:'Raised',avg:'Avg claimed discount'},
+ storesT:'Stores',storesS:'How many products we track and how advertised discounts compare with the lowest price of the last 30 days.',st:{n:'Products',promos:'Deals from 15,000 RSD',real:'Confirmed',fake:'Not lower',raised:'Above low',avg:'Avg claimed discount'},
  reportS:'The same text as the morning notification.',
- foot:{h:'How we judge discounts',p1:'Stores in Serbia must show the lowest price of the previous 30 days next to a discount. We compare that price with today\'s: if today\'s is at least 5% lower, the discount is real. If it is the same, the discount is fake, and if it is higher, the price was raised before the "sale".',
-  p2:'We compare with other stores through pametno.rs and by model number. Data refreshes four times a day.',h2:'Data',p3:'Gigatron, WinWin, Big Bang, PC Practic, Eurotehna and Ananas (all sellers). This site is not affiliated with any store.'},
+ foot:{h:'How we judge discounts',p1:'With a discount, stores state the lowest price of the preceding period (at least 30 days). We automatically compare that published price with today\'s: at least 5% lower means a confirmed reduction; the same means not below the 30-day low; higher means above the 30-day low. Ratings only compare published prices – they are not a claim about a store\'s intentions or a legal assessment. Data can be delayed or contain errors; check the price with the store before buying.',
+  p2:'We compare with other stores through pametno.rs and by model number. Data refreshes four times a day.',h2:'Data',p3:'Gigatron, WinWin, Big Bang, PC Practic, Eurotehna, Tehnomedia and Ananas (all sellers). This site is not affiliated with any store.'},
  adm:{title:'Categories in the detailed crawl',intro:'Tick what goes into the full crawl. The button copies the new list and opens GitHub – paste it there (Cmd/Ctrl+A, then Cmd/Ctrl+V) and click "Commit changes". Only the repository owner can save it. Takes effect from the next run.',
   filter:'Find a category',all:'Include all',none:'Exclude all',save:'Copy & open GitHub',copied:'Copied. Paste into the GitHub editor and click "Commit changes".',excluded:n=>`${n} excluded`,
   noData:'The list appears after the first full run.',json:'New content of categories.json',notCrawled:'not crawled'}}};
@@ -284,6 +287,61 @@ function setHash(){ if(location.hash==='#admin') return; const p=[]; if(cur!=='s
 async function shareItem(k){ const x=X[k]; setHash.a=hid(x.r); setHash(); const url=location.href; if(typeof TRK==='function') TRK('share',{store:x.r[0],item:x.r[2]});
   if(navigator.share&&isM()){ try{ await navigator.share({title:x.r[2],text:`${x.r[2]} – ${nf(x.r[3])} din (${x.r[0]})`,url}); return; }catch(e){ if(e&&e.name==='AbortError') return; } }
   try{ await navigator.clipboard.writeText(url); }catch(e){ const ta=document.createElement('textarea'); ta.value=url; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); }catch(_){} ta.remove(); } toast(t('fv.copied')); }
+// ---- share image (1080×1920: Instagram story, Viber, WhatsApp) – drawn in the browser, nothing is uploaded
+async function shareImg(k){ const x=X[k], r=x.r, W=1080, H=1920, P=84, g=x.vg;
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H; const c=cv.getContext('2d');
+  try{ await document.fonts.load('800 40px Manrope'); await document.fonts.load('600 40px Manrope'); }catch(e){}
+  const F=(w,s)=>`${w} ${s}px Manrope, system-ui, -apple-system, "Segoe UI", sans-serif`;
+  const COL={good:['#1F6B45','#E3F3EA'],bad:['#B3261E','#FBEAE8'],warn:['#8A5A00','#FBF1DC'],neu:['#5B6B62','#EEF2EC']};
+  const cur_=lang==='sr'?'din':'RSD';
+  c.fillStyle='#F6F7F3'; c.fillRect(0,0,W,H);
+  c.fillStyle='#1F6B45'; c.fillRect(0,0,W,14);
+  c.textBaseline='alphabetic'; c.fillStyle='#13201A'; c.font=F(800,58); c.fillText('babl',P,170); const bw=c.measureText('babl ').width;
+  c.fillStyle='#1F6B45'; c.fillText('cene',P+bw,170);
+  // card
+  const cy=250, ch=1430; c.fillStyle='#FFFFFF'; c.beginPath(); c.roundRect?c.roundRect(P-24,cy,W-2*P+48,ch,36):c.rect(P-24,cy,W-2*P+48,ch); c.fill();
+  let y=cy+90; c.fillStyle='#5B6B62'; c.font=F(700,36); c.fillText(String(r[0]).toUpperCase()+(x.cat?'  ·  '+x.cat:''),P+20,y);
+  // name, up to 3 lines
+  c.fillStyle='#13201A'; c.font=F(800,54); const words=String(r[2]).split(/\s+/); let line='', lines=[];
+  for(const w of words){ const tst=line?line+' '+w:w; if(c.measureText(tst).width>W-2*P-40&&line){ lines.push(line); line=w; } else line=tst; } if(line) lines.push(line);
+  if(lines.length>3){ lines=lines.slice(0,3); lines[2]=lines[2].replace(/\s*\S*$/,'')+' …'; }
+  y+=40; for(const l of lines){ y+=66; c.fillText(l,P+20,y); }
+  // price
+  y+=150; c.fillStyle='#1F6B45'; c.font=F(800,140); const ptxt=nf(r[3]); c.fillText(ptxt,P+20,y); const pw=c.measureText(ptxt).width;
+  c.font=F(700,52); c.fillText(' '+cur_,P+20+pw,y);
+  y+=64; c.font=F(600,40); c.fillStyle='#5B6B62';
+  if(r[4]&&r[4]>r[3]){ const was=nf(r[4])+' '+cur_; c.fillText(was,P+20,y); const ww=c.measureText(was).width; c.fillRect(P+20,y-14,ww,4); c.fillStyle='#B3261E'; c.fillText('   −'+pct(x.claimed),P+20+ww,y); }
+  else c.fillText(t('fv.imgNow'),P+20,y);
+  // verdict pill
+  if(r[6]){ y+=96; const [fg,bg]=COL[VCLS[g]]||COL.neu; const vt=t('V.'+g); c.font=F(800,42); const tw=c.measureText(vt).width;
+    c.fillStyle=bg; c.beginPath(); c.roundRect?c.roundRect(P+20,y-58,tw+64,84,42):c.rect(P+20,y-58,tw+64,84); c.fill(); c.fillStyle=fg; c.fillText(vt,P+52,y); }
+  // chart
+  const h=(r[C.hist]||[]).slice(); const hp=h.map(p=>p[1]).concat([r[3]]);
+  y+=100; c.fillStyle='#5B6B62'; c.font=F(700,34); c.fillText(t('fv.imgHist'),P+20,y);
+  const gx=P+20, gw=W-2*P-40, gy=y+30, gh=330;
+  if(h.length>=2){ const ps=h.map(p=>p[1]), mn=Math.min(...ps)*0.97, mx=Math.max(...ps)*1.03; const X_=i=>gx+i/(h.length-1)*gw, Y_=p=>gy+gh-(p-mn)/(mx-mn||1)*gh;
+    c.strokeStyle='#DCE3DD'; c.lineWidth=2; for(const v of [mn,(mn+mx)/2,mx]){ c.beginPath(); c.moveTo(gx,Y_(v)); c.lineTo(gx+gw,Y_(v)); c.stroke(); }
+    c.beginPath(); c.moveTo(X_(0),Y_(h[0][1])); for(let i=1;i<h.length;i++){ c.lineTo(X_(i),Y_(h[i-1][1])); c.lineTo(X_(i),Y_(h[i][1])); }
+    c.lineTo(X_(h.length-1),gy+gh); c.lineTo(X_(0),gy+gh); c.closePath(); c.fillStyle='rgba(31,107,69,.10)'; c.fill();
+    c.beginPath(); c.moveTo(X_(0),Y_(h[0][1])); for(let i=1;i<h.length;i++){ c.lineTo(X_(i),Y_(h[i-1][1])); c.lineTo(X_(i),Y_(h[i][1])); }
+    c.strokeStyle='#1F6B45'; c.lineWidth=7; c.lineJoin='round'; c.stroke();
+    c.fillStyle='#1F6B45'; c.beginPath(); c.arc(X_(h.length-1),Y_(h[h.length-1][1]),13,0,7); c.fill();
+    c.fillStyle='#5B6B62'; c.font=F(600,30); c.fillText(dm(h[0][0]),gx,gy+gh+48); c.textAlign='right'; c.fillText(dm(h[h.length-1][0]),gx+gw,gy+gh+48); c.textAlign='left';
+  } else { c.fillStyle='#5B6B62'; c.font=F(500,34); c.fillText(t('noHist'),gx,gy+80); }
+  // two figures
+  y=gy+gh+150; const col=(lbl,val,xx)=>{ c.fillStyle='#5B6B62'; c.font=F(600,32); c.fillText(lbl,xx,y); c.fillStyle='#13201A'; c.font=F(800,50); c.fillText(val,xx,y+64); };
+  col(t('fv.imgLow'),r[5]?nf(r[5])+' '+cur_:'–',gx); col(t('fv.imgMin'),hp.length>1?nf(Math.min(...hp))+' '+cur_:'–',gx+gw/2+10);
+  // footer
+  c.fillStyle='#13201A'; c.font=F(800,60); c.textAlign='center'; c.fillText('cene.babl.cc',W/2,1790);
+  c.fillStyle='#5B6B62'; c.font=F(500,30); c.fillText(t('fv.imgNote'),W/2,1850); c.textAlign='left';
+  const blob=await new Promise(res=>cv.toBlob(res,'image/png')); if(!blob){ toast('…'); return; }
+  const fname='babl-cene-'+fold(r[2]).replace(/[^a-z0-9]+/g,'-').slice(0,50).replace(/-$/,'')+'.png';
+  if(typeof TRK==='function') TRK('image',{store:r[0],item:r[2]});
+  setHash.a=hid(r); setHash();
+  try{ const file=new File([blob],fname,{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],text:`${r[2]} – ${nf(r[3])} ${cur_} · ${location.href}`}); return; } }
+  catch(e){ if(e&&e.name==='AbortError') return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); toast(t('fv.imgDone')); }
 function favItem(k){ const x=X[k], id=hid(x.r); if(FAV.has(id)) FAV.del(id); else { FAV.add(x); if(typeof TRK==='function') TRK('fav',{store:x.r[0],item:x.r[2],data:{p:x.r[3]}}); }
   const b=document.getElementById('favb'); if(b){ b.textContent=FAV.has(id)?t('fv.on'):t('fv.add'); b.classList.toggle('on',FAV.has(id)); } tabs(); if(cur==='fav') fav(); }
 function why(x){ const r=x.r, g=x.vg, l=r[5]?nf(r[5])+' din':'';
@@ -298,7 +356,7 @@ function openItem(k){ const x=X[k], r=x.r; const ks=keyset(r[2]); const hp=(r[C.
   ${why(x)}
   <dl class="kv num"><div><dt>${t('crossed')}</dt><dd>${f(r[4])||'–'}</dd></div><div><dt>${t('low30')}</dt><dd>${f(r[5])||'–'}</dd></div><div><dt>${t('mkt')}</dt><dd>${f(r[8])||'–'}</dd></div><div><dt>${t('fv.minH')}</dt><dd>${hp.length>1?f(minH):'–'}</dd></div></dl>
   <div class="acts">${r[C.url]?`<a class="btn pri" href="${esc(r[C.url])}" target="_blank" rel="noopener">${t('open')}</a>`:''}
-   <button class="btn ${FAV.has(hid(r))?'on':''}" id="favb" onclick="favItem(${k})">${FAV.has(hid(r))?t('fv.on'):t('fv.add')}</button><button class="btn" onclick="shareItem(${k})">${t('fv.share')}</button>${ACC.can(r[0])?`<button class="btn" onclick="ACC.stock(${k})">📍 ${ACC.t('where')}</button>`:''}</div>
+   <button class="btn ${FAV.has(hid(r))?'on':''}" id="favb" onclick="favItem(${k})">${FAV.has(hid(r))?t('fv.on'):t('fv.add')}</button><button class="btn" onclick="shareItem(${k})">${t('fv.share')}</button><button class="btn" onclick="shareImg(${k})">${t('fv.img')}</button>${ACC.can(r[0])?`<button class="btn" onclick="ACC.stock(${k})">📍 ${ACC.t('where')}</button>`:''}</div>
   <div class="sec"><h3>${t('hist')}</h3>${chart(r[C.hist])}</div>
   ${same.length?`<div class="sec"><h3>${t('same')}</h3><div class="cmp">${same.map(y=>`<a onclick="openItem(${y.i})"><span><span class="nm">${esc(y.r[2])}</span><div class="meta">${st(y.r[0])}</div></span><span class="pr num">${money(y.r[3])}</span></a>`).join('')}</div></div>`:''}`;
   ov.style.display='flex'; sheet.scrollTop=0; document.body.style.overflow='hidden'; }
@@ -554,7 +612,7 @@ function admin(){ mbar.style.display='none'; const stores=Object.keys(CATS.found
   sv.onclick=async()=>{ try{ await navigator.clipboard.writeText(json); }catch(e){ js.select(); document.execCommand('copy'); }
     cp.textContent=t('adm.copied'); window.open(`https://github.com/${D.repo}/edit/main/categories.json`,'_blank','noopener'); }; }
 function fav(){ const m=FAV.all(); const ids=Object.keys(m).sort((a,b)=>(m[b].d||'').localeCompare(m[a].d||''));
-  main.innerHTML=`<h2>${t('fv.h')}</h2><p class="sub">${t('fv.s')} ${ACC.favNote()}</p>`+(ids.some(id=>ACC.can(m[id].s))?`<p><button class="btn pri" onclick="ACC.savedMap()">🗺 ${ACC.t('savedMap')}</button></p>`:'')+(!ids.length?`<div class="list empty">${t('fv.empty')}</div>`:`<div class="list m">${ids.map(id=>{ const x=byId(id), s=m[id];
+  main.innerHTML=`<h2>${t('fv.h')}</h2><p class="sub">${t('fv.s')} ${ACC.favNote()}</p>`+(ids.length?ACC.alertBox():'')+(ids.some(id=>ACC.can(m[id].s))?`<p><button class="btn pri" onclick="ACC.savedMap()">🗺 ${ACC.t('savedMap')}</button></p>`:'')+(!ids.length?`<div class="list empty">${t('fv.empty')}</div>`:`<div class="list m">${ids.map(id=>{ const x=byId(id), s=m[id];
     const d=x?x.r[3]-s.p:0; const ch=!x?`<span class="tag neu">${t('fv.gone')}</span>`:d<0?`<span class="tag good">−${nf(-d)} din (${pct(-d/s.p)})</span>`:d>0?`<span class="tag bad">+${nf(d)} din (${pct(d/s.p)})</span>`:`<span class="tag neu">${t('fv.same')}</span>`;
     return `<div class="it" ${x?`onclick="openItem(${x.i})"`:'style="cursor:default"'}><div class="top"><div><div class="nm">${esc(s.n)}</div><div class="meta">${st(s.s)}</div></div>
       <div class="r">${x?`<div class="pr num">${money(x.r[3])}</div>`:''}<div class="meta num">${esc(t('fv.then')(nf(s.p)))} · ${dm((s.d||'').slice(5))}</div></div></div>
@@ -567,7 +625,7 @@ function tabs(){ const list=TABS.concat(location.hash==='#admin'?['admin']:[]);
 function go(k){ cur=k; tabs(); FN[k](); scrollTo({top:0}); setHash(); }
 function chrome(){ document.documentElement.lang=lang; const [d,h]=D.updated.split(' '); const [,m,dd]=d.split('-'); const ds=`${+dd}. ${MON[lang][+m-1]}`;
   fresh.textContent=t('fresh')(ds,h)+((D.problems||[]).length?' · '+t('prob')(D.problems.length):''); fresh.title=(D.problems||[]).join('\n');
-  foot.innerHTML=`<div><h4>${t('foot.h')}</h4><p>${t('foot.p1')}</p><p>${t('foot.p2')}</p></div><div><h4>${t('foot.h2')}</h4><p>${t('foot.p3')}</p><p>babl · ${t('fresh')(ds,h)}</p></div>`;
+  foot.innerHTML=`<div><h4>${t('foot.h')}</h4><p>${t('foot.p1')}</p><p>${t('foot.p2')}</p></div><div><h4>${t('foot.h2')}</h4><p>${t('foot.p3')}</p><p>babl · ${t('fresh')(ds,h)}</p><p><a href="/popusti.html">${lang==='sr'?'Potvrđena sniženja danas':'Confirmed reductions today'}</a> · <a href="/crni-petak.html">${lang==='sr'?'Crni petak':'Black Friday'}</a> · <a href="/sitemap.xml">${lang==='sr'?'Mapa sajta':'Sitemap'}</a></p></div>`;
   document.querySelectorAll('.lng button').forEach(b=>b.classList.toggle('on',b.dataset.l===lang)); }
 document.getElementById('tabs').onclick=e=>{ const k=e.target.closest('button')?.dataset.t; if(k) go(k); };
 document.querySelectorAll('.lng button').forEach(b=>b.onclick=()=>{ lang=b.dataset.l; try{ localStorage.setItem('lang',lang); }catch(e){} chrome(); go(cur); });
@@ -613,7 +671,8 @@ const ACC=(()=>{
       near:'📍 Najbliže meni',area:'Samo ovo područje',all:'Svi gradovi',km:k=>`${k} km`,qty:q=>`na stanju: ${q}`,route:'Putanja',call:'Pozovi',approx:'približna lokacija',checked:(n,c)=>`${n} radnji · ${c}`,back:'← Nazad na artikal',
       noGeo:'Ne možemo da dobijemo vašu lokaciju – izaberite grad ili pomerite mapu.',err:'Prodavnica trenutno ne odgovara – pokušajte malo kasnije.',savedMap:'Mapa sačuvanih artikala',savedMapH:'Gde su vaši sačuvani artikli',
       savedMapS:(n,m)=>`Proverili smo ${n} artikala iz radnji koje prijavljuju stanje${m?` (još ${m} je iz online prodavnica)`:''}. Najbolje su radnje u kojima je najviše vaših artikala.`,has:(a,b)=>`${a} od ${b} artikala`,
-      favNote:'Prijavite se da ih imate na svim uređajima.',favCloud:'Čuvaju se i na vašem babl nalogu.'},
+      favNote:'Prijavite se da ih imate na svim uređajima.',favCloud:'Čuvaju se i na vašem babl nalogu.',
+      alOn:'Obavesti me emailom kad cena padne',alNeed:'Za obaveštenja je potrebna prijava.',alHint:e=>`Jednom dnevno, samo kad neki sačuvani artikal pojeftini bar 3% (na ${e}).`,alYes:e=>`Uključeno – pišemo na ${e} kad neki sačuvani artikal pojeftini bar 3%.`,alSet:'Obaveštenja su uključena',alOff:'Obaveštenja su isključena',needAlert:'Obaveštenja o padu cene šaljemo prijavljenim korisnicima.'},
     en:{login:'Sign in',acct:'Account',h:'Sign in with your babl account',s:'The same account as on babl.cc. Saved articles are kept in your account (on all your devices), and the store map with stock is available to signed-in users only.',
       google:'Continue with Google',email:'Email address',send:'Send sign-in link',sent:e=>`We sent a link to ${e}. Open it on this device – or type the code from the email:`,code:'Code from the email',verify:'Confirm code',
       out:'Sign out',signed:e=>`Signed in as ${e}.`,savedN:n=>`Articles saved to your account: ${n}.`,bad:'Something went wrong – please try again.',needLogin:'The store map is available to signed-in users only.',
@@ -621,9 +680,10 @@ const ACC=(()=>{
       near:'📍 Nearest to me',area:'Only this area',all:'All cities',km:k=>`${k} km`,qty:q=>`in stock: ${q}`,route:'Directions',call:'Call',approx:'approximate location',checked:(n,c)=>`${n} stores · ${c}`,back:'← Back to the article',
       noGeo:'We cannot get your location – pick a city or move the map.',err:'The shop is not answering right now – please try again a bit later.',savedMap:'Map of saved articles',savedMapH:'Where your saved articles are',
       savedMapS:(n,m)=>`We checked ${n} articles from shops that report store stock${m?` (${m} more are from online shops)`:''}. The best stores are the ones holding most of your articles.`,has:(a,b)=>`${a} of ${b} articles`,
-      favNote:'Sign in to have them on all your devices.',favCloud:'They are also kept in your babl account.'}};
+      favNote:'Sign in to have them on all your devices.',favCloud:'They are also kept in your babl account.',
+      alOn:'E-mail me when the price drops',alNeed:'Alerts need a sign-in.',alHint:e=>`At most once a day, only when a saved article gets at least 3% cheaper (to ${e}).`,alYes:e=>`On – we write to ${e} when a saved article gets at least 3% cheaper.`,alSet:'Alerts are on',alOff:'Alerts are off',needAlert:'Price-drop alerts are sent to signed-in users.'}};
   const T=k=>TX[lang][k]??k;
-  let sb=null, user=null, loading=null, pos=null;
+  let sb=null, user=null, loading=null, pos=null, PREF=null;
   const hasSession=()=>{ try{ return !!localStorage.getItem(SKEY); }catch(e){ return false; } };
   function load(){ if(loading) return loading;
     loading=new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
@@ -644,7 +704,14 @@ const ACC=(()=>{
     const up=Object.entries(m).filter(([id])=>!cloud.has(id)).map(([id,v])=>({id,store:v.s,name:v.n,url:v.u||null,price_saved:v.p}));
     if(up.length) await sb.from('cene_saved').upsert(up);
     for(const r of data) if(!m[r.id]) FAV.put(r.id,{p:r.price_saved,d:(r.saved_at||'').slice(0,10),n:r.name,s:r.store,u:r.url||''});
+    const pr=await sb.from('cene_prefs').select('price_alerts,lang').maybeSingle(); PREF=!!pr.data?.price_alerts;
+    if(PREF&&pr.data.lang!==lang) sb.from('cene_prefs').update({lang}).eq('user_id',user.id).then(()=>{});
     tabs(); if(cur==='fav') fav(); }
+  // ---- price-drop e-mails (opt-in; sent by the morning run)
+  function alertBox(){ if(!user) return `<div class="alrt"><button class="btn" onclick="ACC.open('alert')">🔔 ${esc(T('alOn'))}</button> <span class="meta">${esc(T('alNeed'))}</span></div>`;
+    return `<div class="alrt"><label><input type="checkbox" ${PREF?'checked':''} onchange="ACC.setAlert(this.checked)"> 🔔 ${esc(T('alOn'))}</label><div class="meta">${esc(T(PREF?'alYes':'alHint')(user.email||''))}</div></div>`; }
+  async function setAlert(on){ const {error}=await sb.from('cene_prefs').upsert({user_id:user.id,price_alerts:on,lang,updated_at:new Date().toISOString()});
+    if(error){ toast(T('bad')); if(cur==='fav') fav(); return; } PREF=on; ev('alert',{data:{on}}); toast(T(on?'alSet':'alOff')); if(cur==='fav') fav(); }
   const _add=FAV.add, _del=FAV.del;
   FAV.add=x=>{ _add(x); if(sb&&user) sb.from('cene_saved').upsert({id:hid(x.r),store:x.r[0],name:x.r[2],url:x.r[C.url]||null,price_saved:x.r[3]}).then(()=>{}); };
   FAV.del=id=>{ _del(id); if(sb&&user) sb.from('cene_saved').delete().eq('id',id).then(()=>{}); };
@@ -654,7 +721,7 @@ const ACC=(()=>{
     if(user){ sheetOpen(`<div class="sh"><div><h2>${esc(T('acct'))}</h2></div><button class="x" onclick="closeS()">✕</button></div>
       <p class="sub" style="margin-top:12px">${esc(T('signed')(user.email||''))}<br>${esc(T('savedN')(FAV.n()))}</p><button class="btn" onclick="ACC.logout()">${T('out')}</button>`); return; }
     sheetOpen(`<div class="sh"><div><h2>${esc(T('h'))}</h2></div><button class="x" onclick="closeS()">✕</button></div>
-      ${reason==='map'?`<p class="lock">🔒 ${esc(T('needLogin'))}</p>`:''}<p class="sub" style="margin-top:10px">${esc(T('s'))}</p>
+      ${reason==='map'?`<p class="lock">🔒 ${esc(T('needLogin'))}</p>`:reason==='alert'?`<p class="lock">🔔 ${esc(T('needAlert'))}</p>`:''}<p class="sub" style="margin-top:10px">${esc(T('s'))}</p>
       <div class="lgn"><button class="btn pri" onclick="ACC.google()">${T('google')}</button><div class="or">ili / or</div>
        <input type="email" id="lem" placeholder="${esc(T('email'))}" autocomplete="email"><button class="btn" onclick="ACC.email()">${T('send')}</button><div id="lmsg"></div></div>`); }
   async function google(){ sessionStorage.setItem('ret',location.hash||''); ev('login',{data:{via:'google'}});
@@ -718,7 +785,7 @@ const ACC=(()=>{
   // start: restore the session (or finish a sign-in that came back from Google / the email link)
   if(hasSession()||/[?&]code=/.test(location.search)) load().catch(()=>{});
   setTimeout(paint,0);
-  return {open,google,email,code,logout,stock,savedMap,can:s=>CHAINS.includes(String(s).split(' (')[0]),t:T,
+  return {open,google,email,code,logout,stock,savedMap,alertBox,setAlert,can:s=>CHAINS.includes(String(s).split(' (')[0]),t:T,
     favNote:()=>user?T('favCloud'):T('favNote')};
 })();
 chrome();

@@ -234,6 +234,78 @@ def send_daily_report(today, hour, log=print, force=False):
     meta_set("report_sent", today); log(f"daily report for {day} e-mailed")
     return True
 
+# ---------------------------------------------------------------------------------------- price-drop alerts
+ALERTS_URL = os.environ.get("ALERTS_URL") or _CFG.get("alerts_url") or "https://miikcfemhoayjyujkftk.supabase.co/functions/v1/cene-alerts"
+SITE = (os.environ.get("SITE_URL") or "https://cene.babl.cc").rstrip("/")
+
+def _alerts(body):
+    req = urllib.request.Request(ALERTS_URL, data=json.dumps(body).encode("utf-8"), method="POST",
+                                 headers={"x-cene-key": KEY, "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=90) as r: return json.loads(r.read().decode("utf-8"))
+
+def _nf(n): return f"{int(round(n)):,}".replace(",", ".")
+
+ALERT_TXT = {
+    "sr": dict(subj="Cena je pala: {name}", subjn="Pale su cene za {n} sačuvana artikla", hi="Cene artikala koje ste sačuvali na babl cene su pale:",
+               was="ranije", now="sada", open="Pogledaj istoriju cene", shop="Kod prodavca",
+               foot="Ovaj e-mail ste dobili jer ste uključili obaveštenja o padu cene na cene.babl.cc. Isključite ih u kartici „Sačuvano” (prijavljeni nalog). Cene su preuzete sa sajtova prodavaca i mogu kasniti – proverite cenu pre kupovine."),
+    "en": dict(subj="Price drop: {name}", subjn="Prices dropped on {n} saved items", hi="Prices dropped on items you saved on babl cene:",
+               was="was", now="now", open="See the price history", shop="At the store",
+               foot="You get this e-mail because you turned on price-drop alerts on cene.babl.cc. Turn them off in the “Saved” tab (signed in). Prices are read from the stores' websites and may be out of date – check the price before buying."),
+}
+
+def alert_html(lang, hits):
+    T = ALERT_TXT.get(lang, ALERT_TXT["sr"])
+    out = ['<div style="font:15px/1.45 Arial,sans-serif;color:#111;max-width:600px">',
+           '<p style="font:700 20px Arial;margin:0 0 4px">babl <span style="color:#16a34a">cene</span></p>', f'<p>{T["hi"]}</p>']
+    for h in hits:
+        pct = round((1 - h["price"] / h["ref"]) * 100)
+        out.append('<div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin:10px 0">'
+                   f'<div style="font-size:12px;color:#6b7280">{h["store"]}</div><div style="font-weight:700">{_esc(h["name"])}</div>'
+                   f'<div style="margin:6px 0"><span style="font-size:20px;font-weight:700;color:#16a34a">{_nf(h["price"])} RSD</span> '
+                   f'<span style="color:#6b7280">({T["now"]}) · {T["was"]} <s>{_nf(h["ref"])}</s> · −{pct}%</span></div>'
+                   f'<a href="{SITE}/#a={h["id"]}" style="color:#2563eb">{T["open"]}</a>'
+                   + (f' · <a href="{_esc(h["url"])}" style="color:#2563eb">{T["shop"]}</a>' if h.get("url") else "") + '</div>')
+    out.append(f'<p style="font-size:12px;color:#9ca3af;margin-top:18px">{T["foot"]}</p></div>')
+    return "".join(out)
+
+def _esc(s): return str(s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+def send_price_alerts(all_items, log=print, dry=False, min_pct=0.03, min_abs=200):
+    """E-mail signed-in babl users whose saved articles got cheaper (only those who turned alerts on).
+    The babl project's edge function cene-alerts hands out the list; the reference price is the price when saved,
+    or the price of the last alert, so the same drop is never mailed twice."""
+    if not (enabled() and BREVO_KEY): log("price alerts: BREVO_API_KEY / database key missing – skipped"); return 0
+    by_url, by_name = {}, {}
+    for a in all_items:
+        p = a.get("p")
+        if not p: continue
+        if a.get("u") and a["store"] != "Big Bang": by_url[(a["store"], a["u"])] = min(p, by_url.get((a["store"], a["u"]), p))
+        by_name[(a["store"], a["name"])] = min(p, by_name.get((a["store"], a["name"]), p))
+    users = _alerts({"action": "list"}).get("users", [])
+    senders = [s_ for s_ in _brevo("GET", "senders").get("senders", []) if s_.get("active")]
+    if not senders: raise RuntimeError("Brevo has no active sender")
+    sent, marks = 0, []
+    for u in users:
+        hits = []
+        for it in u.get("items", []):
+            ref = it.get("ref") or 0
+            now = (by_url.get((it["store"], it.get("url"))) if it.get("url") and it["store"] != "Big Bang" else None) or by_name.get((it["store"], it["name"]))
+            if not (ref and now): continue
+            if now <= ref * (1 - min_pct) and ref - now >= min_abs: hits.append(dict(it, price=now))
+        if not hits: continue
+        T = ALERT_TXT.get(u.get("lang"), ALERT_TXT["sr"])
+        subj = T["subj"].format(name=hits[0]["name"][:70]) if len(hits) == 1 else T["subjn"].format(n=len(hits))
+        if dry: log(f"price alerts (dry): {len(hits)} item(s) for one user"); continue
+        try:
+            _brevo("POST", "smtp/email", {"sender": {"name": "babl cene", "email": senders[0]["email"]}, "to": [{"email": u["email"]}],
+                                          "subject": subj, "htmlContent": "<html><body>" + alert_html(u.get("lang"), hits) + "</body></html>"})
+            sent += 1; marks += [{"user_id": u["user_id"], "id": h["id"], "price": h["price"]} for h in hits]
+        except Exception as e: log("price alert e-mail failed:", e)
+    if marks and not dry: _alerts({"action": "mark", "updates": marks})
+    log(f"price alerts: {len(users)} subscriber(s), {sent} e-mail(s) sent")
+    return sent
+
 # ---------------------------------------------------------------------------------------- restore
 def restore_history(path, log=print):
     """Rebuild history.sqlite from the database (used when the GitHub cache expired)."""

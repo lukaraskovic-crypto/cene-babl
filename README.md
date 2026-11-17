@@ -6,6 +6,8 @@ GitHub Actions crawls Gigatron, WinWin, Big Bang, Ananas, PC Practic, Eurotehna 
 store's own legally required 30-day lowest price, compares promos with all sellers on pametno.rs, stores everything in an online
 database (Supabase) and publishes the site.
 
+Runs are started on time by the database (Supabase cron jobs `cene-full`, `cene-refresh` → GitHub API; token in Vault `github_dispatch_token`, valid 1 year).
+
 | When (Belgrade) | What |
 |---|---|
 | 04:00 | **full**: every store's whole catalogue in parallel + pametno.rs + database + phone notification |
@@ -50,9 +52,27 @@ Signed-in users get "📍 Gde je na stanju" on Gigatron and WinWin articles and 
 (WinWin store locations: table `cene_store_geo`). The map (Leaflet + OpenStreetMap) sorts stores by distance from the visitor
 or limits them to a city / the visible area. Tehnomedia refuses requests from the server, so it is not offered.
 
+## Price-drop e-mails
+Signed-in users can tick "🔔 Obavesti me emailom kad cena padne" in the Saved tab (table `cene_prefs`, opt-in, off by default).
+After every run (full and refresh) `db.send_price_alerts` asks the babl edge function `cene-alerts` (source in
+`supabase/functions/cene-alerts`; it accepts only this project's service key) for subscribers and their saved articles, and sends
+one Brevo e-mail per user when an article is at least 3% and 200 din cheaper than when it was saved (or than at the last alert).
+The alerted price is stored (`cene_saved.alert_price`) so the same drop is never mailed twice.
+
+## Share images and search-engine pages
+"🖼 Slika za Instagram / Viber" in an article draws a 1080×1920 image in the browser (price, verdict, chart, 30-day low) and opens
+the phone's share sheet (or downloads it on a computer). `seo.py` writes plain-HTML pages after every build, also in "site" mode:
+up to 5,000 article pages (`p/`), category and store pages, `popusti.html`, `crni-petak.html`, `sitemap.xml`, `robots.txt`.
+Submit `https://cene.babl.cc/sitemap.xml` once in Google Search Console.
+
+## Wording of the verdicts
+Verdicts only compare published prices (today's price vs the lowest price the store states for the previous 30 days, which shops
+must show since the 2026 amendments of the Zakon o trgovini). They are worded as facts ("Nije niže od 30 dana", "Iznad 30-dnevnog
+minimuma"), never as accusations, and the footer says they are not a claim about a store's intentions nor a legal assessment.
+
 ## Files
 `bf_watch.py` (crawl, verdicts, health check, `--only <store>` / `--light` / `--combine` / `--refresh`), `catalog.py` (full-catalogue
-crawlers, spec reader, price history), `specs_js.js` (product-page specifications), `db.py` (database), `pw_site.py` +
+crawlers, spec reader, price history), `specs_js.js` (product-page specifications), `db.py` (database, daily e-mail, price alerts), `seo.py` (search-engine pages), `pw_site.py` +
 `site_template.html` (website), `site_check.py`, `categories.json`, `config.json`, `.github/workflows/daily.yml`.
 
 ## One-time setup (done)
