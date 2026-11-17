@@ -45,7 +45,7 @@ window.vtexProducts = (root) => { const out=[]; const seen=new Set();
 FULL_MINUTES = 60   # time limit for one store's full-catalogue crawl (config: full_store_minutes)
 LIGHT = False       # light intraday refresh: first PAGES pages of every category, no product pages
 PAGES = None        # overrides max_pages (light refresh)
-LOW_MIN = 15000     # 30-day lows are read from product pages only for articles at least this expensive
+LOW_MIN = 3000      # 30-day lows are read from product pages only for articles at least this expensive
 SPECS_JS = (Path(__file__).resolve().parent / "specs_js.js").read_text(encoding="utf-8") if (Path(__file__).resolve().parent / "specs_js.js").exists() else "true;"
 JS_SEL = r'''
 // category selection (categories.json "exclude": path prefixes) + leaves-only + cached 30-day lows
@@ -166,7 +166,7 @@ def full_opencart(br, store, home, log, max_pages=40, exclude=(), known=None):
           const arr=parseOC(t); if(!arr.length) break; cnt[c]=(cnt[c]||0)+arr.length;
           let added=0; arr.forEach(x=>{ if(!items[x.u]){ x.cat=c.split('/').pop(); x.cp=c; items[x.u]=x; added++; } });
           if(!added) break; await sleep(200);} },300);
-      const disc=Object.values(items).filter(x=>x.o && x.o>x.p && x.p>=15000);
+      const disc=Object.values(items).filter(x=>x.o && x.o>x.p && x.p>=(window.__lowMin||15000));
       await lowsWithCache(disc, known, /Najni[žz]a (?:web )?cena u (?:prethodnih|poslednjih) 30 dana\s*:?\s*([\d.,]+)/i);
       disc.forEach(x=>{ if(x.l&&x.l<1000) x.l=null; });
       return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [OC_SKIP, OC_KEEP, max_pages, list(exclude), known or {}])
@@ -192,7 +192,7 @@ def full_bazzar(br, log, max_pages=60, exclude=(), known=None):
           const arr=parseBZ(t); if(!arr.length) break; cnt[c]=(cnt[c]||0)+arr.length;
           let added=0; arr.forEach(x=>{ if(!items[x.u]){ x.cp=c; x.cat=c.split('/').pop()+(x.s?' · seller '+x.s:''); items[x.u]=x; added++; } });
           if(!added) break; await sleep(250);} },300);
-      const disc=Object.values(items).filter(x=>x.o && x.o>x.p && x.p>=15000).sort((a,b)=>(1-b.p/b.o)-(1-a.p/a.o));
+      const disc=Object.values(items).filter(x=>x.o && x.o>x.p && x.p>=(window.__lowMin||15000)).sort((a,b)=>(1-b.p/b.o)-(1-a.p/a.o));
       await lowsWithCache(disc, known, /Najni[žz]a cena u (?:prethodnih|poslednjih) 30 dana\s*:?\s*([\d.]+)/i);
       return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [BZ_KEEP, BZ_SKIP, max_pages, list(exclude), known or {}])
     log(f"Bazzar full: {len(res['items'])} listings from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))

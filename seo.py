@@ -141,7 +141,7 @@ def build(site, log=print):
         arts.append(a)
     # which articles get their own page: confirmed reductions, other advertised discounts, then the biggest price drops
     pri = lambda a: (0 if a["g"] == "real" else 1 if a["g"] in VNAME else 2, -a["drop"], -a["price"])
-    pick = sorted([a for a in arts if a["price"] >= 10000 and (a["g"] in VNAME or a["drop"] >= 0.05)], key=pri)[:MAX_PAGES]
+    pick = sorted([a for a in arts if a["price"] >= 3000 and (a["g"] in VNAME or a["drop"] >= 0.05)], key=pri)[:MAX_PAGES]
     for a in pick: a["path"] = f"p/{slug(a['name'])}-{a['id']}.html"
     bycat = {}
     for a in arts:

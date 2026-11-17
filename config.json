@@ -5,8 +5,8 @@
   "ntfy_topic": "",
   "stop_after": "",
   "mode": "full",
-  "min_price": 15000,
-  "low30_min_price": 15000,
+  "min_price": 3000,
+  "low30_min_price": 3000,
   "low30_cache_days": 5,
   "full_store_minutes": 60,
   "light_pages": 2,
@@ -26,11 +26,12 @@
   "spec_minutes": 12,
   "health_max_drop": 0.4,
   "min_history_days": 7,
-  "drops_min_price": 15000,
+  "drops_min_price": 3000,
   "open_site": false,
   "skip_stores": [
     "Tehnomanija",
     "DOTmarket",
     "Bazzar"
-  ]
+  ],
+  "db_promos_min_price": 15000
 }

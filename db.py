@@ -109,9 +109,10 @@ def push_articles(all_items, date, full, hist_sqlite=None, specs=None, log=print
 def push_run(date, mode, items, watch_rows, drop_rows, summ, cat_counts, report, problems, log=print):
     """Daily results: verified promos, watch rows, price drops, per-store summary, run report."""
     if mode == "full":
+        pmin = _CFG.get("db_promos_min_price", 15000)   # the database archive keeps the dearer promos only (the website shows them all)
         upsert("promos", [dict(date=date, store=i["store"], name=i["name"], cat=i.get("cat", ""), price=i["p"], old=i.get("o"), claimed=i.get("claimed"),
                                low30=i.get("l_used") or i.get("l"), real_cut=i.get("real"), market_low=i.get("mkt") or None, verdict=i.get("v"),
-                               market_verdict=i.get("mv"), url=i.get("u", "")) for i in items], ["date", "store", "name"])
+                               market_verdict=i.get("mv"), url=i.get("u", "")) for i in items if (i.get("p") or 0) >= pmin], ["date", "store", "name"])
         upsert("watch", [dict(date=date, grp=w[0][:2], store=w[1], name=w[2], spec=w[3], price=w[4], old=w[5] or None, low30=w[6] or None,
                               real_cut=w[7] if w[7] != "" else None, market_best=w[8] or None, market_store=w[9], market_verdict=w[11], url=w[12])
                          for w in watch_rows], ["date", "grp", "store", "name"])
