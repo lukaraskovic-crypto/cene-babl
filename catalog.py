@@ -209,7 +209,11 @@ def full_tehnomedia(br, log, max_pages=60, exclude=(), known=None):
       const re=new RegExp(top); const fails=[];
       const parseTM=html=>{ const d=new DOMParser().parseFromString(html,'text/html');
         return [...d.querySelectorAll('article.tm-product-single')].map(a=>{ const l=a.querySelector('a.product-link'), pr=a.querySelector('.tm-product-price'), od=a.querySelector('.tm-product-price-old, .product-price del, .product-price s');
-          let p=pr?pN(pr.textContent):null, o=od?pN(od.textContent):null; if(o&&p&&o<=p) o=null;
+          let p=pr?pN(pr.textContent):null, o=od?pN(od.textContent):null;
+          // the card shows the discount as a tag: "Ušteda 7,000 RSD" (saving vs the MP price) – old price = price + saving
+          if(!o&&p){ const tg=[...a.querySelectorAll('.tag-discount,.tm-product-tag')].map(e=>e.textContent).join(' ').match(/U[šs]teda\s*([\d.,]+)\s*RSD/i);
+            if(tg){ const sv=+tg[1].replace(/[.,]\d{2}$/,'').replace(/[^\d]/g,''); if(sv>0) o=p+sv; } }
+          if(o&&p&&o<=p) o=null;
           return {n:l?l.textContent.trim().replace(/\s+/g,' '):'', u:l?new URL(l.getAttribute('href'),location.origin).href.split('?')[0]:'', p, o}; }).filter(x=>x.u&&x.p&&x.n); };
       const h=await ft2('/'); let cats=h?linksOf(h,re):[];
       if(!cats.length) fails.push('no categories – homepage: status '+window.__st+', '+(h?h.length:0)+' bytes, title: '+((h||'').match(/<title>([^<]{0,80})/i)||['',''])[1]);
@@ -325,8 +329,14 @@ class History:
             self.db.execute("""INSERT INTO seen VALUES(?,?,?,?,?) ON CONFLICT(store,url,name) DO UPDATE SET
                                first=MIN(first,excluded.first), last=MAX(last,excluded.last)""", (s_, u, n, d, d))
     def save(self, date, items):
+        # several offers can share one key (two Big Bang listings with the same name, several Ananas sellers on one product page):
+        # keep the cheapest, so the history does not flip between offers from run to run
+        best = {}
         for i in items:
-            k = (i["store"], i.get("u", ""), i["name"]); v = (i["p"], i.get("o"), i.get("l"))
+            k = (i["store"], i.get("u", ""), i["name"])
+            if i.get("p") and (k not in best or i["p"] < best[k]["p"]): best[k] = i
+        for k, i in best.items():
+            v = (i["p"], i.get("o"), i.get("l"))
             prev = self._last.get(k)
             if prev is None or prev[1:] != v or prev[0] == date:
                 self.db.execute("INSERT OR REPLACE INTO points VALUES(?,?,?,?,?,?,?)", (*k, date, *v)); self._last[k] = (date, *v)

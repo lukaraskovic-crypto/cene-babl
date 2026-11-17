@@ -577,17 +577,20 @@ function deals(){ const base=X.filter(x=>!DS.store||x.r[0]===DS.store);
   main.innerHTML=`<div class="seg">${Object.keys(sets).map(k=>`<button class="${DS.tab===k?'on':''}" data-k="${k}">${t('deals.'+k)}<b class="num">${nf(sets[k].length)}</b></button>`).join('')}</div>
    <h2>${t('deals.'+DS.tab)}</h2><p class="sub">${t('deals.'+DS.tab+'S')}</p>
    <div class="tool" style="margin-bottom:14px"><select class="sel ${DS.store?'set':''}" id="dst">${opt(uniq(X.map(x=>x.r[0])),DS.store,t('allStores'))}</select></div>
-   ${!rs.length?`<div class="list empty">${t('none')}</div>`:isM()?`<div class="list m">${rs.slice(0,lim).map(row).join('')}</div>`:tableHTML(rs.slice(0,lim),SC,DL[DS.tab],'dsrt')}
+   ${!rs.length?`<div class="list empty">${t('none')}</div>`:isM()?`<div class="list m">${rs.slice(0,lim).map(row).join('')}</div>`:tableHTML(rs.slice(0,lim),SC.filter(c=>c.k!=='ppu'),DL[DS.tab],'dsrt')}
    ${rs.length>lim?`<p class="sub" style="margin-top:12px">${t('more')(lim)}</p>`:''}`;
   main.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ DS.tab=b.dataset.k; deals(); });
   dst.onchange=()=>{ DS.store=dst.value; deals(); }; mbar.style.display='none'; }
 function dsrt(k){ setSort(DL[DS.tab],k,SDEF[k]||1); deals(); }
 const PF={store:'',sort:'drop',dir:-1};
 const PC=[{k:'store',t:'store',v:d=>d[0]},{k:'name',t:'name',v:d=>d[2]},{k:'price',t:'price',n:1,v:d=>d[3]},{k:'drop',t:'save',n:1,v:d=>d[4]-d[3]},{k:'low',t:'low',n:1,hm:1,v:d=>d[8]||null}];
-function drops(){ const rs=sortRows(D.drops.filter(d=>!PF.store||d[0]===PF.store),PC,PF);
+let DROPS=null;   // a drop counts only when it is the article's current best offer (not a pricier seller of the same product)
+function dropList(){ if(DROPS) return DROPS; const best={}; for(const x of X){ const k=x.r[0]+'|'+x.r[2]; if(!best[k]||x.r[3]<best[k]) best[k]=x.r[3]; }
+  return DROPS=(D.drops||[]).filter(d=>{ const b=best[d[0]+'|'+d[2]]; return b==null||d[3]<=b; }); }
+function drops(){ const rs=sortRows(dropList().filter(d=>!PF.store||d[0]===PF.store),PC,PF);
   const link=d=>d[9]?`<a href="${esc(d[9])}" target="_blank" rel="noopener" style="color:inherit">${esc(d[2])}</a>`:esc(d[2]);
   main.innerHTML=`<h2>${t('drops')}</h2><p class="sub">${t('dropsS')}</p>
-   <div class="tool" style="margin-bottom:14px"><select class="sel ${PF.store?'set':''}" id="pst">${opt(uniq(D.drops.map(d=>d[0])),PF.store,t('allStores'))}</select></div>
+   <div class="tool" style="margin-bottom:14px"><select class="sel ${PF.store?'set':''}" id="pst">${opt(uniq(dropList().map(d=>d[0])),PF.store,t('allStores'))}</select></div>
    ${!rs.length?`<div class="list empty">${t('none')}</div>`:isM()?`<div class="list m">${rs.map(d=>`<div class="it" style="cursor:default"><div class="top"><div><div class="nm">${link(d)}</div><div class="meta">${st(d[0])}</div></div>
      <div class="r"><div class="pr num">${money(d[3])}</div><div class="was num">${nf(d[4])}</div></div></div><div class="bot"><span class="tag good">−${pct(d[5])}</span><span class="save num" style="font-size:13px">−${nf(d[4]-d[3])} din</span></div></div>`).join('')}</div>`
    :`<div class="list"><table>${thead(PC,PF,'psrt')}<tbody>${rs.map(d=>`<tr style="cursor:default"><td>${st(d[0])}</td><td><div class="nm">${link(d)}</div><div class="meta">${esc(d[1])}</div></td>
@@ -652,7 +655,9 @@ function fav(){ const m=FAV.all(); const ids=Object.keys(m).sort((a,b)=>(m[b].d|
   mbar.style.display='none'; }
 const TABS=['search','deals','drops','fav','watch','stores','report']; const FN={search,deals,drops,fav,watch,stores,report,admin};
 let cur='search';
-function tabs(){ const list=TABS.concat(location.hash==='#admin'?['admin']:[]);
+const PRIV=['watch','report'];   // the owner's watch list and the internal English report: only at /#admin
+const ADM=(()=>{ try{ if(location.hash==='#admin') localStorage.setItem('adm','1'); return localStorage.getItem('adm')==='1'; }catch(e){ return location.hash==='#admin'; } })();
+function tabs(){ const list=TABS.filter(k=>ADM||!PRIV.includes(k)).concat(location.hash==='#admin'?['admin']:[]);
   document.getElementById('tabs').innerHTML=list.map(k=>`<button data-t="${k}" class="${k===cur?'on':''}">${t('tabs.'+k)}${k==='fav'&&FAV.n()?` <b class="num">${FAV.n()}</b>`:''}</button>`).join(''); }
 function go(k){ cur=k; tabs(); FN[k](); scrollTo({top:0}); setHash(); }
 function chrome(){ document.documentElement.lang=lang; const [d,h]=D.updated.split(' '); const [,m,dd]=d.split('-'); const ds=`${+dd}. ${MON[lang][+m-1]}`;
@@ -668,7 +673,7 @@ let wasM=isM(); window.addEventListener('resize',()=>{ const m=isM(); if(m!==was
 // The browser keeps only the date of its first and last visit and a visit counter (localStorage, never sent as an id) –
 // what is sent is "new / returning, nth visit, days since last visit". Coarse device facts only (phone/tablet/desktop, OS family,
 // browser family, in-app browser). Do Not Track / Global Privacy Control or the footer switch turn all of it off.
-const TRK=(()=>{ let off=false; try{ off=localStorage.getItem('notrack')==='1'; }catch(e){}
+const TRK=(()=>{ let off=false; try{ off=localStorage.getItem('notrack')==='1'||localStorage.getItem('adm')==='1'; }catch(e){}   // the owner's own visits (opened /#admin once) are not counted
   const on=/babl\.cc$/.test(location.hostname)&&location.hash!=='#admin'&&!off&&navigator.doNotTrack!=='1'&&!navigator.globalPrivacyControl;
   const U='https://hxtdrtsqigvuvhaszxna.supabase.co/rest/v1/rpc/log_events', K='sb_publishable_DPAXHrrEuhxB1ABfXQ7UrQ_azF6yuZ5';
   let sid=''; try{ sid=sessionStorage.getItem('sid')||''; }catch(e){}
@@ -850,7 +855,7 @@ const ACC=(()=>{
 })();
 chrome();
 { const hp=new URLSearchParams(location.hash.slice(1)); const t0=hp.get('t'), q0=hp.get('q'), a0=hp.get('a');
-  if(q0) S.q=q0; go(location.hash==='#admin'?'admin':(t0&&TABS.includes(t0)?t0:'search'));
+  if(q0) S.q=q0; go(location.hash==='#admin'?'admin':(t0&&TABS.includes(t0)&&(ADM||!PRIV.includes(t0))?t0:'search'));
   if(a0){ const x=byId(a0); if(x) openItem(x.i); } }
 </script>
 <!-- Cloudflare Web Analytics (cookie-free visitor counts) -->
