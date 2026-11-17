@@ -35,9 +35,12 @@ def build(run_dir, date):
     except Exception: pspecs = {}
 
     # cheapest price per model code across stores
-    def keys(n):
-        return {re.sub(r"[^A-Za-z0-9]", "", t).upper() for t in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-/.+]*", n)
-                if len(re.sub(r"[^A-Za-z0-9]", "", t)) >= 6 and re.search(r"[A-Za-z]", t) and re.search(r"\d", t)}
+    JUNK = re.compile(r"^(\d+(GB|TB|MB|MAH|W|WH|L|BTU|KG|HZ|MHZ|GHZ|MM|CM|V|PA|K|MP|INCH|RPM|DB)|\d+GB\d+(GB|TB)?|\d+(GB|TB)?\d+(GB|TB)|\d+X\d+|(I[3579]|U[579]|R[3579]|C[357])\d+[A-Z]*|\d+)$")
+    brand = lambda n: re.sub(r"[^A-Z0-9-]", "", (n.split() or [""])[0].upper())
+    def keys(n):      # (brand, model code) – memory sizes, resolutions etc. are not model codes
+        b = brand(n)
+        return {(b, c) for c in (re.sub(r"[^A-Za-z0-9]", "", t).upper() for t in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-/.+]*", n))
+                if len(c) >= 6 and re.search(r"[A-Z]", c) and re.search(r"\d", c) and not JUNK.match(c)}
     best = {}
     for a in allit:
         for k in keys(a["name"]):
