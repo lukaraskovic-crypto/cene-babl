@@ -934,6 +934,11 @@ def assemble(raw):
         if a_["p"] == i["p"]:
             if not a_.get("o") and i.get("o"): a_["o"] = i["o"]
             if not a_.get("l") and i.get("l"): a_["l"] = i["l"]
+    # ---- a shop's stated 30-day low must be plausible: never above its own regular (crossed-out) price, never 3x today's price
+    #      (WinWin once published "Najniža web cena u prethodnih 30 dana 319.999,00" for a 3.999 din charger with MP price 4.705)
+    for x in all_items + items:
+        l, p, o = x.get("l"), x.get("p"), x.get("o")
+        if l and p and ((o and l > o * 1.05) or l > p * 3): x["l"] = None
     # ---- own price history (SQLite) + price drops vs last run
     import catalog
     hist_db = catalog.History(HERE / "history.sqlite")
