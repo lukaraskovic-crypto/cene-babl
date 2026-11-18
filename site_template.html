@@ -853,7 +853,10 @@ const TRK=(()=>{ let off=false; try{ off=localStorage.getItem('notrack')==='1'||
   addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') leave(); else { vis=Date.now(); left=false; } });
   addEventListener('pagehide',leave); setInterval(flush,8000);
   // ---- a few JavaScript errors per session (message only), so broken features show up in the report
-  let errs=0; addEventListener('error',e=>{ if(errs++<3) ev('error',{q:String(e.message||'').slice(0,110),data:{line:e.lineno||0}}); });
+  let errs=0; addEventListener('error',e=>{ const m=String(e.message||''), fn=String(e.filename||'');
+    // only our own code: in-app browsers (Instagram, Facebook) and extensions inject scripts that throw on their own, e.g. "Java object is gone"
+    if(!fn.startsWith(location.origin)||/Java object is gone|postMessage|^Script error/i.test(m)) return;
+    if(errs++<3) ev('error',{q:m.slice(0,110),data:{line:e.lineno||0,col:e.colno||0}}); });
   // ---- one 'visit' per tab session
   let fresh=true; try{ fresh=!sessionStorage.getItem('sv'); sessionStorage.setItem('sv','1'); }catch(e){}
   if(fresh&&on){ let ref=''; try{ ref=document.referrer?new URL(document.referrer).hostname:''; }catch(e){}
@@ -879,7 +882,8 @@ function trackSwitch(){ let off=false; try{ off=localStorage.getItem('notrack')=
 { let tm=null, lastQ='', lastF=''; const _res=results;
   results=function(){ const out=_res.apply(this,arguments); clearTimeout(tm);
     tm=setTimeout(()=>{ const qq=(S.q||'').trim(); const f=JSON.stringify([S.store,S.cat,S.brand,S.vg,S.min,S.max,S.onlyReal,S.onlyDisc,S.onlyXs,S.onlyNew,S.spec,S.ppu,S.sort]);
-      if(qq&&qq!==lastQ){ lastQ=qq; const c=document.querySelector('#res table tbody, #res .list.m'); TRK('search',{q:qq,data:{n:c?c.children.length:0}}); }
+      if(qq&&qq!==lastQ){ lastQ=qq; const fl=!!(S.store.length||S.cat.length||S.brand.length||S.vg.length||S.min||S.max||S.onlyReal||S.onlyDisc||S.onlyXs||S.onlyBest||S.onlyNew||Object.keys(S.spec||{}).length);
+        let n=0; try{ n=filtered().length; }catch(e){} TRK('search',{q:qq,data:{n,f:fl?1:undefined}}); }
       if(f!==lastF){ if(lastF) TRK(Object.keys(S.spec||{}).length||S.ppu?'spec':'filter',{q:qq||null,data:{store:S.store,cat:S.cat,brand:S.brand,vg:S.vg,min:S.min,max:S.max,
           flags:[S.onlyReal&&'real',S.onlyDisc&&'disc',S.onlyXs&&'xs',S.onlyNew&&'new'].filter(Boolean),spec:S.spec,ppu:S.ppu,sort:S.sort}}); lastF=f; } },1800);
     return out; }; }
