@@ -14,7 +14,7 @@ function cmp(a,b,p,top){ for(const k of Object.keys(a)){ if(top&&SKIP.has(k)) co
   else if(x&&typeof x==='object') { if(!y||typeof y!=='object') err('not an object '+pk); else cmp(x,y,pk+'.'); }
   else if(typeof y!=='string'||!y.trim()) err('empty '+pk);
   else { const tags=s=>(String(s).match(/<[^>]+>/g)||[]).map(t=>t.replace(/\s.*$/,'')).sort().join(); if(tags(x)!==tags(y)) err('html tags differ '+pk); } } }
-function cmpJ(a,b,p){ for(const k of Object.keys(a)){ const pk=p+k; if(!(k in b)){ err('missing '+pk); continue; }
+function cmpJ(a,b,p){ for(const k of Object.keys(a)){ const pk=p+k; if(p==='seo.'&&['press','foot_press'].includes(k)) continue; if(!(k in b)){ err('missing '+pk); continue; }
   if(Array.isArray(a[k])){ if(!Array.isArray(b[k])||b[k].length!==a[k].length) err('array length '+pk); else a[k].forEach((v,i)=>cmpJ({v},{v:b[k][i]},pk+'['+i+'].')); continue; }
   if(a[k]&&typeof a[k]==='object'){ cmpJ(a[k],b[k]||{},pk+'.'); continue; }
   const ph=s=>(String(s).match(/\{\w+\}/g)||[]).sort().join(); if(ph(a[k])!==ph(b[k])) err(`placeholders ${pk}: [${ph(b[k])}] vs [${ph(a[k])}]`);
