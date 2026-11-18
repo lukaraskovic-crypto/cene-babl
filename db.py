@@ -328,12 +328,12 @@ def send_weekly(today, log=print, force=False):
     senders = [s_ for s_ in _brevo("GET", "senders").get("senders", []) if s_.get("active")]
     sent = 0
     for u in users:
-        T = WEEK_TXT.get(u.get("lang"), WEEK_TXT["sr"])
+        M = _mailtx(u.get("lang")); T = dict(subj=M["wsubj"], hi=M["whi"], btn=M["wbtn"], foot=M["wfoot"])
         rows = "".join(f'<div style="border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;margin:8px 0"><div style="font-size:12px;color:#6b7280">{_esc(a["store"])}</div>'
-                       f'<a href="{SITE}/{a["path"] or ("#a=" + a["id"])}" style="color:#111;font-weight:700;text-decoration:none">{_esc(a["name"])}</a>'
-                       f'<div><b style="color:#16a34a">{_nf(a["price"])} RSD</b> <span style="color:#6b7280">umesto {_nf(a["low30"])} · −{round((1 - a["price"] / a["low30"]) * 100)}%</span></div></div>' for a in top)
+                       f'<a href="{SITE}/{a["path"] if (a["path"] and not M["pre"]) else (M["q"] + "#a=" + a["id"])}" style="color:#111;font-weight:700;text-decoration:none">{_esc(a["name"])}</a>'
+                       f'<div><b style="color:#16a34a">{_nf(a["price"])} {M["cur"]}</b> <span style="color:#6b7280">{M["instead"]} {_nf(a["low30"])} · −{round((1 - a["price"] / a["low30"]) * 100)}%</span></div></div>' for a in top)
         html = (f'<div style="font:15px/1.45 Arial;max-width:600px"><p style="font:700 20px Arial;margin:0 0 4px">babl <span style="color:#16a34a">cene</span></p><p>{T["hi"]}</p>{rows}'
-                f'<p><a href="{SITE}/top10.html?utm_source=email&utm_campaign=weekly" style="color:#2563eb">{T["btn"]}</a></p><p style="font-size:12px;color:#9ca3af">{T["foot"]}</p></div>')
+                f'<p><a href="{SITE}/{M["pre"]}top10.html?utm_source=email&utm_campaign=weekly" style="color:#2563eb">{T["btn"]}</a></p><p style="font-size:12px;color:#9ca3af">{T["foot"]}</p></div>')
         try:
             _brevo("POST", "smtp/email", {"sender": {"name": "babl cene", "email": senders[0]["email"]}, "to": [{"email": u["email"]}], "subject": T["subj"], "htmlContent": f"<html><body>{html}</body></html>"})
             sent += 1
@@ -361,17 +361,32 @@ ALERT_TXT = {
                foot="You get this e-mail because you turned on price-drop alerts on cene.babl.cc. Turn them off in the “Saved” tab (signed in). Prices are read from the stores' websites and may be out of date – check the price before buying."),
 }
 
+
+def _mailtx(lang):
+    """E-mail texts in the user's language (i18n/<code>.json; Cyrillic transliterated; English fills gaps; Serbian if unknown)."""
+    try:
+        import importlib.util
+        sp = importlib.util.spec_from_file_location("seo", HERE / "seo.py"); seo = importlib.util.module_from_spec(sp); sp.loader.exec_module(seo)
+        TX = seo.texts(); m = (TX.get(lang) or TX["sr"])["mail"]
+        pre_ = "" if (lang or "sr") == "sr" or lang not in TX else lang + "/"
+        q = "" if not pre_ else f"?lang={lang}"
+        return dict(subj=m["alert_subj"], subjn=m["alert_subjn"], hi=m["alert_hi"], was=m["alert_was"], now=m["alert_now"], open=m["alert_open"], shop=m["alert_shop"],
+                    foot=m["alert_foot"], wsubj=m["week_subj"], whi=m["week_hi"], wbtn=m["week_btn"], wfoot=m["week_foot"], instead=m["week_instead"], cur=m["cur"], pre=pre_, q=q)
+    except Exception:
+        T = ALERT_TXT.get(lang, ALERT_TXT["sr"]); W_ = WEEK_TXT.get(lang, WEEK_TXT["sr"])
+        return dict(T, wsubj=W_["subj"], whi=W_["hi"], wbtn=W_["btn"], wfoot=W_["foot"], instead="umesto" if lang != "en" else "instead of", cur="din" if lang != "en" else "RSD", pre="", q="")
+
 def alert_html(lang, hits):
-    T = ALERT_TXT.get(lang, ALERT_TXT["sr"])
+    T = _mailtx(lang)
     out = ['<div style="font:15px/1.45 Arial,sans-serif;color:#111;max-width:600px">',
            '<p style="font:700 20px Arial;margin:0 0 4px">babl <span style="color:#16a34a">cene</span></p>', f'<p>{T["hi"]}</p>']
     for h in hits:
         pct = round((1 - h["price"] / h["ref"]) * 100)
         out.append('<div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin:10px 0">'
                    f'<div style="font-size:12px;color:#6b7280">{h["store"]}</div><div style="font-weight:700">{_esc(h["name"])}</div>'
-                   f'<div style="margin:6px 0"><span style="font-size:20px;font-weight:700;color:#16a34a">{_nf(h["price"])} RSD</span> '
+                   f'<div style="margin:6px 0"><span style="font-size:20px;font-weight:700;color:#16a34a">{_nf(h["price"])} {T["cur"]}</span> '
                    f'<span style="color:#6b7280">({T["now"]}) · {T["was"]} <s>{_nf(h["ref"])}</s> · −{pct}%</span></div>'
-                   f'<a href="{SITE}/#a={h["id"]}" style="color:#2563eb">{T["open"]}</a>'
+                   f'<a href="{SITE}/{T["q"]}#a={h["id"]}" style="color:#2563eb">{T["open"]}</a>'
                    + (f' · <a href="{_esc(h["url"])}" style="color:#2563eb">{T["shop"]}</a>' if h.get("url") else "") + '</div>')
     out.append(f'<p style="font-size:12px;color:#9ca3af;margin-top:18px">{T["foot"]}</p></div>')
     return "".join(out)
@@ -401,7 +416,7 @@ def send_price_alerts(all_items, log=print, dry=False, min_pct=0.03, min_abs=200
             if not (ref and now): continue
             if now <= ref * (1 - min_pct) and ref - now >= min_abs: hits.append(dict(it, price=now))
         if not hits: continue
-        T = ALERT_TXT.get(u.get("lang"), ALERT_TXT["sr"])
+        T = _mailtx(u.get("lang"))
         subj = T["subj"].format(name=hits[0]["name"][:70]) if len(hits) == 1 else T["subjn"].format(n=len(hits))
         if dry: log(f"price alerts (dry): {len(hits)} item(s) for one user"); continue
         try:

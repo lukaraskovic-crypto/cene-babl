@@ -23,7 +23,8 @@ a{color:var(--primary)}button,input,select{font:inherit;color:inherit}
 .wm{font-weight:800;font-size:21px;letter-spacing:-.03em;color:var(--text);text-decoration:none;display:flex;align-items:baseline;gap:6px}
 .wm b{color:var(--primary)}.wm span{font-weight:500;color:var(--muted)}.wm .mk{font:800 15px/26px Manrope,sans-serif;font-style:normal;width:26px;height:26px;border-radius:7px;background:var(--primary);color:var(--accent);text-align:center;align-self:center;margin-right:2px}
 .hd .sp{flex:1}.fresh{font-size:13px;color:var(--muted)}
-.lng{display:flex;gap:2px;font-size:13px;font-weight:700}.lng button{border:0;background:none;padding:4px 6px;cursor:pointer;color:var(--muted);border-radius:6px}.lng button.on{color:var(--text);background:var(--alt)}
+.lng{display:flex;gap:2px;font-size:13px;font-weight:700}.lng button{border:0;background:none;padding:4px 6px;cursor:pointer;color:var(--muted);border-radius:6px}.lng button.on{color:var(--text);background:var(--alt)}.lng select{border:0;background:none;color:var(--muted);font:inherit;font-weight:700;padding:4px 2px;border-radius:6px;cursor:pointer;max-width:110px}@media(max-width:760px){.lng select{max-width:62px}}.wm{direction:ltr}.lng select.on{color:var(--text);background:var(--alt)}
+[dir=rtl] .it .top,[dir=rtl] .kv,[dir=rtl] .acts{direction:rtl}[dir=rtl] .num,[dir=rtl] .pr,[dir=rtl] .was{direction:ltr;unicode-bidi:isolate}
 nav.tabs{display:flex;gap:22px;overflow-x:auto;scrollbar-width:none}nav.tabs::-webkit-scrollbar{display:none}
 nav.tabs button{border:0;background:none;padding:10px 0 12px;cursor:pointer;font-weight:600;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent;font-size:14px}
 nav.tabs button.on{color:var(--text);border-bottom-color:var(--primary)}nav.tabs button:hover{color:var(--text)}
@@ -157,7 +158,7 @@ td .nm{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;over
 </style></head><body>
 <header class="hd"><div class="wrap">
  <div class="row"><a class="wm" href="./"><i class="mk">b</i><b>babl</b><span>cene</span></a><div class="sp"></div><div class="fresh" id="fresh"></div>
-  <button class="acct" id="acct" onclick="ACC.open()"></button><div class="lng"><button data-l="sr">SR</button><button data-l="en">EN</button></div></div>
+  <button class="acct" id="acct" onclick="ACC.open()"></button><div class="lng"><button data-l="sr">SR</button><button data-l="en">EN</button><select id="lsel" aria-label="Jezik / Language"></select></div></div>
  <nav class="tabs" id="tabs"></nav></div></header>
 <main class="wrap" id="main"></main>
 <footer><div class="wrap cols" id="foot"></div><noscript><div class="wrap"><a href="/popusti.html">Potvrđena sniženja danas</a> · <a href="/crni-petak.html">Crni petak</a> · <a href="/sitemap.xml">Mapa sajta</a></div></noscript></footer>
@@ -215,6 +216,7 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',fav:'Sačuvano',w
  reportS:'Isti tekst koji stiže u jutarnjem obaveštenju (na engleskom).',
  foot:{h:'Kako ocenjujemo popuste',p1:'Uz sniženje prodavnice navode najnižu cenu iz prethodnog perioda (najmanje 30 dana). Mi automatski poredimo tu, javno objavljenu cenu sa današnjom: ako je današnja bar 5% niža, sniženje je potvrđeno; ako je ista, cena nije niža od 30-dnevnog minimuma; ako je viša, cena je iznad 30-dnevnog minimuma. Kada prodavnica tu cenu ne objavljuje (ili je očigledno pogrešna), koristimo našu istoriju cena iz vremena pre sniženja. Ocene su samo poređenje objavljenih cena, ne tvrdnja o namerama prodavca niti pravna ocena. Podaci mogu kasniti ili sadržati greške – pre kupovine proverite cenu kod prodavca.',
   p2:'Cene sa drugim prodavnicama poredimo preko pametno.rs i po šifri modela. Podaci se osvežavaju četiri puta dnevno.',h2:'Podaci',p3:'Gigatron, WinWin, Big Bang, PC Practic, Eurotehna, Tehnomedia i Ananas (sa svim prodavcima). Sajt nije povezan ni sa jednom prodavnicom.'},
+ x:{close:'Zatvori',cur:'din',lang:'Jezik',more:'Još jezika',auto:'',install:'Dodaj na početni ekran telefona',priv:'Privatnost: statistika je anonimna – bez kolačića, bez IP adresa i bez ličnih podataka; pregledač pamti samo datum vaše prve i poslednje posete.',statsOn:'Uključi statistiku',statsOff:'Isključi statistiku',toastOn:'Anonimna statistika je uključena',toastOff:'Anonimna statistika je isključena za ovaj pregledač',today:'Potvrđena sniženja danas',bf:'Crni petak',sitemap:'Mapa sajta',suggest:'Pošaljite predlog ili prijavite grešku'},
  adm:{title:'Kategorije za detaljnu pretragu',intro:'Štikliraj šta ulazi u punu pretragu. Dugme ispod kopira novu listu i otvara GitHub – tamo nalepi (Cmd/Ctrl+A, pa Cmd/Ctrl+V) i klikni „Commit changes". Samo vlasnik repozitorijuma može da sačuva izmenu. Važi od sledećeg pokretanja.',
   filter:'Pronađi kategoriju',all:'Uključi sve',none:'Isključi sve',save:'Kopiraj i otvori GitHub',copied:'Kopirano. Nalepi u GitHub editor i klikni „Commit changes".',excluded:n=>`${n} isključeno`,
   noData:'Lista se pojavljuje posle prvog punog pokretanja.',json:'Novi sadržaj categories.json',notCrawled:'nije pretraživano'}},
@@ -260,18 +262,40 @@ en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',fav:'Saved',watch:'W
  reportS:'The same text as the morning notification.',
  foot:{h:'How we judge discounts',p1:'With a discount, stores state the lowest price of the preceding period (at least 30 days). We automatically compare that published price with today\'s: at least 5% lower means a confirmed reduction; the same means not below the 30-day low; higher means above the 30-day low. When a store does not publish that price (or it is obviously wrong), we use our own price history from before the reduction. Ratings only compare published prices – they are not a claim about a store\'s intentions or a legal assessment. Data can be delayed or contain errors; check the price with the store before buying.',
   p2:'We compare with other stores through pametno.rs and by model number. Data refreshes four times a day.',h2:'Data',p3:'Gigatron, WinWin, Big Bang, PC Practic, Eurotehna, Tehnomedia and Ananas (all sellers). This site is not affiliated with any store.'},
+ x:{close:'Close',cur:'RSD',lang:'Language',more:'More languages',auto:'',install:'Add to the home screen',priv:'Privacy: statistics are anonymous – no cookies, no IP addresses, no personal data; your browser only keeps the date of your first and last visit.',statsOn:'Turn statistics on',statsOff:'Turn statistics off',toastOn:'Anonymous statistics on',toastOff:'Anonymous statistics off for this browser',today:'Confirmed reductions today',bf:'Black Friday',sitemap:'Sitemap',suggest:'Send a suggestion or report a mistake'},
  adm:{title:'Categories in the detailed crawl',intro:'Tick what goes into the full crawl. The button copies the new list and opens GitHub – paste it there (Cmd/Ctrl+A, then Cmd/Ctrl+V) and click "Commit changes". Only the repository owner can save it. Takes effect from the next run.',
   filter:'Find a category',all:'Include all',none:'Exclude all',save:'Copy & open GitHub',copied:'Copied. Paste into the GitHub editor and click "Commit changes".',excluded:n=>`${n} excluded`,
   noData:'The list appears after the first full run.',json:'New content of categories.json',notCrawled:'not crawled'}}};
-let lang='sr'; try{ lang=localStorage.getItem('lang')||'sr'; }catch(e){}
-const t=k=>{ const v=k.split('.').reduce((o,p)=>o&&o[p],L[lang]); return v==null?k:v; };
-const loc=()=>lang==='sr'?'sr-Latn-RS':'en-GB';
+// ---- languages: SR and EN are built in; the others load from /i18n/<code>.js (machine-translated, English as fallback); Cyrillic is transliterated from SR
+const LANGS={sr:['Srpski','sr-Latn-RS'],en:['English','en-GB'],cir:['Ћирилица','sr-Cyrl-RS'],hu:['Magyar','hu-HU'],ru:['Русский','ru-RU'],uk:['Українська','uk-UA'],sk:['Slovenčina','sk-SK'],ro:['Română','ro-RO'],rue:['Руски','rue'],sq:['Shqip','sq-AL'],bs:['Bosanski','bs-BA'],hr:['Hrvatski','hr-HR'],bg:['Български','bg-BG'],mk:['Македонски','mk-MK'],rom:['Romani','rom'],zh:['中文','zh-CN'],tr:['Türkçe','tr-TR'],ar:['العربية','ar'],fa:['فارسی','fa-IR']};
+const RTL=['ar','fa'];
+const CYR=(()=>{ const m={'lj':'љ','nj':'њ','dž':'џ','Lj':'Љ','Nj':'Њ','Dž':'Џ','LJ':'Љ','NJ':'Њ','DŽ':'Џ'}, a='abvgdđežzijklmnoprstćufhcčšABVGDĐEŽZIJKLMNOPRSTĆUFHCČŠ', b='абвгдђежзијклмнопрстћуфхцчшАБВГДЂЕЖЗИЈКЛМНОПРСТЋУФХЦЧШ';
+  const KEEP=/^(babl|cene\.babl\.cc|pametno\.rs|Gigatron|WinWin|Big|Bang|Ananas|PC|Practic|Eurotehna|Tehnomedia|Tehnomanija|Google|Instagram|Viber|GitHub|Cmd|Ctrl|iPad|Air|Max|Xiaomi|OLED\w*|B-roba|e-mail|email|Commit|changes|categories\.json|Leaflet|OpenStreetMap)$/i;
+  const w=x=>{ if(KEEP.test(x)||/\d/.test(x)||/[qwxy]/i.test(x)||(x.length>1&&x===x.toUpperCase())) return x; let o=''; for(let i=0;i<x.length;i++){ const d=x.substr(i,2); if(m[d]){ o+=m[d]; i++; continue; } const k=a.indexOf(x[i]); o+=k<0?x[i]:b[k]; } return o; };
+  const txt=s=>s.replace(/[A-Za-z0-9ČĆŽŠĐčćžšđ]+(?:\.[A-Za-z]+)*/g,w);
+  const tr=s=>String(s).split(/(<[^>]*>|&[a-z#0-9]+;|https?:\/\/\S+|babl cene|e-mail|B-roba)/).map((p,i)=>i%2?p:txt(p)).join('');
+  const deep=o=>typeof o==='string'?tr(o):typeof o==='function'?(...a)=>tr(o(...a)):Array.isArray(o)?o.map(deep):o&&typeof o==='object'?Object.fromEntries(Object.entries(o).map(([k,v])=>[k,deep(v)])):o;
+  return {tr,deep}; })();
+const merge=(base,o)=>{ if(!o||typeof o!=='object'||Array.isArray(o)||typeof base!=='object'||!base) return o===undefined?base:o; const r={...base}; for(const k in o) r[k]=merge(base[k],o[k]); return r; };
+function addLang(code){ const P=(window.I18N||{})[code]; if(code==='cir'){ L.cir=CYR.deep(L.sr); MON.cir=MON.sr.map(CYR.tr); return true; } if(!P) return false;
+  L[code]=merge(L.en,P.ui); L[code].x=merge(L[code].x,{auto:P.ui?.x?.auto||'Automatic translation – Serbian and English are the original.'}); MON[code]=P.months||MON.en; if(P.acc&&typeof ACC!=='undefined') ACC.addTX(code,P.acc); else if(P.acc) (window.__TXQ=window.__TXQ||[]).push([code,P.acc]); return true; }
+function needLang(code){ return new Promise(res=>{ if(L[code]||addLang(code)) return res(true); const sc=document.createElement('script'); sc.src='/i18n/'+code+'.js?v='+encodeURIComponent(D.updated||'');
+  sc.onload=()=>res(addLang(code)); sc.onerror=()=>res(false); document.head.appendChild(sc); }); }
+let lang='sr'; try{ lang=localStorage.getItem('lang')||''; }catch(e){}
+{ const q=new URLSearchParams(location.search).get('lang')||new URLSearchParams(location.hash.slice(1)).get('l'); if(q&&LANGS[q]) lang=q;
+  if(!lang){ const nav=(navigator.languages||[navigator.language||'']).map(x=>String(x).toLowerCase()); lang='sr';
+    for(const n of nav){ const b=n.split('-')[0]; if(b==='sr'||b==='sh'){ lang=/cyrl/.test(n)?'cir':'sr'; break; } const c={en:'en',hu:'hu',ru:'ru',uk:'uk',sk:'sk',ro:'ro',sq:'sq',bs:'bs',hr:'hr',bg:'bg',mk:'mk',zh:'zh',tr:'tr',ar:'ar',fa:'fa',rom:'rom',rue:'rue'}[b]; if(c){ lang=c; break; } } }
+  if(!LANGS[lang]) lang='sr'; }
+const t=k=>{ const v=k.split('.').reduce((o,p)=>o&&o[p],L[lang]||L.sr); return v==null?(k.split('.').reduce((o,p)=>o&&o[p],L.en)??k):v; };
+const loc=()=>(LANGS[lang]||LANGS.sr)[1];
+const lp=()=>lang==='sr'?'/':'/'+lang+'/';
 const nf=n=>Number(n).toLocaleString('sr-RS');
 const f=n=>n?nf(n):'';
-const money=n=>n?`${nf(n)}<small>${lang==='sr'?'din':'RSD'}</small>`:'';
+const money=n=>n?`${nf(n)}<small>${t('x.cur')}</small>`:'';
 const pct=x=>Math.round(x*100)+'%';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const dm=s=>{ if(!s) return ''; const [m,d]=s.split('-'); return `${+d}. ${MON[lang][+m-1]}`; };
+const dmy=(m,d)=>['sr','en','cir'].includes(lang)?`${+d}. ${MON[lang][+m-1]}`:(()=>{ try{ return new Date(Date.UTC(2024,+m-1,+d,12)).toLocaleDateString(loc().split('-u-')[0]+'-u-ca-gregory-nu-latn',{day:'numeric',month:'short',timeZone:'UTC'}); }catch(e){ return `${+d}. ${(MON[lang]||MON.en)[+m-1]}`; } })();
+const dm=s=>{ if(!s) return ''; const [m,d]=s.split('-'); return dmy(m,d); };
 const TODAY=D.date.slice(5);
 const VG=v=>!v?'none':v.startsWith('REAL CUT')?'real':v.startsWith('PRICE RAISED')?'raised':v.startsWith('FAKE')?'fake':v.startsWith('No real')?'nochange':v.startsWith('BELOW')?'below':v.startsWith('At market')?'at':v.startsWith('Above')?'above':'unverified';
 const VCLS={real:'good',below:'good',raised:'bad',fake:'bad',above:'warn',nochange:'warn',at:'neu',unverified:'neu',none:'neu'};
@@ -325,7 +349,7 @@ async function shareImg(k){ const x=X[k], r=x.r, W=1080, H=1920, P=84, g=x.vg;
   try{ await document.fonts.load('800 40px Manrope'); await document.fonts.load('600 40px Manrope'); }catch(e){}
   const F=(w,s)=>`${w} ${s}px Manrope, system-ui, -apple-system, "Segoe UI", sans-serif`;
   const COL={good:['#1F6B45','#E3F3EA'],bad:['#B3261E','#FBEAE8'],warn:['#8A5A00','#FBF1DC'],neu:['#5B6B62','#EEF2EC']};
-  const cur_=lang==='sr'?'din':'RSD';
+  const cur_=t('x.cur');
   c.fillStyle='#F6F7F3'; c.fillRect(0,0,W,H);
   c.fillStyle='#1F6B45'; c.fillRect(0,0,W,14);
   c.textBaseline='alphabetic'; c.fillStyle='#13201A'; c.font=F(800,58); c.fillText('babl',P,170); const bw=c.measureText('babl ').width;
@@ -409,10 +433,10 @@ const advTag=x=>{ const s=sig(x); return bro(x)+(s.raised?`<span class="tag bad"
 // ---- "report a mistake" / suggestion (anonymous: only the message, the article and the session id for rate limiting)
 // ---- "add to home screen" (only when the browser offers it)
 let INST=null; addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); INST=e; showInstall(); });
-function showInstall(){ const el=document.getElementById('inst'); if(!el||!INST) return; el.innerHTML=` · <a href="#" id="instA">${lang==='sr'?'Dodaj na početni ekran telefona':'Add to the home screen'}</a>`;
+function showInstall(){ const el=document.getElementById('inst'); if(!el||!INST) return; el.innerHTML=` · <a href="#" id="instA">${t('x.install')}</a>`;
   instA.onclick=async e=>{ e.preventDefault(); INST.prompt(); try{ const r=await INST.userChoice; if(typeof TRK==='function') TRK('lang',{data:{install:r.outcome}}); }catch(_){ } INST=null; el.innerHTML=''; }; }
 function feedback(k){ const x=k!=null?X[k]:null;
-  sheet.innerHTML=`<div class="sh"><div><h2>${esc(t(x?'fb.h':'fb.h2'))}</h2>${x?`<div class="meta">${st(x.r[0])} ${esc(x.r[2])}</div>`:''}</div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div>
+  sheet.innerHTML=`<div class="sh"><div><h2>${esc(t(x?'fb.h':'fb.h2'))}</h2>${x?`<div class="meta">${st(x.r[0])} ${esc(x.r[2])}</div>`:''}</div><button class="x" onclick="closeS()" aria-label="${t('x.close')}">${IC.x}</button></div>
    <p class="sub" style="margin-top:12px">${esc(t(x?'fb.s':'fb.s2'))}</p><textarea id="fbm" maxlength="1000" style="min-height:110px;font:15px inherit" placeholder="${esc(t('fb.ph'))}"></textarea>
    <p style="margin-top:10px"><button class="btn pri" id="fbs">${t('fb.send')}</button></p><p class="meta">${esc(t('fb.priv'))}</p>`;
   ov.style.display='flex'; document.body.style.overflow='hidden';
@@ -420,7 +444,7 @@ function feedback(k){ const x=k!=null?X[k]:null;
     try{ await fetch('https://hxtdrtsqigvuvhaszxna.supabase.co/rest/v1/rpc/log_feedback',{method:'POST',headers:{apikey:'sb_publishable_DPAXHrrEuhxB1ABfXQ7UrQ_azF6yuZ5','Content-Type':'application/json'},
       body:JSON.stringify({f:{kind:x?'item':'general',store:x?x.r[0]:'',item:x?x.r[2]:'',url:x?(x.r[C.url]||location.href):location.href,msg:m,lang,sid}})}); }catch(e){}
     closeS(); toast(t('fb.thx')); }; }
-function why(x){ const r=x.r, g=x.vg, l=r[5]?nf(r[5])+' din':'';
+function why(x){ const r=x.r, g=x.vg, l=r[5]?nf(r[5])+' '+t('x.cur'):'';
   const s=!r[5]&&['real','raised','fake','nochange'].includes(g)?t('why.nolow'):g==='real'?t('why.real')(pct(x.real),l):g==='raised'?t('why.raised')(pct(x.claimed),pct(-x.real),l):g==='fake'?t('why.fake')(pct(x.claimed),l):g==='nochange'?t('why.nochange')(l):(r[6]&&!r[5])?t('why.nolow'):!r[6]?t(r[4]>r[3]?'why.unrated':'why.plain'):'';
   const ours=/our own/.test(r[6]||'')&&g!=='none'&&g!=='unverified';
   return s?`<div class="why"><b>${t('why.title')}</b>${esc(ours?s.replace(t('why.store'),t('why.rec')):s)}${ours?`<div class="meta" style="margin-top:6px">${esc(t('why.ours'))}</div>`:''}</div>`:''; }
@@ -428,7 +452,7 @@ function openItem(k){ const x=X[k], r=x.r; const ks=keyset(r[2]); const hp=(r[C.
   setHash.a=hid(r); setHash();
   const g=C.mg!=null?r[C.mg]:0;   // match group from the site build (same brand + model code)
   const same=g?(MG[g]||[]).filter(y=>y!==x&&y.r[3]>=r[3]*0.35&&y.r[3]<=r[3]*2.9).sort((a,b)=>a.r[3]-b.r[3]).slice(0,8):[];
-  sheet.innerHTML=`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])} &nbsp; ${esc(x.cat)}</div><h2>${esc(r[2])}</h2></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div>
+  sheet.innerHTML=`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])} &nbsp; ${esc(x.cat)}</div><h2>${esc(r[2])}</h2></div><button class="x" onclick="closeS()" aria-label="${t('x.close')}">${IC.x}</button></div>
   <div class="big"><span class="pr num">${money(r[3])}</span>${r[4]?`<span class="was num">${nf(r[4])}</span> <span class="pct bad">−${pct(x.claimed)}</span>`:''} ${vtag(r[6])} ${mtag(r[7])} ${bro(x)} ${atMin?`<span class="tag good">${t('fv.atMin')}</span>`:''}</div>
   <div class="meta">${x.since?esc(t('since')(dm(x.since),x.atLeast)):''}${r[C.seen]&&r[C.seen]!==TODAY?esc(t('seen')(dm(r[C.seen]))):''}</div>
   ${(a=>a?`<div class="adv ${a[0]}">${esc(a[1])}</div>`:'')(advice(x))}
@@ -545,7 +569,7 @@ function bindFilters(root,onChange){
   root.querySelectorAll('.tg[data-k]').forEach(b=>b.onclick=()=>{ S[b.dataset.k]=!S[b.dataset.k]; S.page=0; onChange(); }); }
 function appliedHTML(){ const a=[];
   for(const k of Object.keys(MS)) for(const v of S[k]) a.push([k+'|'+v,msLab(k,v)]);
-  if(S.min||S.max) a.push(['minmax',`${S.min?nf(S.min):'0'} – ${S.max?nf(S.max):'∞'} din`]); TOG.forEach(([k,l])=>{ if(S[k]) a.push([k,t(l)]); });
+  if(S.min||S.max) a.push(['minmax',`${S.min?nf(S.min):'0'} – ${S.max?nf(S.max):'∞'} ${t('x.cur')}`]); TOG.forEach(([k,l])=>{ if(S[k]) a.push([k,t(l)]); });
   for(const [k,vs] of Object.entries(S.spec)) for(const v of vs) a.push(['spec|'+k+'|'+v,`${t('SPN')[k]}: ${spFmt(k,SPK[k].n?+v:v)}`]);
   const spx=S.cat.length?`<button class="spx" id="spx">${SP.open?t('specHide'):t('specBtn')}</button>`:'';
   return (a.length||spx)?`<div class="applied">${a.map(([k,v])=>`<button class="ch" data-k="${esc(k)}">${esc(v)} <i>×</i></button>`).join('')}${a.length?`<button class="clr" id="clr">${t('clear')}</button>`:''}${spx}</div>`:''; }
@@ -614,10 +638,10 @@ function tableHTML(rows,cols,s,fn){ return `<div class="list"><table>${thead(col
   <td class="r hm">${spark(r[C.hist])}</td><td class="r"><span class="dt ${x.since===TODAY?'new':''}">${dm(x.since)}</span></td></tr>`; }).join('')}</tbody></table></div>`; }
 function row(x){ const r=x.r; return `<div class="it" onclick="openItem(${x.i})"><div class="top"><div><div class="nm">${esc(r[2])}</div><div class="meta">${st(r[0])}${nlTxt(r)}</div></div>
   <div class="r"><div class="pr num">${money(r[3])}</div>${r[4]?`<div class="was num">${nf(r[4])}</div>`:''}${ppuTxt(x)}</div></div>
-  <div class="bot">${vtag(r[6])}${advTag(x)}${x.save?`<span class="save num" style="font-size:13px">−${nf(x.save)} din</span>`:x.claimed?`<span class="pct bad num" style="font-size:13px">−${pct(x.claimed)}</span>`:''}${x.xs?`<span class="meta" style="margin:0">${esc(r[11])}: ${nf(x.xs)}</span>`:''}<span class="sp"></span><span class="dt ${x.since===TODAY?'new':''}">${dm(x.since)}</span></div></div>`; }
+  <div class="bot">${vtag(r[6])}${advTag(x)}${x.save?`<span class="save num" style="font-size:13px">−${nf(x.save)} ${t('x.cur')}</span>`:x.claimed?`<span class="pct bad num" style="font-size:13px">−${pct(x.claimed)}</span>`:''}${x.xs?`<span class="meta" style="margin:0">${esc(r[11])}: ${nf(x.xs)}</span>`:''}<span class="sp"></span><span class="dt ${x.since===TODAY?'new':''}">${dm(x.since)}</span></div></div>`; }
 function srt(k){ setSort(S,k,SDEF[k]||(['store','name','price'].includes(k)?1:-1)); results(); }
 function openF(mode){ closePop(); fs.style.display='flex'; document.body.style.overflow='hidden';
-  fs.innerHTML=`<div class="fh"><b>${mode==='sort'?t('sort'):t('filters')}</b><button class="x" onclick="closeF()" aria-label="Zatvori">${IC.x}</button></div><div class="fb" id="fb"></div>
+  fs.innerHTML=`<div class="fh"><b>${mode==='sort'?t('sort'):t('filters')}</b><button class="x" onclick="closeF()" aria-label="${t('x.close')}">${IC.x}</button></div><div class="fb" id="fb"></div>
    <div class="ff"><button class="btn pri" style="width:100%" onclick="closeF()" id="fgo"></button></div>`;
   if(mode==='sort'){ fb.innerHTML=`<div class="tgs">${Object.keys(SDEF).filter(k=>k!=='ppu'||S.ppu).map(k=>`<button class="tg ${S.sort===k?'on':''}" data-s="${k}">${k==='ppu'?t('ppuSort')(t('PU')[S.ppu]||''):t('sorts')[k]}</button>`).join('')}</div>`;
     fb.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{ S.sort=b.dataset.s; S.dir=SDEF[S.sort]; S.page=0; results(); closeF(); }); fgo.textContent=t('done'); return; }
@@ -654,7 +678,7 @@ function drops(){ const rs=sortRows(dropList().filter(d=>!PF.store||d[0]===PF.st
   main.innerHTML=`<h2>${t('drops')}</h2><p class="sub">${t('dropsS')}</p>
    <div class="tool" style="margin-bottom:14px"><select class="sel ${PF.store?'set':''}" id="pst">${opt(uniq(dropList().map(d=>d[0])),PF.store,t('allStores'))}</select></div>
    ${!rs.length?`<div class="list empty">${t('none')}</div>`:isM()?`<div class="list m">${rs.map(d=>`<div class="it" style="cursor:default"><div class="top"><div><div class="nm">${link(d)}</div><div class="meta">${st(d[0])}</div></div>
-     <div class="r"><div class="pr num">${money(d[3])}</div><div class="was num">${nf(d[4])}</div></div></div><div class="bot"><span class="tag good">−${pct(d[5])}</span><span class="save num" style="font-size:13px">−${nf(d[4]-d[3])} din</span></div></div>`).join('')}</div>`
+     <div class="r"><div class="pr num">${money(d[3])}</div><div class="was num">${nf(d[4])}</div></div></div><div class="bot"><span class="tag good">−${pct(d[5])}</span><span class="save num" style="font-size:13px">−${nf(d[4]-d[3])} ${t('x.cur')}</span></div></div>`).join('')}</div>`
    :`<div class="list"><table>${thead(PC,PF,'psrt')}<tbody>${rs.map(d=>`<tr style="cursor:default"><td>${st(d[0])}</td><td><div class="nm">${link(d)}</div><div class="meta">${esc(d[1])}</div></td>
      <td class="r"><div class="pr num">${money(d[3])}</div><div class="was num">${nf(d[4])}</div></td><td class="r"><span class="save num">−${nf(d[4]-d[3])}</span> <span class="tag good">−${pct(d[5])}</span></td><td class="r hm num">${f(d[8])}</td></tr>`).join('')}</tbody></table></div>`}`;
   pst.onchange=()=>{ PF.store=pst.value; drops(); }; mbar.style.display='none'; }
@@ -727,12 +751,15 @@ const ADM=(()=>{ try{ if(location.hash==='#admin') localStorage.setItem('adm','1
 function tabs(){ const list=TABS.filter(k=>ADM||!PRIV.includes(k)).concat(location.hash==='#admin'?['admin']:[]);
   document.getElementById('tabs').innerHTML=list.map(k=>`<button data-t="${k}" class="${k===cur?'on':''}">${t('tabs.'+k)}${k==='fav'&&FAV.n()?` <b class="num">${FAV.n()}</b>`:''}</button>`).join(''); }
 function go(k){ cur=k; tabs(); FN[k](); scrollTo({top:0}); setHash(); }
-function chrome(){ document.documentElement.lang=lang; const [d,h]=D.updated.split(' '); const [,m,dd]=d.split('-'); const ds=`${+dd}. ${MON[lang][+m-1]}`;
+function chrome(){ document.documentElement.lang=lang; const [d,h]=D.updated.split(' '); const [,m,dd]=d.split('-'); const ds=dmy(m,dd); document.documentElement.dir=RTL.includes(lang)?'rtl':'ltr'; document.documentElement.lang=(LANGS[lang]||LANGS.sr)[1];
+  const ls=document.getElementById('lsel'); if(ls){ ls.value=['sr','en'].includes(lang)?'':lang; ls.classList.toggle('on',!['sr','en'].includes(lang)); }
   fresh.textContent=t('fresh')(ds,h)+((D.problems||[]).length?' · '+t('prob')(D.problems.length):''); fresh.title=(D.problems||[]).join('\n');
-  foot.innerHTML=`<div><h4>${t('foot.h')}</h4><p>${t('foot.p1')}</p><p>${t('foot.p2')}</p></div><div><h4>${t('foot.h2')}</h4><p>${t('foot.p3')}</p><p>babl · ${t('fresh')(ds,h)}</p><p class="meta">${lang==='sr'?'Privatnost: statistika je anonimna – bez kolačića, bez IP adresa i bez ličnih podataka; pregledač pamti samo datum vaše prve i poslednje posete.':'Privacy: statistics are anonymous – no cookies, no IP addresses, no personal data; your browser only keeps the date of your first and last visit.'} <a href="#" onclick="event.preventDefault();trackSwitch()">${(()=>{ let o=false; try{ o=localStorage.getItem('notrack')==='1'; }catch(e){} return lang==='sr'?(o?'Uključi statistiku':'Isključi statistiku'):(o?'Turn statistics on':'Turn statistics off'); })()}</a></p><p><a href="/popusti.html">${lang==='sr'?'Potvrđena sniženja danas':'Confirmed reductions today'}</a> · <a href="/crni-petak.html">${lang==='sr'?'Crni petak':'Black Friday'}</a> · <a href="/sitemap.xml">${lang==='sr'?'Mapa sajta':'Sitemap'}</a> · <a href="#" onclick="event.preventDefault();feedback()">${lang==='sr'?'Pošaljite predlog ili prijavite grešku':'Send a suggestion or report a mistake'}</a><span id="inst"></span></p></div>`; showInstall();
+  foot.innerHTML=`<div><h4>${t('foot.h')}</h4><p>${t('foot.p1')}</p><p>${t('foot.p2')}</p></div><div><h4>${t('foot.h2')}</h4><p>${t('foot.p3')}</p><p>babl · ${t('fresh')(ds,h)}</p><p class="meta">${t('x.priv')} <a href="#" onclick="event.preventDefault();trackSwitch()">${(()=>{ let o=false; try{ o=localStorage.getItem('notrack')==='1'; }catch(e){} return o?t('x.statsOn'):t('x.statsOff'); })()}</a></p><p><a href="${lp()}popusti.html">${t('x.today')}</a> · <a href="${lp()}crni-petak.html">${t('x.bf')}</a> · <a href="/sitemap.xml">${t('x.sitemap')}</a> · <a href="#" onclick="event.preventDefault();feedback()">${t('x.suggest')}</a>${t('x.auto')?`<br><span class="meta">${t('x.auto')}</span>`:''}<span id="inst"></span></p></div>`; showInstall();
   document.querySelectorAll('.lng button').forEach(b=>b.classList.toggle('on',b.dataset.l===lang)); }
 document.getElementById('tabs').onclick=e=>{ const k=e.target.closest('button')?.dataset.t; if(k) go(k); };
-document.querySelectorAll('.lng button').forEach(b=>b.onclick=()=>{ lang=b.dataset.l; try{ localStorage.setItem('lang',lang); }catch(e){} chrome(); go(cur); });
+async function setLang(l){ if(!LANGS[l]) return; if(!(await needLang(l))) { toast('…'); return; } lang=l; try{ localStorage.setItem('lang',lang); }catch(e){} chrome(); go(cur); if(typeof ACC!=='undefined') ACC.repaint&&ACC.repaint(); if(typeof TRK==='function') TRK('lang',{data:{to:l}}); }
+document.querySelectorAll('.lng button').forEach(b=>b.onclick=()=>setLang(b.dataset.l));
+{ const ls=document.getElementById('lsel'); ls.innerHTML=`<option value="">🌐</option>`+Object.entries(LANGS).filter(([k])=>!['sr','en'].includes(k)).map(([k,v])=>`<option value="${k}" lang="${v[1]}">${v[0]}</option>`).join(''); ls.onchange=()=>{ if(ls.value) setLang(ls.value); }; }
 window.addEventListener('hashchange',()=>{ if(location.hash==='#admin') go('admin'); else tabs(); });
 let wasM=isM(); window.addEventListener('resize',()=>{ const m=isM(); if(m!==wasM){ wasM=m; FN[cur](); } });
 // ------------------------------------------------------------------ anonymous usage log
@@ -776,7 +803,7 @@ const TRK=(()=>{ let off=false; try{ off=localStorage.getItem('notrack')==='1'||
       load:Math.round(performance.now()/100)*100,ttfb:nav?Math.round(nav.responseStart):undefined}}); }
   const api=(e,o)=>{ if(e==='item') opened++; ev(e,o); }; api.off=()=>!on;
   return api; })();
-function trackSwitch(){ let off=false; try{ off=localStorage.getItem('notrack')==='1'; localStorage.setItem('notrack',off?'0':'1'); }catch(e){} toast(lang==='sr'?(off?'Anonimna statistika je uključena':'Anonimna statistika je isključena za ovaj pregledač'):(off?'Anonymous statistics on':'Anonymous statistics off for this browser')); chrome(); }
+function trackSwitch(){ let off=false; try{ off=localStorage.getItem('notrack')==='1'; localStorage.setItem('notrack',off?'0':'1'); }catch(e){} toast(off?t('x.toastOn'):t('x.toastOff')); chrome(); }
 { const _go=go; go=function(k){ if(k!==cur) TRK('tab',{tab:k}); return _go(k); }; }
 { const _oi=openItem; openItem=function(k){ const x=X[k]; if(x) TRK('item',{store:x.r[0],item:x.r[2],data:{p:x.r[3],v:x.r[6]||''}}); return _oi(k); }; }
 { let tm=null, lastQ='', lastF=''; const _res=results;
@@ -788,7 +815,7 @@ function trackSwitch(){ let off=false; try{ off=localStorage.getItem('notrack')=
     return out; }; }
 document.addEventListener('click',e=>{ const a=e.target.closest('a[href^="http"]'); if(!a) return; let h=''; try{ h=new URL(a.href).hostname; }catch(e){}
   if(h&&!/babl\.cc$/.test(h)) TRK('out',{store:h.replace(/^www\./,''),item:(a.closest('.it,tr,.sheet,.panel,div')?.querySelector('.nm')?.textContent||a.textContent||'').trim().slice(0,150)}); },true);
-document.querySelectorAll('.lng button').forEach(b=>b.addEventListener('click',()=>TRK('lang',{data:{to:b.dataset.l}})));
+
 </script>
 <script>
 "use strict";
@@ -816,7 +843,10 @@ const ACC=(()=>{
       favNote:'Sign in to have them on all your devices.',favCloud:'They are also kept in your babl account.',
       wkOn:'Weekly summary: 10 real reductions, on Mondays',wkHint:'One e-mail a week. Turn it off here with one click.',wkSet:'Weekly summary is on',wkOff:'Weekly summary is off',
       alOn:'E-mail me when the price drops',alNeed:'Alerts need a sign-in.',alHint:e=>`At most once a day, only when a saved article gets at least 3% cheaper (to ${e}).`,alYes:e=>`On – we write to ${e} when a saved article gets at least 3% cheaper.`,alSet:'Alerts are on',alOff:'Alerts are off',needAlert:'Price-drop alerts are sent to signed-in users.'}};
-  const T=k=>TX[lang][k]??k;
+  const T=k=>(TX[lang]||TX.en)[k]??TX.en[k]??k;
+  TX.cir=CYR.deep(TX.sr);
+  function addTX(code,o){ TX[code]=merge(TX.en,o); }
+  (window.__TXQ||[]).forEach(([c,o])=>addTX(c,o));
   let sb=null, user=null, loading=null, pos=null, PREF=null, PREFW=null;
   const hasSession=()=>{ try{ return !!localStorage.getItem(SKEY); }catch(e){ return false; } };
   function load(){ if(loading) return loading;
@@ -855,9 +885,9 @@ const ACC=(()=>{
   // ---- sign-in sheet
   function sheetOpen(html){ sheet.innerHTML=html; ov.style.display='flex'; sheet.scrollTop=0; document.body.style.overflow='hidden'; }
   async function open(reason){ try{ await load(); }catch(e){ toast(T('bad')); return; }
-    if(user){ sheetOpen(`<div class="sh"><div><h2>${esc(T('acct'))}</h2></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div>
+    if(user){ sheetOpen(`<div class="sh"><div><h2>${esc(T('acct'))}</h2></div><button class="x" onclick="closeS()" aria-label="${t('x.close')}">${IC.x}</button></div>
       <p class="sub" style="margin-top:12px">${esc(T('signed')(user.email||''))}<br>${esc(T('savedN')(FAV.n()))}</p><button class="btn" onclick="ACC.logout()">${T('out')}</button>`); return; }
-    sheetOpen(`<div class="sh"><div><h2>${esc(T('h'))}</h2></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div>
+    sheetOpen(`<div class="sh"><div><h2>${esc(T('h'))}</h2></div><button class="x" onclick="closeS()" aria-label="${t('x.close')}">${IC.x}</button></div>
       ${reason==='map'?`<p class="lock">${IC.lock}${esc(T('needLogin'))}</p>`:reason==='alert'?`<p class="lock">${IC.bell}${esc(T('needAlert'))}</p>`:''}<p class="sub" style="margin-top:10px">${esc(T('s'))}</p>
       <div class="lgn"><button class="btn pri" onclick="ACC.google()">${T('google')}</button><div class="or">ili / or</div>
        <input type="email" id="lem" placeholder="${esc(T('email'))}" autocomplete="email"><button class="btn" onclick="ACC.email()">${T('send')}</button><div id="lmsg"></div></div>`); }
@@ -879,16 +909,16 @@ const ACC=(()=>{
   const dir=s=>`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}`;
   async function gate(){ if(!hasSession()&&!user){ open('map'); return false; } try{ await load(); }catch(e){ toast(T('bad')); return false; } if(!user){ open('map'); return false; } return true; }
   async function stock(k){ if(!await gate()) return; const x=X[k], r=x.r; ev('stock',{store:r[0],item:r[2]});
-    sheetOpen(`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])}</div><h2>${esc(T('whereH'))}</h2><div class="meta">${esc(r[2])}</div></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div><p class="sub" style="margin-top:14px">${esc(T('loading'))}</p>`);
+    sheetOpen(`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])}</div><h2>${esc(T('whereH'))}</h2><div class="meta">${esc(r[2])}</div></div><button class="x" onclick="closeS()" aria-label="${t('x.close')}">${IC.x}</button></div><p class="sub" style="margin-top:14px">${esc(T('loading'))}</p>`);
     let stores; try{ stores=await call(r[0],r[C.url],r[2]); }catch(e){ if(e.message==='login'){ open('map'); return; } sheet.querySelector('.sub').textContent=T('err'); return; }
     render({title:T('whereH'),sub:r[2],chain:r[0],back:k,stores:stores.map(s=>Object.assign(s,{items:[x]}))}); }
   async function savedMap(){ if(!await gate()) return; const m=FAV.all(); const ids=Object.keys(m); const sup=ids.filter(id=>CHAINS.includes(m[id].s)&&(m[id].u||byId(id)));
-    sheetOpen(`<div class="sh"><div><h2>${esc(T('savedMapH'))}</h2></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div><p class="sub" style="margin-top:14px">${esc(T('loading'))}</p>`);
+    sheetOpen(`<div class="sh"><div><h2>${esc(T('savedMapH'))}</h2></div><button class="x" onclick="closeS()" aria-label="${t('x.close')}">${IC.x}</button></div><p class="sub" style="margin-top:14px">${esc(T('loading'))}</p>`);
     const by={}; let done=0; ev('stock',{data:{saved:sup.length}});
     for(const id of sup.slice(0,15)){ const v=m[id], x=byId(id); const url=x?x.r[C.url]:v.u; try{ for(const s of await call(v.s,url,v.n)){ const kk=s.chain+'|'+s.label; (by[kk]=by[kk]||Object.assign(s,{items:[]})).items.push(x||{r:[v.s,'',v.n,v.p],i:null}); } }catch(e){} done++;
       const p=sheet.querySelector('.sub'); if(p) p.textContent=T('loading')+` ${done}/${Math.min(15,sup.length)}`; }
     render({title:T('savedMapH'),sub:T('savedMapS')(Math.min(15,sup.length),ids.length-sup.length),stores:Object.values(by),total:Math.min(15,sup.length)}); }
-  async function render(o){ const head=`<div class="sh"><div>${o.chain?`<div class="meta" style="margin:0 0 6px">${st(o.chain)}</div>`:''}<h2>${esc(o.title)}</h2><div class="meta">${esc(o.sub||'')}</div></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div>`;
+  async function render(o){ const head=`<div class="sh"><div>${o.chain?`<div class="meta" style="margin:0 0 6px">${st(o.chain)}</div>`:''}<h2>${esc(o.title)}</h2><div class="meta">${esc(o.sub||'')}</div></div><button class="x" onclick="closeS()" aria-label="${t('x.close')}">${IC.x}</button></div>`;
     const back=o.back!=null?`<p style="margin:10px 0 0"><button class="btn" onclick="openItem(${o.back})">${T('back')}</button></p>`:'';
     if(!o.stores.length){ sheetOpen(head+`<p class="sub" style="margin-top:14px">${esc(T('none'))}</p>`+back); return; }
     const cities=uniq(o.stores.map(s=>s.city));
@@ -922,13 +952,15 @@ const ACC=(()=>{
   // start: restore the session (or finish a sign-in that came back from Google / the email link)
   if(hasSession()||/[?&]code=/.test(location.search)) load().catch(()=>{});
   setTimeout(paint,0);
-  return {open,google,email,code,logout,stock,savedMap,alertBox,setAlert,setWeekly,can:s=>CHAINS.includes(String(s).split(' (')[0]),t:T,
+  return {open,google,email,code,logout,stock,savedMap,alertBox,setAlert,setWeekly,addTX,repaint:()=>paint(),can:s=>CHAINS.includes(String(s).split(' (')[0]),t:T,
     favNote:()=>user?T('favCloud'):T('favNote')};
 })();
-chrome();
-{ const hp=new URLSearchParams(location.hash.slice(1)); const t0=hp.get('t'), q0=hp.get('q'), a0=hp.get('a');
+(async()=>{ if(!L[lang]){ const ok=await Promise.race([needLang(lang),new Promise(r=>setTimeout(()=>r(false),4000))]); if(!ok) lang='sr'; }
+  chrome(); paint0();
+  const hp=new URLSearchParams(location.hash.slice(1)); const t0=hp.get('t'), q0=hp.get('q'), a0=hp.get('a');
   if(q0) S.q=q0; go(location.hash==='#admin'?'admin':(t0&&TABS.includes(t0)&&(ADM||!PRIV.includes(t0))?t0:'search'));
-  if(a0){ const x=byId(a0); if(x) openItem(x.i); } }
+  if(a0){ const x=byId(a0); if(x) openItem(x.i); } })();
+function paint0(){ if(typeof ACC!=='undefined'&&ACC.repaint) ACC.repaint(); }
 </script>
 <!-- Cloudflare Web Analytics (cookie-free visitor counts) -->
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "fe568fc367be44488f1e84d14f62233c"}'></script></body></html>

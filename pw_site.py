@@ -135,6 +135,10 @@ def build(run_dir, date):
     (SITE / "cats.js").write_text("window.CATS=" + json.dumps({"found": cats, "exclude": excl}, ensure_ascii=False, separators=(",", ":")) + ";", encoding="utf-8")
     page = PAGE.replace("<!--DATA-->", '<script src="data.js"></script>' + "".join(f'<script src="data-{k}.js"></script>' for k in range(len(parts))) + '<script src="cats.js"></script>')
     (SITE / "index.html").write_text(page, encoding="utf-8")
+    import shutil   # interface translations (loaded by the page on demand)
+    (SITE / "i18n").mkdir(exist_ok=True)
+    for f_ in (HERE / "i18n").glob("*.js"):
+        if f_.name != "validate.js": shutil.copy(f_, SITE / "i18n" / f_.name)
     try:     # search-engine pages (p/, k/, prodavnica/, sitemap.xml) – never block the website itself
         sspec = importlib.util.spec_from_file_location("seo", HERE / "seo.py"); seo = importlib.util.module_from_spec(sspec); sspec.loader.exec_module(seo)
         seo.build(SITE)

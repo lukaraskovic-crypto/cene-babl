@@ -86,6 +86,15 @@ The daily e-mail adds these from the `usage_extra(day)` RPC (service role only).
 * **Report a mistake**: button on every article + footer link → table `feedback` (RPC `log_feedback`, message only, rate-limited) → morning e-mail.
 * **Install on phone**: `manifest.webmanifest`, icons in `static/`.
 
+## Languages
+SR and EN are the main languages (buttons in the header); the 🌐 menu adds Serbian Cyrillic (ćirilica, transliterated automatically from SR),
+the minority languages Hungarian, Slovak, Romanian, Rusyn, Albanian, Bosnian, Croatian, Bulgarian, Macedonian, Romani, and the migrant languages
+Russian, Ukrainian, Chinese, Turkish, Arabic and Persian (right-to-left). The first visit picks the browser's language; `?lang=ru` forces one.
+Texts: `i18n/<code>.js` (website, loaded only when chosen) and `i18n/<code>.json` (search-engine pages and e-mails). They are machine-translated
+from the Serbian original – every page says so. Check a file after editing with `node i18n/validate.js <code>`.
+Search-engine pages: Serbian at the root, the other languages under `/<code>/` (all hub and store pages, the biggest `seo_cats_other` categories
+and the top `seo_pages_other` articles), linked with hreflang. Price alerts and the weekly e-mail go out in the language the user had on the site.
+
 ## Wording of the verdicts
 Verdicts only compare published prices (today's price vs the lowest price the store states for the previous 30 days, which shops
 must show since the 2026 amendments of the Zakon o trgovini). They are worded as facts ("Nije niže od 30 dana", "Iznad 30-dnevnog
