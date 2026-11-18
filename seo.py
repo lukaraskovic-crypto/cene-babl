@@ -3,7 +3,7 @@ Search-engine pages for cene.babl.cc, written next to the website after every bu
 
     p/<name>-<id>.html     one page per article worth finding (confirmed reductions, other advertised discounts, price drops)
     k/<category>.html      category pages (confirmed reductions first, then the cheapest)
-    prodavnica/<store>.html, popusti.html, crni-petak.html
+    prodavnica/<store>.html, popusti.html, crni-petak.html, podaci.html (+ podaci.csv/json, data for journalists: press.py)
     sitemap.xml, robots.txt, seo.css
 
 Every page is plain HTML (readable without JavaScript) and links to the live site (/#a=<id>) for the full tool.
@@ -187,7 +187,7 @@ def page(l, S, title, desc, path, body, crumbs=(), ld=None, og_type="website", a
 <meta property="og:type" content="{og_type}"><meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}"><meta property="og:url" content="{e(url)}"><meta property="og:site_name" content="babl cene"><meta property="og:locale" content="{OGLOC.get(l, 'sr_RS')}">
 <meta name="theme-color" content="#1F6B45"><link rel="alternate" type="application/rss+xml" title="babl cene" href="/rss.xml"><link rel="stylesheet" href="/seo.css">{ldh}<script defer src="/t.js"></script></head><body>
 <header><div class="w"><a class="wm" href="{home(l)}" dir="ltr">babl <b>cene</b></a><nav><a href="/{p}top10.html">{e(S["nav_top10"])}</a><a href="/{p}popusti.html">{e(S["nav_real"])}</a><a href="/{p}crni-petak.html">{e(S["nav_bf"])}</a></nav></div></header>
-<main class="w">{bc}{body}</main><footer class="w">{e(S["note"])}{(" " + e(S["auto"])) if S.get("auto") else ""} <a href="{home(l)}">{e(S["foot_search"])}</a> · <a href="/sitemap.xml">{e(S["foot_sitemap"])}</a>{sw}</footer></body></html>"""
+<main class="w">{bc}{body}</main><footer class="w">{e(S["note"])}{(" " + e(S["auto"])) if S.get("auto") else ""} <a href="{home(l)}">{e(S["foot_search"])}</a> · <a href="/sitemap.xml">{e(S["foot_sitemap"])}</a>{(' · <a href="/' + p + 'podaci.html">' + e(S["foot_press"]) + "</a>") if l in ("sr", "en") else ""}{sw}</footer></body></html>"""
 
 def li(a, l, S, own=None):
     """own: the set of article ids that have a page in this language (others link to the live site)."""
@@ -364,6 +364,9 @@ def build(site, log=print):
                                   f'<link>{BASE}/</link><description>{e(S["rss_desc"])}</description><language>sr</language>{items_xml}</channel></rss>', encoding="utf-8")
     (site / "top10.json").write_text(json.dumps([{k: a[k] for k in ("store", "name", "price", "low30", "url", "id")} | {"path": a.get("path", "")} for a in top], ensure_ascii=False), encoding="utf-8")
 
+    try:       # "data for journalists" page (podaci.html, en/podaci.html, podaci.csv/json); see press.py
+        sys.path.insert(0, str(HERE)); import press; press.pages(site, W, log)
+    except Exception as ex: log(f"press page skipped: {ex!r}")
     sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     sm += [f"<url><loc>{e(u)}</loc><lastmod>{d}</lastmod></url>" for u, d in urls] + ["</urlset>"]
     (site / "sitemap.xml").write_text("\n".join(sm), encoding="utf-8")

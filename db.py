@@ -309,6 +309,10 @@ def owner_extras(day):
         out.append('<h3 style="font:600 15px Arial;margin:22px 0 6px">Za objavu (Viber / Telegram / Reddit)</h3><p style="color:#6b7280;margin:0 0 6px">Kopirajte i objavite; '
                    'za Reddit promenite utm_source=reddit.</p><pre style="white-space:pre-wrap;background:#f3f6f4;border-radius:8px;padding:12px;font:13px/1.5 Arial">'
                    + esc("\n".join(lines)) + "</pre>")
+    try: out.append(__import__("press").owner_html(HERE / "site"))
+    except Exception as e: out.append(f'<p style="color:#6b7280">Za medije: nije dostupno ({esc(e)})</p>')
+    out.append(f'<h3 style="font:600 15px Arial;margin:22px 0 6px">Slike za objavu (Top 10)</h3><p><a href="{SITE}/share/top10-story.png">Priča 1080×1920</a> · '
+               f'<a href="{SITE}/share/top10-square.png">Objava 1080×1350</a> · <a href="{SITE}/share/caption.txt">Tekst</a></p>')
     out.append("</div>")
     return "".join(out)
 

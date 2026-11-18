@@ -785,6 +785,21 @@ function setEx(store,p,exclude){ let ex=(AD.ex[store]||[]).filter(e=>!(e===p||e.
       const sib=(n)=>{ for(const k of Object.values(n.kids)){ if(k.p===p) continue; if(p.startsWith(k.p+'/')) sib(k); else ex.push(k.p); } };
       const find=(n,q)=>n.p===q?n:Object.values(n.kids).map(k=>q.startsWith(k.p)?find(k,q):null).find(Boolean); sib(find(tree(store),anc)); } }
   AD.ex[store]=[...new Set(ex)].sort(); }
+// ---- owner-only: today's visitor numbers, live from the database (anonymous aggregates; no Claude needed)
+async function live(){ mbar.style.display='none'; clearTimeout(live.tm);
+  main.innerHTML=`<h2>Posete danas</h2><p class="sub">Uživo iz baze · osvežava se svakog minuta dok je ova kartica otvorena.</p><div id="lv"><p class="sub">…</p></div>`;
+  let d; try{ const r=await fetch('https://hxtdrtsqigvuvhaszxna.supabase.co/rest/v1/rpc/stats_live',{method:'POST',headers:{apikey:'sb_publishable_DPAXHrrEuhxB1ABfXQ7UrQ_azF6yuZ5','Content-Type':'application/json'},body:'{}'}); d=await r.json(); }catch(e){}
+  const el=document.getElementById('lv'); if(!el) return; if(!d||d.code){ el.innerHTML='<p class="sub">Statistika trenutno nije dostupna.</p>'; return; }
+  const k=(v,l)=>`<div><b class="num">${nf(v||0)}</b><span>${l}</span></div>`;
+  const tbl=(h,rows,fmt=x=>esc(x))=>rows&&rows.length?`<div class="sec"><h3>${h}</h3><div class="list"><table><tbody>${rows.map(([a,b])=>`<tr style="cursor:default"><td>${fmt(a)}</td><td class="r num"><b>${nf(b)}</b></td></tr>`).join('')}</tbody></table></div></div>`:'';
+  const mx=Math.max(1,...(d.hours||[]).map(h=>h[1]));
+  el.innerHTML=`<div class="kpis">${k(d.sessions,'posetilaca')}${k(d.new,'prvi put')}${k(d.last_hour,'u poslednjih sat vremena')}${k(d.yesterday_same_time,'juče do ovog sata')}</div>
+   <div class="kpis" style="margin-top:10px">${k(d.searches,'pretraga')}${k(d.opened,'otvorenih artikala')}${k(d.out,'klikova ka prodavnicama')}${k(d.saves,'sačuvano')}</div>
+   <p class="meta" style="margin-top:8px">Na telefonu ${nf(d.mobile)} · medijana vremena ${nf(d.median_sec||0)} s · stranice za pretraživače ${nf(d.seo_pages)} · prijave ${nf(d.logins)} · slike ${nf(d.images)} · greške ${nf(d.errors)} · juče ukupno ${nf(d.yesterday_total)} · ${esc(d.now)}</p>
+   <div class="sec"><h3>Po satu</h3><div style="display:flex;align-items:flex-end;gap:4px;height:90px">${(d.hours||[]).map(([h,n])=>`<div title="${h}h: ${n}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%"><i style="display:block;width:100%;background:var(--primary);border-radius:3px 3px 0 0;height:${Math.max(3,n/mx*70)}px"></i><span class="meta" style="margin:2px 0 0;font-size:10px">${h}</span></div>`).join('')}</div></div>
+   ${tbl('Odakle dolaze',d.sources)}${tbl('Pretrage (bar 2 puta)',d.top_searches)}${tbl('Pretrage bez rezultata',d.no_results)}${tbl('Najotvaraniji artikli',d.top_items)}
+   ${tbl('Klikovi ka prodavnicama',d.stores_out)}${tbl('Kartice',d.tabs,x=>esc(t('tabs.'+x)))}${tbl('Jezici',d.langs,x=>esc((LANGS[x]||[x])[0]))}`;
+  live.tm=setTimeout(()=>{ if(cur==='live') live(); },60000); }
 function admin(){ mbar.style.display='none'; const stores=Object.keys(CATS.found);
   if(!stores.length){ main.innerHTML=`<h2>${t('adm.title')}</h2><p class="sub">${t('adm.noData')}</p>`; return; }
   let rt=tree(AD.store); while(Object.keys(rt.kids).length===1&&!rt.own){ const k=Object.values(rt.kids)[0]; if(!Object.keys(k.kids).length) break; rt=k; }
@@ -813,12 +828,12 @@ function fav(){ const m=FAV.all(); const ids=Object.keys(m).sort((a,b)=>(m[b].d|
       <div class="bot">${ch}${x?vtag(x.r[6]):''}<span class="sp"></span><button class="btn" style="padding:5px 12px;font-size:13px" onclick="event.stopPropagation();FAV.del('${id}');tabs();fav()">${t('fv.rm')}</button></div>
       ${x?`<div class="tgbox" onclick="event.stopPropagation()"><label class="meta" for="tg_${id}">${esc(t('rv.tg'))}</label><input id="tg_${id}" type="number" inputmode="numeric" min="1" placeholder="${esc(t('rv.tgPh'))}" value="${s.tg||''}" onchange="setTarget('${id}',this.value)"><span class="meta">${t('x.cur')}</span>${s.tg&&!ACC.alertsOn()?`<span class="meta">${esc(t('rv.tgNeed'))}</span>`:''}</div>`:''}</div>`; }).join('')}</div>`);
   mbar.style.display='none'; }
-const TABS=['search','deals','drops','fav','watch','stores','report']; const FN={search,deals,drops,fav,watch,stores,report,admin};
+const TABS=['search','deals','drops','fav','watch','stores','report','live']; const FN={search,deals,drops,fav,watch,stores,report,admin,live};
 let cur='search';
-const PRIV=['watch','report'];   // the owner's watch list and the internal English report: only at /#admin
+const PRIV=['watch','report','live'];   // the owner's watch list and the internal English report: only at /#admin
 const ADM=(()=>{ try{ if(location.hash==='#admin') localStorage.setItem('adm','1'); return localStorage.getItem('adm')==='1'; }catch(e){ return location.hash==='#admin'; } })();
 function tabs(){ const list=TABS.filter(k=>ADM||!PRIV.includes(k)).concat(location.hash==='#admin'?['admin']:[]);
-  document.getElementById('tabs').innerHTML=list.map(k=>`<button data-t="${k}" class="${k===cur?'on':''}">${t('tabs.'+k)}${k==='fav'&&FAV.n()?` <b class="num">${FAV.n()}</b>`:''}</button>`).join(''); }
+  document.getElementById('tabs').innerHTML=list.map(k=>`<button data-t="${k}" class="${k===cur?'on':''}">${k==='live'?(lang==='sr'?'Posete':'Visitors'):t('tabs.'+k)}${k==='fav'&&FAV.n()?` <b class="num">${FAV.n()}</b>`:''}</button>`).join(''); }
 function go(k){ cur=k; tabs(); FN[k](); scrollTo({top:0}); setHash(); }
 function chrome(){ document.documentElement.lang=lang; const [d,h]=D.updated.split(' '); const [,m,dd]=d.split('-'); const ds=dmy(m,dd); document.documentElement.dir=RTL.includes(lang)?'rtl':'ltr'; document.documentElement.lang=(LANGS[lang]||LANGS.sr)[1];
   const ls=document.getElementById('lsel'); if(ls){ ls.value=['sr','en'].includes(lang)?'':lang; ls.classList.toggle('on',!['sr','en'].includes(lang)); }

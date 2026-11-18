@@ -107,6 +107,15 @@ device asks for reduced motion), bigger touch targets with a strong keyboard foc
 It works for everyone; for signed-in users the settings are also saved to the babl account (`cene_prefs.a11y`) and follow them to every device.
 The page itself has a skip link, a level-one heading, labelled controls and dialog semantics for the article/sign-in sheets (checked with axe-core).
 
+## Owner tools without AI
+* **Live visitors:** open `#admin` once, then the "Posete" tab shows today's numbers live (database function `stats_live()`: anonymous aggregates only,
+  search texts only when typed at least twice; refreshes every minute).
+* **Data for journalists:** `press.py` builds `/podaci.html` (+ `/en/podaci.html`, `podaci.csv`, `podaci.json`) after every build: today's shares of
+  confirmed / not-lower / above-low discounts, by category, methodology and citation. The morning e-mail adds "Za medije": a ready press note and the
+  per-store table (owner only – not published).
+* **Top 10 images:** `share_top10.py` renders `/share/top10-story.png` (1080×1920), `/share/top10-square.png` (1080×1350) and `/share/caption.txt`
+  after every build. Optional Telegram auto-post once a day: add secrets `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (bot = admin of the channel).
+
 ## Wording of the verdicts
 Verdicts only compare published prices (today's price vs the lowest price the store states for the previous 30 days, which shops
 must show since the 2026 amendments of the Zakon o trgovini). They are worded as facts ("Nije niže od 30 dana", "Iznad 30-dnevnog
