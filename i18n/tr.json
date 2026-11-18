@@ -62,7 +62,7 @@
   "real_title": "Bugünkü onaylı indirimler ({n}) – Gigatron, WinWin, Big Bang… | babl cene",
   "real_desc": "Bugün {n} ürün, önceki 30 günün en düşük fiyatından gerçekten daha ucuz. Liste günde birkaç kez güncellenir.",
   "bf_h1": "Kara Cuma {y} – hangi indirimler gerçek?",
-  "bf_p": "Kara Cuma {d} Kasım {y} tarihinde. 1 Mayıs 2026’dan beri Sırbistan’daki mağazalar indirimle birlikte <b>önceki fiyatı</b> da göstermek zorunda – yani indirimden önceki dönemin en düşük fiyatını. babl cene her gün bu yayımlanan fiyatı bugünkü fiyatla karşılaştırıyor; Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic ve Eurotehna’dan yaklaşık 100.000 ürün için.",
+  "bf_p": "Kara Cuma {d} Kasım {y} tarihinde. 1 Mayıs 2026’dan beri Sırbistan’daki mağazalar indirimle birlikte <b>önceki fiyatı</b> da göstermek zorunda – yani indirimden önceki dönemin en düşük fiyatını. babl cene her gün bu yayımlanan fiyatı bugünkü fiyatla karşılaştırıyor; Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic ve Eurotehna’dan yaklaşık 115.000 ürün için.",
   "bf_box": "Bir indirimi 30 saniyede nasıl kontrol edersiniz",
   "bf_steps": [
    "Ürünü <a href=\"{home}\">cene.babl.cc</a> sitesinde bulun.",
@@ -75,7 +75,7 @@
   "bf_search": "Arama",
   "bf_crumb": "Kara Cuma {y}",
   "bf_title": "Kara Cuma {y} – indirim kontrolü (Gigatron, WinWin, Big Bang…) | babl cene",
-  "bf_desc": "Kara Cuma {y} indirimi gerçek mi? 100.000 ürün için fiyatları önceki 30 günün en düşük fiyatıyla karşılaştırıyoruz.",
+  "bf_desc": "Kara Cuma {y} indirimi gerçek mi? 115.000 ürün için fiyatları önceki 30 günün en düşük fiyatıyla karşılaştırıyoruz.",
   "top_h1": "En büyük 10 gerçek indirim",
   "top_intro": "İndirimden önceki 30 günün en düşük fiyatının gerçekten altında olan en büyük on indirim – fiyatı önce artırılan ürünler ve başka mağazada daha ucuz olanlar hariç. Güncelleme: {d}.",
   "top_all": "Tüm onaylı indirimler",

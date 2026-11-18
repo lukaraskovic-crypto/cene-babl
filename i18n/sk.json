@@ -62,7 +62,7 @@
   "real_title": "Potvrdené zníženia dnes ({n}) – Gigatron, WinWin, Big Bang… | babl cene",
   "real_desc": "{n} produktov je dnes naozaj lacnejších ako ich najnižšia cena za predchádzajúcich 30 dní. Zoznam sa aktualizuje viackrát denne.",
   "bf_h1": "Čierny piatok {y} – ktoré zľavy sú skutočné?",
-  "bf_p": "Čierny piatok je {d}. novembra {y}. Od 1. mája 2026 musia obchody v Srbsku pri znížení uviesť aj <b>predchádzajúcu cenu</b> – najnižšiu cenu z obdobia pred znížením. babl cene každý deň porovnáva túto zverejnenú cenu s dnešnou, pre asi 100.000 produktov z obchodov Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic a Eurotehna.",
+  "bf_p": "Čierny piatok je {d}. novembra {y}. Od 1. mája 2026 musia obchody v Srbsku pri znížení uviesť aj <b>predchádzajúcu cenu</b> – najnižšiu cenu z obdobia pred znížením. babl cene každý deň porovnáva túto zverejnenú cenu s dnešnou, pre asi 115.000 produktov z obchodov Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic a Eurotehna.",
   "bf_box": "Ako overiť zľavu za 30 sekúnd",
   "bf_steps": [
    "Nájdite produkt na <a href=\"{home}\">cene.babl.cc</a>.",
@@ -75,7 +75,7 @@
   "bf_search": "Hľadanie",
   "bf_crumb": "Čierny piatok {y}",
   "bf_title": "Čierny piatok {y} – overenie zliav (Gigatron, WinWin, Big Bang…) | babl cene",
-  "bf_desc": "Je zľava na Čierny piatok {y} skutočná? Pre 100.000 produktov porovnávame ceny s najnižšou cenou za predchádzajúcich 30 dní.",
+  "bf_desc": "Je zľava na Čierny piatok {y} skutočná? Pre 115.000 produktov porovnávame ceny s najnižšou cenou za predchádzajúcich 30 dní.",
   "top_h1": "Top 10 skutočných znížení",
   "top_intro": "Desať najväčších zliav, ktoré sú naozaj pod najnižšou cenou za 30 dní pred znížením – bez produktov, ktorým sa cena najprv zvýšila, a bez tých, ktoré sú lacnejšie v inom obchode. Aktualizované {d}.",
   "top_all": "Všetky potvrdené zníženia",

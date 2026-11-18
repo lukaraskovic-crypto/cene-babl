@@ -75,7 +75,7 @@
   "real_title": "Potvrđena sniženja danas ({n}) – Gigatron, WinWin, Big Bang… | babl cene",
   "real_desc": "Artikala koji su danas zaista jeftiniji od najniže cijene iz prethodnih 30 dana: {n}. Spisak se osvježava više puta dnevno.",
   "bf_h1": "Crni petak {y} – koji su popusti stvarni?",
-  "bf_p": "Crni petak je {d}. novembra {y}. Od 1. maja 2026. prodavnice u Srbiji uz sniženje moraju navesti i <b>prethodnu cijenu</b> – najnižu cijenu iz perioda prije sniženja. babl cene svaki dan poredi tu objavljenu cijenu s današnjom, za oko 100.000 artikala iz Gigatrona, WinWina, Big Banga, Ananasa, Tehnomedije, PC Practica i Eurotehne.",
+  "bf_p": "Crni petak je {d}. novembra {y}. Od 1. maja 2026. prodavnice u Srbiji uz sniženje moraju navesti i <b>prethodnu cijenu</b> – najnižu cijenu iz perioda prije sniženja. babl cene svaki dan poredi tu objavljenu cijenu s današnjom, za oko 115.000 artikala iz Gigatrona, WinWina, Big Banga, Ananasa, Tehnomedije, PC Practica i Eurotehne.",
   "bf_box": "Kako provjeriti popust za 30 sekundi",
   "bf_steps": [
    "Pronađite artikal na <a href=\"{home}\">cene.babl.cc</a> (pretraga radi i bez kvačica).",
@@ -88,7 +88,7 @@
   "bf_search": "Pretraga",
   "bf_crumb": "Crni petak {y}",
   "bf_title": "Crni petak {y} – provjera popusta (Gigatron, WinWin, Big Bang…) | babl cene",
-  "bf_desc": "Da li je popust za Crni petak {y} stvaran? Poredimo cijene s najnižom cijenom iz prethodnih 30 dana za 100.000 artikala.",
+  "bf_desc": "Da li je popust za Crni petak {y} stvaran? Poredimo cijene s najnižom cijenom iz prethodnih 30 dana za 115.000 artikala.",
   "top_h1": "Top 10 stvarnih sniženja",
   "top_intro": "Deset najvećih popusta koji su zaista ispod najniže cijene iz 30 dana prije sniženja – bez artikala kojima je cijena prvo podignuta i bez onih koji su jeftiniji u drugoj prodavnici. Ažurirano {d}.",
   "top_all": "Sva potvrđena sniženja",

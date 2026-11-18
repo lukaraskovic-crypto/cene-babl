@@ -75,7 +75,7 @@
   "real_title": "Confirmed reductions today ({n}) – Gigatron, WinWin, Big Bang… | babl cene",
   "real_desc": "{n} products are really cheaper today than their lowest price of the previous 30 days. The list refreshes several times a day.",
   "bf_h1": "Black Friday {y} – which discounts are real?",
-  "bf_p": "Black Friday is on {d} November {y}. Since 1 May 2026 stores in Serbia must also show the <b>previous price</b> with a reduction – the lowest price from the period before the reduction. Every day babl cene compares that published price with today's price, for about 100,000 products from Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic and Eurotehna.",
+  "bf_p": "Black Friday is on {d} November {y}. Since 1 May 2026 stores in Serbia must also show the <b>previous price</b> with a reduction – the lowest price from the period before the reduction. Every day babl cene compares that published price with today's price, for about 115,000 products from Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic and Eurotehna.",
   "bf_box": "How to check a discount in 30 seconds",
   "bf_steps": [
    "Find the product on <a href=\"{home}\">cene.babl.cc</a>.",
@@ -88,7 +88,7 @@
   "bf_search": "Search",
   "bf_crumb": "Black Friday {y}",
   "bf_title": "Black Friday {y} – discount check (Gigatron, WinWin, Big Bang…) | babl cene",
-  "bf_desc": "Is the Black Friday {y} discount real? We compare prices with the lowest price of the previous 30 days for 100,000 products.",
+  "bf_desc": "Is the Black Friday {y} discount real? We compare prices with the lowest price of the previous 30 days for 115,000 products.",
   "top_h1": "Top 10 real reductions",
   "top_intro": "The ten biggest discounts that are really below the lowest price of the 30 days before the reduction – without products whose price was raised first and without those that are cheaper in another store. Updated {d}.",
   "top_all": "All confirmed reductions",

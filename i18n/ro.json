@@ -75,7 +75,7 @@
   "real_title": "Reduceri confirmate azi ({n}) – Gigatron, WinWin, Big Bang… | babl cene",
   "real_desc": "Produse cu adevărat mai ieftine azi decât cel mai mic preț din ultimele 30 de zile: {n}. Lista se actualizează de mai multe ori pe zi.",
   "bf_h1": "Black Friday {y} – care reduceri sunt reale?",
-  "bf_p": "Black Friday este pe {d} noiembrie {y}. Din 1 mai 2026, magazinele din Serbia trebuie să indice la o reducere și <b>prețul anterior</b> – cel mai mic preț din perioada dinaintea reducerii. babl cene compară în fiecare zi acest preț publicat cu cel de azi, pentru aproximativ 100.000 de produse de la Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic și Eurotehna.",
+  "bf_p": "Black Friday este pe {d} noiembrie {y}. Din 1 mai 2026, magazinele din Serbia trebuie să indice la o reducere și <b>prețul anterior</b> – cel mai mic preț din perioada dinaintea reducerii. babl cene compară în fiecare zi acest preț publicat cu cel de azi, pentru aproximativ 115.000 de produse de la Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic și Eurotehna.",
   "bf_box": "Cum verificați o reducere în 30 de secunde",
   "bf_steps": [
    "Găsiți produsul pe <a href=\"{home}\">cene.babl.cc</a>.",
@@ -88,7 +88,7 @@
   "bf_search": "Căutare",
   "bf_crumb": "Black Friday {y}",
   "bf_title": "Black Friday {y} – verificarea reducerilor (Gigatron, WinWin, Big Bang…) | babl cene",
-  "bf_desc": "Este reală reducerea de Black Friday {y}? Comparăm prețurile cu cel mai mic preț din ultimele 30 de zile pentru 100.000 de produse.",
+  "bf_desc": "Este reală reducerea de Black Friday {y}? Comparăm prețurile cu cel mai mic preț din ultimele 30 de zile pentru 115.000 de produse.",
   "top_h1": "Top 10 reduceri reale",
   "top_intro": "Cele mai mari zece reduceri care sunt cu adevărat sub cel mai mic preț din cele 30 de zile dinaintea reducerii – fără produsele al căror preț a fost mai întâi mărit și fără cele care sunt mai ieftine în alt magazin. Actualizat {d}.",
   "top_all": "Toate reducerile confirmate",

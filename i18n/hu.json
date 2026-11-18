@@ -62,7 +62,7 @@
   "real_title": "Megerősített árcsökkentések ma ({n}) – Gigatron, WinWin, Big Bang… | babl cene",
   "real_desc": "Ma {n} termék valóban olcsóbb az előző 30 nap legalacsonyabb áránál. A lista naponta többször frissül.",
   "bf_h1": "Black Friday {y} – mely kedvezmények valódiak?",
-  "bf_p": "A Black Friday időpontja: {y}. november {d}. 2026. május 1. óta a szerbiai üzleteknek árcsökkentéskor a <b>korábbi árat</b> is fel kell tüntetniük – a csökkentés előtti időszak legalacsonyabb árát. A babl cene minden nap összeveti ezt a közzétett árat a mai árral, mintegy 100 000 termék esetében a Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic és Eurotehna üzletekből.",
+  "bf_p": "A Black Friday időpontja: {y}. november {d}. 2026. május 1. óta a szerbiai üzleteknek árcsökkentéskor a <b>korábbi árat</b> is fel kell tüntetniük – a csökkentés előtti időszak legalacsonyabb árát. A babl cene minden nap összeveti ezt a közzétett árat a mai árral, mintegy 115 000 termék esetében a Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic és Eurotehna üzletekből.",
   "bf_box": "Így ellenőrizhet egy kedvezményt 30 másodperc alatt",
   "bf_steps": [
    "Keresse meg a terméket a <a href=\"{home}\">cene.babl.cc</a> oldalon.",
@@ -75,7 +75,7 @@
   "bf_search": "Keresés",
   "bf_crumb": "Black Friday {y}",
   "bf_title": "Black Friday {y} – kedvezmények ellenőrzése (Gigatron, WinWin, Big Bang…) | babl cene",
-  "bf_desc": "Valódi a Black Friday {y} kedvezmény? 100 000 termék árát vetjük össze az előző 30 nap legalacsonyabb árával.",
+  "bf_desc": "Valódi a Black Friday {y} kedvezmény? 115 000 termék árát vetjük össze az előző 30 nap legalacsonyabb árával.",
   "top_h1": "Top 10 valódi árcsökkentés",
   "top_intro": "A tíz legnagyobb kedvezmény, amely valóban a csökkentés előtti 30 nap legalacsonyabb ára alatt van – azon termékek nélkül, amelyek árát előbb megemelték, és azok nélkül, amelyek egy másik üzletben olcsóbbak. Frissítve: {d}.",
   "top_all": "Összes megerősített árcsökkentés",

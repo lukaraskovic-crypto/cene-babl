@@ -62,7 +62,7 @@
   "real_title": "Ulje të konfirmuara sot ({n}) – Gigatron, WinWin, Big Bang… | babl cene",
   "real_desc": "{n} artikuj janë sot vërtet më të lirë se çmimi më i ulët i 30 ditëve të mëparshme. Lista përditësohet disa herë në ditë.",
   "bf_h1": "E Premtja e Zezë {y} – cilat zbritje janë reale?",
-  "bf_p": "E Premtja e Zezë është më {d} nëntor {y}. Që nga 1 maji 2026, dyqanet në Serbi duhet të tregojnë me uljen edhe <b>çmimin e mëparshëm</b> – çmimin më të ulët nga periudha para uljes. Çdo ditë babl cene e krahason këtë çmim të publikuar me çmimin e sotëm, për rreth 100.000 artikuj nga Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic dhe Eurotehna.",
+  "bf_p": "E Premtja e Zezë është më {d} nëntor {y}. Që nga 1 maji 2026, dyqanet në Serbi duhet të tregojnë me uljen edhe <b>çmimin e mëparshëm</b> – çmimin më të ulët nga periudha para uljes. Çdo ditë babl cene e krahason këtë çmim të publikuar me çmimin e sotëm, për rreth 115.000 artikuj nga Gigatron, WinWin, Big Bang, Ananas, Tehnomedia, PC Practic dhe Eurotehna.",
   "bf_box": "Si ta kontrolloni një zbritje për 30 sekonda",
   "bf_steps": [
    "Gjeni artikullin në <a href=\"{home}\">cene.babl.cc</a>.",
@@ -75,7 +75,7 @@
   "bf_search": "Kërko",
   "bf_crumb": "E Premtja e Zezë {y}",
   "bf_title": "E Premtja e Zezë {y} – kontrolli i zbritjeve (Gigatron, WinWin, Big Bang…) | babl cene",
-  "bf_desc": "A është reale zbritja për të Premten e Zezë {y}? Krahasojmë çmimet me çmimin më të ulët të 30 ditëve të mëparshme për 100.000 artikuj.",
+  "bf_desc": "A është reale zbritja për të Premten e Zezë {y}? Krahasojmë çmimet me çmimin më të ulët të 30 ditëve të mëparshme për 115.000 artikuj.",
   "top_h1": "Top 10 uljet reale",
   "top_intro": "Dhjetë zbritjet më të mëdha që janë vërtet nën çmimin më të ulët të 30 ditëve para uljes – pa artikuj, çmimi i të cilëve fillimisht u rrit, dhe pa ata që janë më të lirë në një dyqan tjetër. Përditësuar më {d}.",
   "top_all": "Të gjitha uljet e konfirmuara",

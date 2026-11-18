@@ -62,7 +62,7 @@
   "real_title": "今日确认降价（{n}）– Gigatron、WinWin、Big Bang… | babl cene",
   "real_desc": "今天有 {n} 件商品确实比前30天的最低价更便宜。列表每天更新多次。",
   "bf_h1": "{y}年黑色星期五 – 哪些折扣是真的？",
-  "bf_p": "{y}年的黑色星期五是11月{d}日。从2026年5月1日起，塞尔维亚的商店打折时必须同时标出<b>之前的价格</b>——也就是降价前一段时间内的最低价。babl cene 每天把这个公开价格和今天的价格比较，涵盖 Gigatron、WinWin、Big Bang、Ananas、Tehnomedia、PC Practic 和 Eurotehna 的约10万件商品。",
+  "bf_p": "{y}年的黑色星期五是11月{d}日。从2026年5月1日起，塞尔维亚的商店打折时必须同时标出<b>之前的价格</b>——也就是降价前一段时间内的最低价。babl cene 每天把这个公开价格和今天的价格比较，涵盖 Gigatron、WinWin、Big Bang、Ananas、Tehnomedia、PC Practic 和 Eurotehna 的约11.5万件商品。",
   "bf_box": "30秒核查一个折扣",
   "bf_steps": [
    "在 <a href=\"{home}\">cene.babl.cc</a> 上找到商品。",
@@ -75,7 +75,7 @@
   "bf_search": "搜索",
   "bf_crumb": "{y}年黑色星期五",
   "bf_title": "{y}年黑色星期五 – 折扣核查（Gigatron、WinWin、Big Bang…）| babl cene",
-  "bf_desc": "{y}年黑色星期五的折扣是真的吗？我们把10万件商品的价格与前30天的最低价进行比较。",
+  "bf_desc": "{y}年黑色星期五的折扣是真的吗？我们把11.5万件商品的价格与前30天的最低价进行比较。",
   "top_h1": "真实降价前10名",
   "top_intro": "确实低于降价前30天最低价的十个最大折扣——不包括先涨价的商品，也不包括在别家更便宜的商品。更新于 {d}。",
   "top_all": "全部确认降价",
