@@ -11,19 +11,48 @@
 /* babl tokens (app/src/theme/tokens.ts) */
 :root{--bg:#F6F7F3;--surface:#FFFFFF;--alt:#EEF2EC;--text:#13201A;--muted:#5B6B62;--primary:#1F6B45;--onp:#FFFFFF;--accent:#CDEBD9;--border:#DCE3DD;--danger:#B3261E;
  --dangerbg:#FBEAE8;--warn:#8A5A00;--warnbg:#FBF1DC;--good:#1F6B45;--goodbg:#E3F3EA;--r:12px}
+@media (prefers-color-scheme:dark){html.a-hc:not(.a-light){--text:#FFF;--muted:#E0E0E0;--border:#A0A0A0;--primary:#7FE0A8;--good:#7FE0A8;--danger:#FFB4AB;--warn:#FFD27A;--bg:#000;--surface:#0A0A0A;--alt:#151515}
+ html.a-cb:not(.a-light){--good:#7DB7F5;--goodbg:#0F2740;--danger:#FFB27A;--dangerbg:#3A2210}}
 @media (prefers-color-scheme:dark){:root{--bg:#0E1512;--surface:#17211C;--alt:#1D2A23;--text:#E8F0EA;--muted:#9AACA1;--primary:#5CC48A;--onp:#08130D;--accent:#1E3A2B;--border:#28362E;--danger:#F2B8B5;
  --dangerbg:#3A1D1B;--warn:#E8C27A;--warnbg:#33290F;--good:#5CC48A;--goodbg:#173326}}
 *{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+.fh2{font-size:14px;margin:0 0 8px}footer h2.fh2{font-weight:800}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:absolute;left:8px;top:-60px;z-index:200;background:var(--primary);color:var(--onp);padding:10px 14px;border-radius:8px;font-weight:700}.skip:focus{top:8px}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.a11b{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;height:30px;min-width:34px;padding:0 9px;font:800 13px inherit;cursor:pointer;margin-right:6px}
+.a11b.on{background:var(--primary);color:var(--onp);border-color:var(--primary)}
+.a11 .grp{margin:18px 0 6px;font-weight:800}.a11 .seg{display:flex;gap:6px;flex-wrap:wrap}.a11 .seg button{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;padding:8px 12px;font:700 14px inherit;cursor:pointer;min-height:40px}
+.a11 .seg button[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:var(--onp)}
+.a11 label.opt{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer}.a11 label.opt input{width:22px;height:22px;flex:none;margin-top:2px;accent-color:var(--primary)}
+.a11 label.opt b{display:block}.a11 label.opt span{color:var(--muted);font-size:13px}
+/* ---- accessibility options (html classes set by A11Y) */
+html.a-s1 body{zoom:1.15}html.a-s2 body{zoom:1.3}html.a-s3 body{zoom:1.5}
+html.a-light{color-scheme:light;--bg:#F6F7F3;--surface:#FFFFFF;--alt:#EEF2EC;--text:#13201A;--muted:#5B6B62;--primary:#1F6B45;--onp:#FFFFFF;--accent:#CDEBD9;--border:#DCE3DD;--danger:#B3261E;--dangerbg:#FBEAE8;--warn:#8A5A00;--warnbg:#FBF1DC;--good:#1F6B45;--goodbg:#E3F3EA}
+html.a-dark{color-scheme:dark;--bg:#0E1512;--surface:#17211C;--alt:#1D2A23;--text:#E8F0EA;--muted:#9AACA1;--primary:#5CC48A;--onp:#08130D;--accent:#1E3A2B;--border:#28362E;--danger:#F2B8B5;--dangerbg:#3A1D1B;--warn:#E8C27A;--warnbg:#33290F;--good:#5CC48A;--goodbg:#173326}
+html.a-hc{--text:#000;--muted:#1F1F1F;--border:#6B6B6B;--primary:#0A4A2A;--good:#0A4A2A;--danger:#8C0F0F;--warn:#5C3A00;--bg:#FFFFFF;--alt:#F0F0F0}
+html.a-hc.a-dark{--text:#FFF;--muted:#E0E0E0;--border:#A0A0A0;--primary:#7FE0A8;--good:#7FE0A8;--danger:#FFB4AB;--warn:#FFD27A;--bg:#000;--surface:#0A0A0A;--alt:#151515}html.a-cb.a-dark{--good:#7DB7F5;--goodbg:#0F2740;--danger:#FFB27A;--dangerbg:#3A2210}
+html.a-hc .tag,html.a-hc .btn,html.a-hc .sel,html.a-hc .chip,html.a-hc .tg{border:1.5px solid currentColor}
+html.a-hc .list,html.a-hc .kpis,html.a-hc .box{border-color:var(--text)}
+html.a-motion *,html.a-motion *::before,html.a-motion *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+html.a-read body,html.a-read button,html.a-read input,html.a-read select{font-family:'Atkinson Hyperlegible',Manrope,system-ui,sans-serif!important}
+html.a-read body{letter-spacing:.03em;word-spacing:.12em}html.a-read p,html.a-read .nm,html.a-read .adv,html.a-read li{line-height:1.75!important}
+html.a-links a{text-decoration:underline!important;text-underline-offset:3px}
+html.a-cb{--good:#0B5CAD;--goodbg:#E3EEFA;--danger:#B34700;--dangerbg:#FDEBDD}
+html.a-cb .tag.good::before{content:"✓ "}html.a-cb .tag.bad::before{content:"✕ "}html.a-cb .tag.warn::before{content:"! "}html.a-cb .pct.bad::before,html.a-cb .adv.bad::before{content:"✕ "}html.a-cb .adv.good::before{content:"✓ "}
+html.a-big :focus-visible{outline:4px solid #F5B400!important;outline-offset:3px!important;box-shadow:0 0 0 7px #000!important}
+html.a-big button,html.a-big .btn,html.a-big .sel,html.a-big select,html.a-big .tabs button{min-height:44px}html.a-big .lng button{min-width:40px}
+.say{margin-top:10px}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 a{color:var(--primary)}button,input,select{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
 .wrap{max-width:1240px;margin:0 auto;padding:0 24px}
 .hd{background:var(--surface);border-bottom:1px solid var(--border)}
-.hd .row{display:flex;align-items:center;gap:16px;height:60px}
+.hd .row{display:flex;align-items:center;gap:6px 16px;min-height:60px;flex-wrap:wrap;padding:6px 0}.hd .row .ctl{display:flex;align-items:center;margin-left:auto}
 .wm{font-weight:800;font-size:21px;letter-spacing:-.03em;color:var(--text);text-decoration:none;display:flex;align-items:baseline;gap:6px}
 .wm b{color:var(--primary)}.wm span{font-weight:500;color:var(--muted)}.wm .mk{font:800 15px/26px Manrope,sans-serif;font-style:normal;width:26px;height:26px;border-radius:7px;background:var(--primary);color:var(--accent);text-align:center;align-self:center;margin-right:2px}
 .hd .sp{flex:1}.fresh{font-size:13px;color:var(--muted)}
-.lng{display:flex;gap:2px;font-size:13px;font-weight:700}.lng button{border:0;background:none;padding:4px 6px;cursor:pointer;color:var(--muted);border-radius:6px}.lng button.on{color:var(--text);background:var(--alt)}.lng select{border:0;background:none;color:var(--muted);font:inherit;font-weight:700;padding:4px 2px;border-radius:6px;cursor:pointer;max-width:110px}@media(max-width:760px){.lng select{max-width:62px}}.wm{direction:ltr}.lng select.on{color:var(--text);background:var(--alt)}
+.lng{display:flex;gap:2px;font-size:13px;font-weight:700}.lng button{border:0;background:none;padding:4px 6px;cursor:pointer;color:var(--muted);border-radius:6px}.lng button.on{color:var(--text);background:var(--alt)}.lng select{border:0;background:none;color:var(--muted);font:inherit;font-weight:700;padding:4px 2px;border-radius:6px;cursor:pointer;max-width:110px}@media(max-width:760px){.lng select{max-width:46px;padding:4px 0}.lng button{padding:4px 5px}.a11b{margin-right:4px;padding:0 7px;min-width:30px;height:28px}.hd .row .ctl{gap:0}.hd .sp{display:none}}.kpis{overflow-wrap:anywhere}.wm{direction:ltr}.lng select.on{color:var(--text);background:var(--alt)}
 [dir=rtl] .it .top,[dir=rtl] .kv,[dir=rtl] .acts{direction:rtl}[dir=rtl] .num,[dir=rtl] .pr,[dir=rtl] .was{direction:ltr;unicode-bidi:isolate}
 nav.tabs{display:flex;gap:22px;overflow-x:auto;scrollbar-width:none}nav.tabs::-webkit-scrollbar{display:none}
 nav.tabs button{border:0;background:none;padding:10px 0 12px;cursor:pointer;font-weight:600;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent;font-size:14px}
@@ -145,7 +174,7 @@ td .nm{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;over
 @media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpis>*:nth-child(2n){border-right:0}.kpis>*:nth-child(-n+2){border-bottom:1px solid var(--border)}.kpis b{font-size:19px}.kpis>*{padding:10px 12px}}
 
 @media (max-width:760px){
- .wrap{padding:0 16px}.hd .row{height:54px}.fresh{display:none}main.wrap{padding-top:18px;padding-bottom:90px}.list td:nth-child(2){min-width:0}
+ .wrap{padding:0 16px}.hd .row{min-height:54px;gap:6px 10px}.wm{flex:none}.fresh{display:none}main.wrap{padding-top:18px;padding-bottom:90px}.list td:nth-child(2){min-width:0}
  nav.tabs{gap:18px}.lede{font-size:18px}
  main .tool#tool{display:none}
  .specg{grid-template-columns:1fr}.specp{padding:14px}
@@ -156,15 +185,16 @@ td .nm{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;over
  .big .pr{font-size:26px}footer .cols{grid-template-columns:1fr}dl.kv{grid-template-columns:repeat(2,1fr)}dl.kv div:nth-child(2n){border-right:0}dl.kv div:nth-child(-n+2){border-bottom:1px solid var(--border)}
 }
 </style></head><body>
-<header class="hd"><div class="wrap">
+<a class="skip" href="#main" id="skip">Preskoči na sadržaj</a>
+<header class="hd"><div class="wrap"><h1 class="sr-only" id="h1">babl cene</h1>
  <div class="row"><a class="wm" href="./"><i class="mk">b</i><b>babl</b><span>cene</span></a><div class="sp"></div><div class="fresh" id="fresh"></div>
-  <button class="acct" id="acct" onclick="ACC.open()"></button><div class="lng"><button data-l="sr">SR</button><button data-l="en">EN</button><select id="lsel" aria-label="Jezik / Language"></select></div></div>
+  <div class="ctl"><button class="a11b" id="a11b" onclick="A11Y.open()" aria-label="Pristupačnost" title="Pristupačnost">Aa</button><button class="acct" id="acct" onclick="ACC.open()"></button><div class="lng"><button data-l="sr">SR</button><button data-l="en">EN</button><select id="lsel" aria-label="Jezik / Language"></select></div></div></div>
  <nav class="tabs" id="tabs"></nav></div></header>
-<main class="wrap" id="main"></main>
+<main class="wrap" id="main" tabindex="-1"></main>
 <footer><div class="wrap cols" id="foot"></div><noscript><div class="wrap"><a href="/popusti.html">Potvrđena sniženja danas</a> · <a href="/crni-petak.html">Crni petak</a> · <a href="/sitemap.xml">Mapa sajta</a></div></noscript></footer>
 <div class="mbar" id="mbar"><button id="mbf"></button><button id="mbs"></button></div>
 <div id="fs"></div>
-<div id="ov"><div id="sheet"></div></div><div id="toast"></div>
+<div id="ov"><div id="sheet" role="dialog" aria-modal="true" aria-label="babl cene" tabindex="-1"></div></div><div id="toast"></div>
 <!--DATA-->
 <script>
 "use strict";
@@ -216,6 +246,12 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',fav:'Sačuvano',w
  reportS:'Isti tekst koji stiže u jutarnjem obaveštenju (na engleskom).',
  foot:{h:'Kako ocenjujemo popuste',p1:'Uz sniženje prodavnice navode najnižu cenu iz prethodnog perioda (najmanje 30 dana). Mi automatski poredimo tu, javno objavljenu cenu sa današnjom: ako je današnja bar 5% niža, sniženje je potvrđeno; ako je ista, cena nije niža od 30-dnevnog minimuma; ako je viša, cena je iznad 30-dnevnog minimuma. Kada prodavnica tu cenu ne objavljuje (ili je očigledno pogrešna), koristimo našu istoriju cena iz vremena pre sniženja. Ocene su samo poređenje objavljenih cena, ne tvrdnja o namerama prodavca niti pravna ocena. Podaci mogu kasniti ili sadržati greške – pre kupovine proverite cenu kod prodavca.',
   p2:'Cene sa drugim prodavnicama poredimo preko pametno.rs i po šifri modela. Podaci se osvežavaju četiri puta dnevno.',h2:'Podaci',p3:'Gigatron, WinWin, Big Bang, PC Practic, Eurotehna, Tehnomedia i Ananas (sa svim prodavcima). Sajt nije povezan ni sa jednom prodavnicom.'},
+ a11y:{btn:'Pristupačnost',h:'Pristupačnost',s:'Prilagodite prikaz. Podešavanja važe u ovom pregledaču; kad ste prijavljeni, čuvaju se na vašem nalogu i važe na svim uređajima.',saved:'Sačuvano na vašem nalogu.',login:'Prijavite se da biste podešavanja imali na svim uređajima.',
+  size:'Veličina teksta',theme:'Tema',auto:'Automatski',light:'Svetla',dark:'Tamna',
+  hc:'Visok kontrast',hcS:'Tamniji tekst i jasnije ivice.',cb:'Boje za daltoniste',cbS:'Plava/narandžasta umesto zelene/crvene i znakovi ✓ ✕ uz ocene.',
+  read:'Lakše čitanje',readS:'Font prilagođen disleksiji, veći razmak između slova i redova.',links:'Podvučeni linkovi',linksS:'Svi linkovi su podvučeni.',
+  motion:'Bez animacija',motionS:'Isključuje pokrete i prelaze.',big:'Veći dodirni elementi i jasan fokus',bigS:'Veća dugmad i upadljiv okvir pri kretanju tastaturom.',
+  speak:'Čitanje naglas',speakS:'Dugme „Pročitaj naglas“ na stranici artikla.',say:'Pročitaj naglas',stop:'Zaustavi',reset:'Vrati podrazumevano',skip:'Preskoči na sadržaj'},
  x:{close:'Zatvori',cur:'din',lang:'Jezik',more:'Još jezika',auto:'',install:'Dodaj na početni ekran telefona',priv:'Privatnost: statistika je anonimna – bez kolačića, bez IP adresa i bez ličnih podataka; pregledač pamti samo datum vaše prve i poslednje posete.',statsOn:'Uključi statistiku',statsOff:'Isključi statistiku',toastOn:'Anonimna statistika je uključena',toastOff:'Anonimna statistika je isključena za ovaj pregledač',today:'Potvrđena sniženja danas',bf:'Crni petak',sitemap:'Mapa sajta',suggest:'Pošaljite predlog ili prijavite grešku'},
  adm:{title:'Kategorije za detaljnu pretragu',intro:'Štikliraj šta ulazi u punu pretragu. Dugme ispod kopira novu listu i otvara GitHub – tamo nalepi (Cmd/Ctrl+A, pa Cmd/Ctrl+V) i klikni „Commit changes". Samo vlasnik repozitorijuma može da sačuva izmenu. Važi od sledećeg pokretanja.',
   filter:'Pronađi kategoriju',all:'Uključi sve',none:'Isključi sve',save:'Kopiraj i otvori GitHub',copied:'Kopirano. Nalepi u GitHub editor i klikni „Commit changes".',excluded:n=>`${n} isključeno`,
@@ -262,6 +298,12 @@ en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',fav:'Saved',watch:'W
  reportS:'The same text as the morning notification.',
  foot:{h:'How we judge discounts',p1:'With a discount, stores state the lowest price of the preceding period (at least 30 days). We automatically compare that published price with today\'s: at least 5% lower means a confirmed reduction; the same means not below the 30-day low; higher means above the 30-day low. When a store does not publish that price (or it is obviously wrong), we use our own price history from before the reduction. Ratings only compare published prices – they are not a claim about a store\'s intentions or a legal assessment. Data can be delayed or contain errors; check the price with the store before buying.',
   p2:'We compare with other stores through pametno.rs and by model number. Data refreshes four times a day.',h2:'Data',p3:'Gigatron, WinWin, Big Bang, PC Practic, Eurotehna, Tehnomedia and Ananas (all sellers). This site is not affiliated with any store.'},
+ a11y:{btn:'Accessibility',h:'Accessibility',s:'Adjust how the site looks. Settings apply in this browser; when you are signed in they are saved to your account and follow you to every device.',saved:'Saved to your account.',login:'Sign in to have these settings on all your devices.',
+  size:'Text size',theme:'Theme',auto:'Automatic',light:'Light',dark:'Dark',
+  hc:'High contrast',hcS:'Darker text and clearer edges.',cb:'Colour-blind friendly',cbS:'Blue/orange instead of green/red, and ✓ ✕ symbols on verdicts.',
+  read:'Easier reading',readS:'A dyslexia-friendly font with more space between letters and lines.',links:'Underlined links',linksS:'All links are underlined.',
+  motion:'No animations',motionS:'Turns off movement and transitions.',big:'Bigger touch targets and clear focus',bigS:'Larger buttons and a strong outline when moving with the keyboard.',
+  speak:'Read aloud',speakS:'A “Read aloud” button on the article page.',say:'Read aloud',stop:'Stop',reset:'Reset to default',skip:'Skip to content'},
  x:{close:'Close',cur:'RSD',lang:'Language',more:'More languages',auto:'',install:'Add to the home screen',priv:'Privacy: statistics are anonymous – no cookies, no IP addresses, no personal data; your browser only keeps the date of your first and last visit.',statsOn:'Turn statistics on',statsOff:'Turn statistics off',toastOn:'Anonymous statistics on',toastOff:'Anonymous statistics off for this browser',today:'Confirmed reductions today',bf:'Black Friday',sitemap:'Sitemap',suggest:'Send a suggestion or report a mistake'},
  adm:{title:'Categories in the detailed crawl',intro:'Tick what goes into the full crawl. The button copies the new list and opens GitHub – paste it there (Cmd/Ctrl+A, then Cmd/Ctrl+V) and click "Commit changes". Only the repository owner can save it. Takes effect from the next run.',
   filter:'Find a category',all:'Include all',none:'Exclude all',save:'Copy & open GitHub',copied:'Copied. Paste into the GitHub editor and click "Commit changes".',excluded:n=>`${n} excluded`,
@@ -455,7 +497,7 @@ function openItem(k){ const x=X[k], r=x.r; const ks=keyset(r[2]); const hp=(r[C.
   sheet.innerHTML=`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])} &nbsp; ${esc(x.cat)}</div><h2>${esc(r[2])}</h2></div><button class="x" onclick="closeS()" aria-label="${t('x.close')}">${IC.x}</button></div>
   <div class="big"><span class="pr num">${money(r[3])}</span>${r[4]?`<span class="was num">${nf(r[4])}</span> <span class="pct bad">−${pct(x.claimed)}</span>`:''} ${vtag(r[6])} ${mtag(r[7])} ${bro(x)} ${atMin?`<span class="tag good">${t('fv.atMin')}</span>`:''}</div>
   <div class="meta">${x.since?esc(t('since')(dm(x.since),x.atLeast)):''}${r[C.seen]&&r[C.seen]!==TODAY?esc(t('seen')(dm(r[C.seen]))):''}</div>
-  ${(a=>a?`<div class="adv ${a[0]}">${esc(a[1])}</div>`:'')(advice(x))}
+  ${(a=>a?`<div class="adv ${a[0]}">${esc(a[1])}</div>`:'')(advice(x))}${A11Y.sayBtn()}
   ${why(x)}
   <dl class="kv num"><div><dt>${t('crossed')}</dt><dd>${f(r[4])||'–'}</dd></div><div><dt>${t('low30')}</dt><dd>${f(r[5])||'–'}</dd></div><div><dt>${t('mkt')}</dt><dd>${f(r[8])||'–'}</dd></div><div><dt>${t('fv.minH')}</dt><dd>${hp.length>1?f(minH):'–'}</dd></div></dl>
   <div class="acts">${r[C.url]?`<a class="btn pri" href="${esc(r[C.url])}" target="_blank" rel="noopener">${t('open')}</a>`:''}
@@ -463,7 +505,9 @@ function openItem(k){ const x=X[k], r=x.r; const ks=keyset(r[2]); const hp=(r[C.
   <div class="sec"><h3>${t('hist')}</h3>${chart(r[C.hist])}</div>
   ${same.length?`<div class="sec"><h3>${t('same')}</h3><div class="cmp">${same.map(y=>`<a onclick="openItem(${y.i})"><span><span class="nm">${esc(y.r[2])}</span><div class="meta">${st(y.r[0])}</div></span><span class="pr num">${money(y.r[3])}</span></a>`).join('')}</div></div>`:''}`;
   ov.style.display='flex'; sheet.scrollTop=0; document.body.style.overflow='hidden'; }
-function closeS(){ ov.style.display='none'; document.body.style.overflow=''; setHash.a=''; setHash(); }
+function closeS(){ if(ov.style.display!=='flex') return; ov.style.display='none'; document.body.style.overflow=''; sheet.removeAttribute('aria-labelledby'); try{ speechSynthesis.cancel(); }catch(e){} setHash.a=''; setHash(); if(closeS.ret&&document.body.contains(closeS.ret)) closeS.ret.focus(); closeS.ret=null; }
+document.addEventListener('focusin',e=>{ if(ov.style.display==='flex'&&!sheet.contains(e.target)&&!ov.contains(e.target)){ sheet.focus(); } });
+new MutationObserver(()=>{ if(ov.style.display==='flex'&&!closeS.open){ closeS.open=true; closeS.ret=closeS.ret||(document.activeElement!==document.body?document.activeElement:null); setTimeout(()=>{ if(!sheet.contains(document.activeElement)) sheet.focus(); },0); } if(ov.style.display!=='flex') closeS.open=false; }).observe(ov,{attributes:true,attributeFilter:['style']});
 ov.onclick=e=>{ if(e.target===ov) closeS(); }; document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeS(); closeF(); } });
 function cmp(a,b){ return typeof a==='number'&&typeof b==='number'?a-b:String(a).localeCompare(String(b),'sr'); }
 const blank=(v,c)=>v==null||v===''||(v===0&&c.z);
@@ -662,7 +706,7 @@ function deals(){ const base=X.filter(x=>!DS.store||x.r[0]===DS.store);
   const rs=sortRows(sets[DS.tab],SC,DL[DS.tab]); const lim=300;
   main.innerHTML=`<div class="seg">${Object.keys(sets).map(k=>`<button class="${DS.tab===k?'on':''}" data-k="${k}">${t('deals.'+k)}<b class="num">${nf(sets[k].length)}</b></button>`).join('')}</div>
    <h2>${t('deals.'+DS.tab)}</h2><p class="sub">${t('deals.'+DS.tab+'S')}</p>
-   <div class="tool" style="margin-bottom:14px"><select class="sel ${DS.store?'set':''}" id="dst">${opt(uniq(X.map(x=>x.r[0])),DS.store,t('allStores'))}</select></div>
+   <div class="tool" style="margin-bottom:14px"><select class="sel ${DS.store?'set':''}" id="dst" aria-label="${esc(t('store'))}">${opt(uniq(X.map(x=>x.r[0])),DS.store,t('allStores'))}</select></div>
    ${!rs.length?`<div class="list empty">${t('none')}</div>`:isM()?`<div class="list m">${rs.slice(0,lim).map(row).join('')}</div>`:tableHTML(rs.slice(0,lim),SC.filter(c=>c.k!=='ppu'),DL[DS.tab],'dsrt')}
    ${rs.length>lim?`<p class="sub" style="margin-top:12px">${t('more')(lim)}</p>`:''}`;
   main.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ DS.tab=b.dataset.k; deals(); });
@@ -676,7 +720,7 @@ function dropList(){ if(DROPS) return DROPS; const best={}; for(const x of X){ c
 function drops(){ const rs=sortRows(dropList().filter(d=>!PF.store||d[0]===PF.store),PC,PF);
   const link=d=>d[9]?`<a href="${esc(d[9])}" target="_blank" rel="noopener" style="color:inherit">${esc(d[2])}</a>`:esc(d[2]);
   main.innerHTML=`<h2>${t('drops')}</h2><p class="sub">${t('dropsS')}</p>
-   <div class="tool" style="margin-bottom:14px"><select class="sel ${PF.store?'set':''}" id="pst">${opt(uniq(dropList().map(d=>d[0])),PF.store,t('allStores'))}</select></div>
+   <div class="tool" style="margin-bottom:14px"><select class="sel ${PF.store?'set':''}" id="pst" aria-label="${esc(t('store'))}">${opt(uniq(dropList().map(d=>d[0])),PF.store,t('allStores'))}</select></div>
    ${!rs.length?`<div class="list empty">${t('none')}</div>`:isM()?`<div class="list m">${rs.map(d=>`<div class="it" style="cursor:default"><div class="top"><div><div class="nm">${link(d)}</div><div class="meta">${st(d[0])}</div></div>
      <div class="r"><div class="pr num">${money(d[3])}</div><div class="was num">${nf(d[4])}</div></div></div><div class="bot"><span class="tag good">−${pct(d[5])}</span><span class="save num" style="font-size:13px">−${nf(d[4]-d[3])} ${t('x.cur')}</span></div></div>`).join('')}</div>`
    :`<div class="list"><table>${thead(PC,PF,'psrt')}<tbody>${rs.map(d=>`<tr style="cursor:default"><td>${st(d[0])}</td><td><div class="nm">${link(d)}</div><div class="meta">${esc(d[1])}</div></td>
@@ -754,8 +798,8 @@ function go(k){ cur=k; tabs(); FN[k](); scrollTo({top:0}); setHash(); }
 function chrome(){ document.documentElement.lang=lang; const [d,h]=D.updated.split(' '); const [,m,dd]=d.split('-'); const ds=dmy(m,dd); document.documentElement.dir=RTL.includes(lang)?'rtl':'ltr'; document.documentElement.lang=(LANGS[lang]||LANGS.sr)[1];
   const ls=document.getElementById('lsel'); if(ls){ ls.value=['sr','en'].includes(lang)?'':lang; ls.classList.toggle('on',!['sr','en'].includes(lang)); }
   fresh.textContent=t('fresh')(ds,h)+((D.problems||[]).length?' · '+t('prob')(D.problems.length):''); fresh.title=(D.problems||[]).join('\n');
-  foot.innerHTML=`<div><h4>${t('foot.h')}</h4><p>${t('foot.p1')}</p><p>${t('foot.p2')}</p></div><div><h4>${t('foot.h2')}</h4><p>${t('foot.p3')}</p><p>babl · ${t('fresh')(ds,h)}</p><p class="meta">${t('x.priv')} <a href="#" onclick="event.preventDefault();trackSwitch()">${(()=>{ let o=false; try{ o=localStorage.getItem('notrack')==='1'; }catch(e){} return o?t('x.statsOn'):t('x.statsOff'); })()}</a></p><p><a href="${lp()}popusti.html">${t('x.today')}</a> · <a href="${lp()}crni-petak.html">${t('x.bf')}</a> · <a href="/sitemap.xml">${t('x.sitemap')}</a> · <a href="#" onclick="event.preventDefault();feedback()">${t('x.suggest')}</a>${t('x.auto')?`<br><span class="meta">${t('x.auto')}</span>`:''}<span id="inst"></span></p></div>`; showInstall();
-  document.querySelectorAll('.lng button').forEach(b=>b.classList.toggle('on',b.dataset.l===lang)); }
+  foot.innerHTML=`<div><h2 class="fh2">${t('foot.h')}</h2><p>${t('foot.p1')}</p><p>${t('foot.p2')}</p></div><div><h2 class="fh2">${t('foot.h2')}</h2><p>${t('foot.p3')}</p><p>babl · ${t('fresh')(ds,h)}</p><p class="meta">${t('x.priv')} <a href="#" onclick="event.preventDefault();trackSwitch()">${(()=>{ let o=false; try{ o=localStorage.getItem('notrack')==='1'; }catch(e){} return o?t('x.statsOn'):t('x.statsOff'); })()}</a></p><p><a href="${lp()}popusti.html">${t('x.today')}</a> · <a href="${lp()}crni-petak.html">${t('x.bf')}</a> · <a href="/sitemap.xml">${t('x.sitemap')}</a> · <a href="#" onclick="event.preventDefault();feedback()">${t('x.suggest')}</a>${t('x.auto')?`<br><span class="meta">${t('x.auto')}</span>`:''}<span id="inst"></span></p></div>`; showInstall();
+  document.querySelectorAll('.lng button').forEach(b=>b.classList.toggle('on',b.dataset.l===lang)); A11Y.apply(); }
 document.getElementById('tabs').onclick=e=>{ const k=e.target.closest('button')?.dataset.t; if(k) go(k); };
 async function setLang(l){ if(!LANGS[l]) return; if(!(await needLang(l))) { toast('…'); return; } lang=l; try{ localStorage.setItem('lang',lang); }catch(e){} chrome(); go(cur); if(typeof ACC!=='undefined') ACC.repaint&&ACC.repaint(); if(typeof TRK==='function') TRK('lang',{data:{to:l}}); }
 document.querySelectorAll('.lng button').forEach(b=>b.onclick=()=>setLang(b.dataset.l));
@@ -820,6 +864,41 @@ document.addEventListener('click',e=>{ const a=e.target.closest('a[href^="http"]
 <script>
 "use strict";
 // ------------------------------------------------------------------ babl account (same login as babl.cc) + store-stock map
+// ------------------------------------------------------------------ accessibility options (browser; synced to the babl account when signed in)
+const A11Y=(()=>{ const DEF={size:0,theme:'',hc:false,cb:false,read:false,links:false,motion:false,big:false,speak:false};
+  let S={...DEF}; try{ S={...DEF,...JSON.parse(localStorage.getItem('a11y')||'{}')}; }catch(e){}
+  try{ if(matchMedia('(prefers-reduced-motion: reduce)').matches&&localStorage.getItem('a11y')==null) S.motion=true; }catch(e){}
+  let fontLoaded=false;
+  function apply(){ const h=document.documentElement, c=h.classList;
+    ['a-s1','a-s2','a-s3','a-light','a-dark','a-hc','a-cb','a-read','a-links','a-motion','a-big'].forEach(k=>c.remove(k));
+    if(S.size) c.add('a-s'+S.size); if(S.theme) c.add('a-'+S.theme);
+    for(const k of ['hc','cb','read','links','motion','big']) if(S[k]) c.add('a-'+k);
+    if(S.read&&!fontLoaded){ fontLoaded=true; const l=document.createElement('link'); l.rel='stylesheet'; l.href='https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap'; document.head.appendChild(l); }
+    const b=document.getElementById('a11b'); if(b){ b.setAttribute('aria-label',t('a11y.btn')); b.title=t('a11y.btn'); b.classList.toggle('on',JSON.stringify(S)!==JSON.stringify(DEF)); }
+    const sk=document.getElementById('skip'); if(sk) sk.textContent=t('a11y.skip'); }
+  function save(remote=true){ try{ localStorage.setItem('a11y',JSON.stringify(S)); }catch(e){} apply(); if(remote&&typeof ACC!=='undefined'&&ACC.saveA11y) ACC.saveA11y(S); }
+  function set(k,v){ S[k]=v; save(); open(true); }
+  function fromAccount(o){ if(!o||typeof o!=='object') return; S={...DEF,...o}; save(false); }
+  function open(keep){ const signed=typeof ACC!=='undefined'&&ACC.signed&&ACC.signed();
+    const seg=(k,opts)=>`<div class="seg" role="group">${opts.map(([v,l])=>`<button aria-pressed="${S[k]===v}" onclick="A11Y.set('${k}',${JSON.stringify(v).replace(/"/g,"'")})">${l}</button>`).join('')}</div>`;
+    const tog=k=>`<label class="opt"><input type="checkbox" ${S[k]?'checked':''} onchange="A11Y.set('${k}',this.checked)"><div><b>${esc(t('a11y.'+k))}</b><span>${esc(t('a11y.'+k+'S'))}</span></div></label>`;
+    const sc=sheet.scrollTop;
+    sheet.innerHTML=`<div class="sh"><div><h2 id="a11h">${esc(t('a11y.h'))}</h2></div><button class="x" onclick="closeS()" aria-label="${t('x.close')}">${IC.x}</button></div>
+     <div class="a11"><p class="sub">${esc(t('a11y.s'))}</p><p class="meta">${esc(signed?t('a11y.saved'):t('a11y.login'))}</p>
+     <div class="grp">${esc(t('a11y.size'))}</div>${seg('size',[[0,'A'],[1,'A+'],[2,'A++'],[3,'A+++']])}
+     <div class="grp">${esc(t('a11y.theme'))}</div>${seg('theme',[['',esc(t('a11y.auto'))],['light',esc(t('a11y.light'))],['dark',esc(t('a11y.dark'))]])}
+     <div style="margin-top:12px">${['hc','cb','read','links','motion','big','speak'].map(tog).join('')}</div>
+     <p style="margin-top:16px"><button class="btn" onclick="A11Y.reset()">${esc(t('a11y.reset'))}</button></p></div>`;
+    sheet.setAttribute('aria-labelledby','a11h'); ov.style.display='flex'; document.body.style.overflow='hidden'; if(keep) sheet.scrollTop=sc; else { sheet.scrollTop=0; sheet.focus(); } }
+  function reset(){ S={...DEF}; save(); open(true); }
+  // read the open article aloud (Web Speech API, in the page language if the device has such a voice)
+  function say(){ if(!('speechSynthesis' in window)) return; const ss=speechSynthesis; if(ss.speaking){ ss.cancel(); return; }
+    const parts=[...sheet.querySelectorAll('h2, .big, .adv, .why, .kv')].map(e=>e.innerText.replace(/\s+/g,' ').trim()).filter(Boolean);
+    const u=new SpeechSynthesisUtterance(parts.join('. ')); u.lang=loc().split('-u-')[0]; const v=ss.getVoices().find(v=>v.lang&&v.lang.toLowerCase().startsWith(u.lang.slice(0,2).toLowerCase())); if(v) u.voice=v; u.rate=.95; ss.speak(u); }
+  function sayBtn(){ return S.speak&&('speechSynthesis' in window)?`<button class="btn say" onclick="A11Y.say()">🔊 ${esc(t('a11y.say'))}</button>`:''; }
+  apply();
+  return {open,set,reset,apply,fromAccount,get:()=>S,changed:()=>JSON.stringify(S)!==JSON.stringify(DEF),say,sayBtn};
+})();
 const ACC=(()=>{
   const SB='https://miikcfemhoayjyujkftk.supabase.co', KEY='sb_publishable_Cd4wJJRhZaan3NfzHlToLg_hjC6rdv4', SKEY='sb-miikcfemhoayjyujkftk-auth-token';
   const CHAINS=['Gigatron','WinWin'];
@@ -868,13 +947,15 @@ const ACC=(()=>{
     const up=Object.entries(m).filter(([id])=>!cloud.has(id)).map(([id,v])=>({id,store:v.s,name:v.n,url:v.u||null,price_saved:v.p}));
     if(up.length) await sb.from('cene_saved').upsert(up);
     for(const r of data) if(!m[r.id]) FAV.put(r.id,{p:r.price_saved,d:(r.saved_at||'').slice(0,10),n:r.name,s:r.store,u:r.url||''});
-    const pr=await sb.from('cene_prefs').select('price_alerts,weekly,lang').maybeSingle(); PREF=!!pr.data?.price_alerts; PREFW=!!pr.data?.weekly;
+    const pr=await sb.from('cene_prefs').select('price_alerts,weekly,lang,a11y').maybeSingle(); PREF=!!pr.data?.price_alerts; PREFW=!!pr.data?.weekly;
+    if(pr.data?.a11y) A11Y.fromAccount(pr.data.a11y); else if(A11Y.changed()) saveA11y(A11Y.get());
     if(PREF&&pr.data.lang!==lang) sb.from('cene_prefs').update({lang}).eq('user_id',user.id).then(()=>{});
     tabs(); if(cur==='fav') fav(); }
   // ---- price-drop e-mails (opt-in; sent by the morning run)
   function alertBox(n){ if(!user) return `<div class="alrt"><button class="btn" onclick="ACC.open('alert')">${IC.bell}${esc(T(n?'alOn':'wkOn'))}</button> <span class="meta">${esc(T('alNeed'))}</span></div>`;
     return `<div class="alrt">${n?`<label><input type="checkbox" ${PREF?'checked':''} onchange="ACC.setAlert(this.checked)"> ${esc(T('alOn'))}</label><div class="meta">${esc(T(PREF?'alYes':'alHint')(user.email||''))}</div>`:''}
       <label style="${n?'margin-top:10px':''}"><input type="checkbox" ${PREFW?'checked':''} onchange="ACC.setWeekly(this.checked)"> ${esc(T('wkOn'))}</label><div class="meta">${esc(T('wkHint'))}</div></div>`; }
+  async function saveA11y(o){ if(!sb||!user) return; await sb.from('cene_prefs').upsert({user_id:user.id,a11y:o,lang,updated_at:new Date().toISOString()}); }
   async function setWeekly(on){ const {error}=await sb.from('cene_prefs').upsert({user_id:user.id,weekly:on,lang,updated_at:new Date().toISOString()});
     if(error){ toast(T('bad')); if(cur==='fav') fav(); return; } PREFW=on; ev('alert',{data:{weekly:on}}); toast(T(on?'wkSet':'wkOff')); if(cur==='fav') fav(); }
   async function setAlert(on){ const {error}=await sb.from('cene_prefs').upsert({user_id:user.id,price_alerts:on,lang,updated_at:new Date().toISOString()});
@@ -922,7 +1003,7 @@ const ACC=(()=>{
     const back=o.back!=null?`<p style="margin:10px 0 0"><button class="btn" onclick="openItem(${o.back})">${T('back')}</button></p>`:'';
     if(!o.stores.length){ sheetOpen(head+`<p class="sub" style="margin-top:14px">${esc(T('none'))}</p>`+back); return; }
     const cities=uniq(o.stores.map(s=>s.city));
-    sheetOpen(head+`<div class="mapbar" style="margin-top:12px"><button class="btn" id="mnear">${IC.pin}${T('near')}</button><select class="sel" id="mcity">${opt(cities,'',T('all'))}</select>
+    sheetOpen(head+`<div class="mapbar" style="margin-top:12px"><button class="btn" id="mnear">${IC.pin}${T('near')}</button><select class="sel" id="mcity" aria-label="${esc(T('all'))}">${opt(cities,'',T('all'))}</select>
       <label class="meta" style="margin:0"><input type="checkbox" id="marea"> ${esc(T('area'))}</label></div><div id="smap"></div><div class="meta" id="mcnt"></div><div class="list m stl" id="mlist"></div>`+back);
     let Lf; try{ Lf=await leaflet(); }catch(e){ document.getElementById('smap').style.display='none'; }
     const pts=o.stores.filter(s=>s.lat!=null);
@@ -952,7 +1033,7 @@ const ACC=(()=>{
   // start: restore the session (or finish a sign-in that came back from Google / the email link)
   if(hasSession()||/[?&]code=/.test(location.search)) load().catch(()=>{});
   setTimeout(paint,0);
-  return {open,google,email,code,logout,stock,savedMap,alertBox,setAlert,setWeekly,addTX,repaint:()=>paint(),can:s=>CHAINS.includes(String(s).split(' (')[0]),t:T,
+  return {open,google,email,code,logout,stock,savedMap,alertBox,setAlert,setWeekly,addTX,saveA11y,signed:()=>!!user,repaint:()=>paint(),can:s=>CHAINS.includes(String(s).split(' (')[0]),t:T,
     favNote:()=>user?T('favCloud'):T('favNote')};
 })();
 (async()=>{ if(!L[lang]){ const ok=await Promise.race([needLang(lang),new Promise(r=>setTimeout(()=>r(false),4000))]); if(!ok) lang='sr'; }

@@ -95,6 +95,13 @@ from the Serbian original – every page says so. Check a file after editing wit
 Search-engine pages: Serbian at the root, the other languages under `/<code>/` (all hub and store pages, the biggest `seo_cats_other` categories
 and the top `seo_pages_other` articles), linked with hreflang. Price alerts and the weekly e-mail go out in the language the user had on the site.
 
+## Accessibility
+The "Aa" button in the header opens the accessibility panel: text size (4 steps), light/dark theme, high contrast, colour-blind mode
+(blue/orange + ✓ ✕ symbols), easier reading (Atkinson Hyperlegible font, wider spacing), underlined links, no animations (on by default when the
+device asks for reduced motion), bigger touch targets with a strong keyboard focus, and a "Read aloud" button on articles (the device's speech voices).
+It works for everyone; for signed-in users the settings are also saved to the babl account (`cene_prefs.a11y`) and follow them to every device.
+The page itself has a skip link, a level-one heading, labelled controls and dialog semantics for the article/sign-in sheets (checked with axe-core).
+
 ## Wording of the verdicts
 Verdicts only compare published prices (today's price vs the lowest price the store states for the previous 30 days, which shops
 must show since the 2026 amendments of the Zakon o trgovini). They are worded as facts ("Nije niže od 30 dana", "Iznad 30-dnevnog
