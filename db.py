@@ -414,7 +414,8 @@ def send_price_alerts(all_items, log=print, dry=False, min_pct=0.03, min_abs=200
             ref = it.get("ref") or 0
             now = (by_url.get((it["store"], it.get("url"))) if it.get("url") and it["store"] != "Big Bang" else None) or by_name.get((it["store"], it["name"]))
             if not (ref and now): continue
-            if now <= ref * (1 - min_pct) and ref - now >= min_abs: hits.append(dict(it, price=now))
+            tg = it.get("target") or 0
+            if (tg and now <= tg and now < ref) or (now <= ref * (1 - min_pct) and ref - now >= min_abs): hits.append(dict(it, price=now))
         if not hits: continue
         T = _mailtx(u.get("lang"))
         subj = T["subj"].format(name=hits[0]["name"][:70]) if len(hits) == 1 else T["subjn"].format(n=len(hits))

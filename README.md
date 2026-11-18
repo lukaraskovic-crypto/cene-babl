@@ -84,6 +84,11 @@ The daily e-mail adds these from the `usage_extra(day)` RPC (service role only).
 * **Weekly Top 10**: `/top10.html`, `/rss.xml` (for Telegram/Viber channel auto-posting), opt-in Monday e-mail for signed-in users
   (`cene_prefs.weekly`, `db.send_weekly`), and a ready-to-post text in the owner's morning e-mail.
 * **Report a mistake**: button on every article + footer link → table `feedback` (RPC `log_feedback`, message only, rate-limited) → morning e-mail.
+* **Clearer numbers** (review 18 Nov): cards say "ušteda X din" (vs the 30-day low, only for confirmed reductions) and "prodavnica: −41% · stvarno: −7%";
+  every verdict and statistic has an explanation on hover; dates read "od 10. nov" (price since) or "viđeno 15. nov" (not on offer at the last check);
+  sort by real reduction %, filter "Najjeftinije među prodavnicama"; the same-model list names the matched model code and has "Pogrešno povezan proizvod? Prijavite";
+  the Stores tab shows the share of advertised discounts that are confirmed; a warning appears when prices are older than 9 hours.
+* **Target price alert**: in the Saved tab ("Obavesti me kad cena padne ispod … din", `cene_saved.target`), sent with the price-drop e-mails.
 * **Install on phone**: `manifest.webmanifest`, icons in `static/`.
 
 ## Languages
