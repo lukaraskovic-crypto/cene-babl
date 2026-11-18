@@ -947,7 +947,7 @@ def assemble(raw):
     for a_ in all_items:
         lo, last, n = hist_db.observed(TODAY, a_["store"], a_.get("u", ""), a_["name"])
         a_["l_obs"], a_["obs_days"] = lo, n
-        if last and a_["p"] < last * 0.97 and a_["p"] >= CFG.get("drops_min_price", MIN_PRICE):
+        if last and last * CFG.get("drops_max_fall", 0.5) <= a_["p"] < last * 0.97 and a_["p"] >= CFG.get("drops_min_price", MIN_PRICE):
             drops.append(dict(a_, last=last))
     obs = {ikey(a_): (a_["l_obs"], a_["obs_days"]) for a_ in all_items}
     for it in items:
@@ -1217,7 +1217,10 @@ def write_outputs(items, watch, raw, pm, fails, all_items=(), drops=(), prev=fro
     for d in sorted(drops, key=lambda d: -(d["last"] - d["p"]))[:5]:
         lines.append(f"• {d['name'][:50]} · {d['store']} · {fmt(d['last'])} → {fmt(d['p'])}")
     lines += ["", "Per store:"]
-    for s in summ: lines.append(f"• {s[0]}: {cat_counts.get(s[0], 0)} articles crawled / {s[1]} promos ≥15k / {s[4]} confirmed reductions / {s[6]} above 30-day low")
+    for s in STORES:   # same counting as the website's Stores tab (final verdicts, incl. our own 30-day record)
+        it = [i for i in items if i["store"] == s]
+        vc = Counter("real" if i["v"].startswith("REAL CUT") else "fake" if i["v"].startswith(("FAKE", "No real")) else "raised" if i["v"].startswith("PRICE RAISED") else "" for i in it)
+        lines.append(f"• {s}: {cat_counts.get(s, 0)} articles crawled / {len(it)} promos ≥{fmt(MIN_PRICE)} / {vc['real']} confirmed reductions / {vc['fake']} not lower / {vc['raised']} above 30-day low")
     lines.append(f"• {raw.get('emmezeta','')}")
     lines += ["", f"Status: pametno {pm_done}/{len(set(i['term'] for i in items))}; failures: {'; '.join(fails[:15]) if fails else 'none'}"] + \
              ([f"Website: {CFG['site_url']}"] if CFG.get("site_url") else [])

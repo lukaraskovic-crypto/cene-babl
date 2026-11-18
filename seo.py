@@ -90,15 +90,15 @@ CSS = """:root{--bg:#F6F7F3;--s:#fff;--t:#13201A;--m:#5B6B62;--p:#1F6B45;--b:#DC
 @media (prefers-color-scheme:dark){:root{--bg:#0E1512;--s:#17211C;--t:#E8F0EA;--m:#9AACA1;--p:#5CC48A;--b:#28362E;--good:#5CC48A;--goodbg:#173326;--bad:#F2B8B5;--badbg:#3A1D1B;--warn:#E8C27A;--warnbg:#33290F}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 a{color:var(--p)}.w{max-width:880px;margin:0 auto;padding:0 16px}header{background:var(--s);border-bottom:1px solid var(--b)}
-header .w{display:flex;align-items:center;gap:14px;height:56px}.wm{font-weight:800;font-size:20px;color:var(--t);text-decoration:none}.wm b{color:var(--p)}
-header nav{margin-left:auto;display:flex;gap:14px;font-size:14px}main{padding:22px 0 40px}.bc{font-size:13px;color:var(--m)}.bc a{color:var(--m)}
+header .w{display:flex;align-items:center;flex-wrap:wrap;gap:4px 14px;min-height:56px;padding-top:8px;padding-bottom:8px}.wm{font-weight:800;font-size:20px;color:var(--t);text-decoration:none;white-space:nowrap}.wm b{color:var(--p)}
+header nav{margin-left:auto;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px}header nav a{white-space:nowrap}main{padding:22px 0 40px}.bc{font-size:13px;color:var(--m)}.bc a{color:var(--m)}
 h1{font-size:26px;line-height:1.25;margin:8px 0 12px}h2{font-size:18px;margin:28px 0 10px}.pr{font-size:34px;font-weight:800;color:var(--p)}.was{color:var(--m);text-decoration:line-through;margin-left:10px}
 .tag{display:inline-block;font-size:13px;font-weight:700;border-radius:99px;padding:3px 10px;margin:6px 6px 0 0}.good{color:var(--good);background:var(--goodbg)}.bad{color:var(--bad);background:var(--badbg)}.warn{color:var(--warn);background:var(--warnbg)}
 .box{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:14px 16px;margin:14px 0}dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:0}dt{font-size:13px;color:var(--m)}dd{margin:0;font-weight:700}
 .btn{display:inline-block;padding:9px 16px;border-radius:99px;border:1px solid var(--b);background:var(--s);text-decoration:none;font-weight:700;margin:6px 8px 0 0}.btn.pri{background:var(--p);color:var(--s);border-color:var(--p)}
 .ch{width:100%;height:auto}.ch path{fill:none;stroke:var(--p);stroke-width:2.4}.ch line{stroke:var(--b)}.ch text{font-size:11px;fill:var(--m)}
-ul.l{list-style:none;padding:0;margin:0}ul.l li{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:10px 14px;margin:8px 0;display:flex;gap:12px;justify-content:space-between;align-items:baseline}
-ul.l .n{font-weight:600}ul.l .m{font-size:13px;color:var(--m)}ul.l .p{font-weight:800;white-space:nowrap}.cl{columns:2 220px;font-size:15px}.cl a{display:block;padding:2px 0}
+.l{list-style:none;padding:0;margin:0;counter-reset:n}.l li{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:10px 14px;margin:8px 0;display:flex;gap:12px;justify-content:space-between;align-items:baseline}
+.l li>div:first-child{min-width:0;overflow-wrap:anywhere}.l .n{font-weight:600}.l .m{font-size:13px;color:var(--m)}.l .p{font-weight:800;white-space:nowrap;text-align:right}.l .p .m{display:block}ol.l li{counter-increment:n}ol.l li::before{content:counter(n);flex:none;align-self:center;font-weight:800;color:var(--p);min-width:1.4em}.cl{columns:2 220px;font-size:15px}.cl a{display:block;padding:2px 0}
 table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid var(--b);padding:6px 4px;text-align:left}footer{border-top:1px solid var(--b);color:var(--m);font-size:13px;padding:18px 0 40px}"""
 
 # anonymous page-view log for these static pages (same rules as the main site: no cookies, no IPs, no persistent id; DNT/GPC respected)
