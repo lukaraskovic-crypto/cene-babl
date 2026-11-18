@@ -284,6 +284,21 @@ def owner_extras(day):
     out.append('<h3 style="font:600 15px Arial;margin:22px 0 6px">Prijave posetilaca (greške, predlozi)</h3>')
     out.append("".join(f'<p style="margin:0 0 8px"><b>{esc(f.get("store"))} · {esc((f.get("item") or "")[:70])}</b><br>{esc(f.get("msg"))}'
                        + (f'<br><a href="{esc(f.get("url"))}">{esc(f.get("url"))}</a>' if f.get("url") else "") + "</p>" for f in fb or []) or '<p style="color:#6b7280">–</p>')
+    try:
+        st = _alerts({"action": "stats", "day": day})
+        k = lambda lbl, v: f'<td style="padding:4px 14px 4px 0"><div style="font:700 18px Arial">{v}</div><div style="color:#6b7280;font-size:12px">{lbl}</div></td>'
+        out.append('<h3 style="font:600 15px Arial;margin:22px 0 6px">Prijavljeni korisnici (babl nalog)</h3><table style="border-collapse:collapse"><tr>'
+                   + k("ukupno naloga", st.get("total", 0)) + k("novih juče", st.get("new_day", 0)) + k("prijavljenih juče", st.get("active_day", 0))
+                   + k("koristi cene (★ / obaveštenja)", st.get("cene_users", 0)) + k("obaveštenja o padu cene", st.get("alerts", 0)) + k("nedeljni pregled", st.get("weekly", 0)) + "</tr></table>")
+        rows = "".join(f'<tr><td style="padding:3px 10px 3px 0">{esc(u.get("email"))}</td><td style="padding:3px 10px 3px 0;color:#6b7280">{esc(u.get("created"))}</td>'
+                       f'<td style="padding:3px 10px 3px 0;color:#6b7280">{esc(u.get("last") or "–")}</td><td style="padding:3px 10px 3px 0">{u.get("saved", 0)}</td>'
+                       f'<td style="padding:3px 0">{"🔔" if u.get("alerts") else ""}{" 📅" if u.get("weekly") else ""}</td></tr>' for u in (st.get("users") or [])[:50])
+        if rows:
+            out.append('<table style="border-collapse:collapse;font-size:13px;margin-top:8px"><tr style="color:#6b7280;text-align:left"><th>Nalog</th><th>Otvoren</th>'
+                       '<th>Poslednja prijava</th><th>★</th><th></th></tr>' + rows + "</table>"
+                       '<p style="color:#9ca3af;font-size:12px">Nalog važi i za babl.cc; „koristi cene” = ima sačuvane artikle ili uključena obaveštenja. Lista je samo za vas – ne prosleđujte je.</p>')
+    except Exception as e:
+        out.append(f'<p style="color:#6b7280">Prijavljeni korisnici: nije dostupno ({esc(e)})</p>')
     top = _top10()[:5]
     if top:
         lines = ["Stvarna sniženja danas (proverili smo cene iz 30 dana pre akcije):"]
