@@ -196,24 +196,24 @@ sr:{tabs:{search:'Pretraga',deals:'Akcije',drops:'Pojeftinilo',fav:'Sačuvano',w
       raised:(c,p,l)=>`Uz artikal je istaknut popust od ${c}, a cena je ${p} viša od najniže cene koju prodavnica navodi za poslednjih 30 dana (${l}).`,
       fake:(c,l)=>`Uz artikal je istaknut popust od ${c}, a ista cena (${l}) je prema podacima prodavnice bila najniža i u poslednjih 30 dana.`,
       nochange:l=>`Cena je praktično ista kao najniža u poslednjih 30 dana (${l}).`,
-      store:'prema podacima prodavnice',rec:'prema našoj istoriji cena',ours:'Najnižu cenu pre sniženja ovde računamo iz naše istorije cena: pre nego što je važila sadašnja cena zabeležili smo nižu cenu od one koju prodavnica navodi, ili prodavnica tu cenu ne objavljuje.',plain:'Bez ocene: prodavnica trenutno ne ističe popust za ovaj artikal, pa nema šta da se proverava. Pratimo cenu i prikazujemo njenu istoriju.',unrated:'Bez ocene: za ovaj artikal još nemamo dovoljno podataka (prodavnica ne objavljuje 30-dnevni minimum, a naša istorija cena je kraća od 7 dana).',nolow:'Prodavnica ne objavljuje najnižu cenu iz poslednjih 30 dana, pa popust poredimo sa ostalim prodavnicama.',title:'Zašto ova ocena'},
+      store:'prema podacima prodavnice',rec:'prema našoj istoriji cena',ours:'Najnižu cenu pre sniženja ovde računamo iz naše istorije cena: pre nego što je važila sadašnja cena zabeležili smo nižu cenu od one koju prodavnica navodi, ili prodavnica tu cenu ne objavljuje.',plain:'Bez ocene: prodavnica trenutno ne ističe popust za ovaj artikal, pa nema šta da se proverava. Pratimo cenu i prikazujemo njenu istoriju.',unrated:'Bez ocene: za ovaj artikal još nemamo dovoljno podataka (prodavnica ne objavljuje 30-dnevni minimum, a naša istorija cena je kraća od 7 dana).',nolow:'Prodavnica ne objavljuje najnižu cenu iz 30 dana pre sniženja, a naša istorija cena još ne pokazuje cenu pre ovog popusta – zato ga još ne ocenjujemo. Uporedite cenu sa drugim prodavnicama ispod.',title:'Zašto ova ocena'},
  MV:{'BUY-WORTHY':'Najbolja ponuda','BEST IN MARKET':'Najjeftinije na tržištu','GOOD':'Dobra cena','OK':'Prosečna cena','SKIP':'Ima jeftinije','SINGLE SELLER':'Samo jedan prodavac','NOT ON PAMETNO':'Nije na pametno.rs','NOT CHECKED':'Nije provereno','LISTED, NO CURRENT OFFERS':'Bez drugih ponuda','MODEL VARIANT DIFFERS':'Druga varijanta','STORAGE DIFFERS':'Druga memorija','UNCERTAIN MATCH':'Nesiguran par','LOOKUP FAILED':'Provera nije uspela'},
- crossed:'Precrtana',low30:'Najniža u 30 dana',mkt:'Najniža na tržištu',since:d=>`Ova cena važi od ${d}.`,seen:d=>` Poslednji put viđeno ${d}.`,
+ crossed:'Precrtana',low30:'Najniža u 30 dana',mkt:'Najniža na tržištu',since:(d,a)=>a?`Ova cena važi bar od ${d} (od kada pratimo artikal).`:`Ova cena važi od ${d}.`,seen:d=>` Poslednji put viđeno ${d}.`,
  open:'Otvori u prodavnici',hist:'Kretanje cene',noHist:'Istorija se tek skuplja – raste sa svakim osvežavanjem.',same:'Isti model u drugim prodavnicama',
- deals:{both:'Najbolje ponude',bothS:'Potvrđeno sniženje i najniža cena na tržištu.',real:'Potvrđena sniženja',realS:'Ispod najniže cene iz poslednjih 30 dana.',
+ deals:{both:'Najbolje ponude',bothS:'Potvrđeno sniženje i najniža cena na tržištu.',real:'Potvrđena sniženja',realS:'Bar 5% ispod najniže cene iz 30 dana pre sniženja.',
         raised:'Iznad 30-dnevnog minimuma',raisedS:'Istaknut popust, a cena je viša od najniže cene iz poslednjih 30 dana.',fake:'Nije niže od 30 dana',fakeS:'Istaknut popust, a cena je ista kao najniža cena iz poslednjih 30 dana.',
         pre:'Podignuto pa sniženo',preS:'Istaknut popust, ali je cena u poslednjih 30 dana prvo podignuta – „akcijska“ cena nije niža od cene pre poskupljenja.',
-        up:'Poskupelo',upS:'Cena je danas bar 10% viša od najniže cene iz poslednjih 14 dana.'},
+        up:'Poskupelo',upS:'Cena je danas bar 10% viša od najniže cene iz poslednjih 14 dana – nekad zato što je akcija završena, nekad zato što je cena podignuta.'},
  adv:{cheaper:(s,p,d)=>`Isti model je jeftiniji u prodavnici ${s}: ${p} din (${d} din manje).`,raised:(lo,pk,p)=>`Sačekajte: cena je nedavno podignuta (${lo} → ${pk} din), pa je „snižena“ na ${p} din.`,
       up:p=>`Cena raste: za 14 dana je poskupela ${p}. Ako možete, sačekajte.`,real:'Dobra kupovina: popust je stvaran.',realMin:'Dobra kupovina: popust je stvaran i ovo je najniža cena koju smo zabeležili.',
-      min:'Najniža cena koju smo zabeležili za ovaj artikal.',fake:'Popust nije stvaran – cena nije niža nego ranije, nema razloga za žurbu.',best:n=>`Najniža cena među prodavnicama koje imaju ovaj model (upoređeno sa još ${n}).`,tagRaised:'Podignuto pa sniženo',tagUp:p=>`Poskupelo ${p}`},
+      min:'Najniža cena koju smo zabeležili za ovaj artikal.',fake:'Popust nije stvaran – cena nije niža nego ranije, nema razloga za žurbu.',ended:(lo,p)=>`Akcija je završena: na akciji je bila ${lo} din, sada je ponovo ${p} din.`,tagEnded:'Akcija završena',err:'Ova cena izgleda kao greška u prodavnici (isti ili sličan artikal drugde košta višestruko manje). Proverite cenu pre kupovine.',best:n=>`Najniža cena među prodavnicama koje imaju ovaj model (upoređeno sa još ${n}).`,tagRaised:'Podignuto pa sniženo',tagUp:p=>`Poskupelo ${p}`},
  more:n=>`Prikazano prvih ${n}. Suzi izbor filterima.`,
  drops:'Pojeftinilo od juče',dropsS:'Artikli od 3.000 din. kojima je cena pala bar 3%.',
  G:{G1:'Xiaomi G20 Max',G1s:'Štapni usisivač – gde je trenutno najjeftiniji.',G2:'Tableti sa SIM karticom',G2s:'Najjeftiniji tableti sa LTE ili 5G.',G3:'Tablet za posao: 8 GB+ RAM i SIM',G3s:'Dobre specifikacije za uloženi novac. Prvo stvarna sniženja.',G4:'Laptop za studenta arhitekture',G4s:'Najmanje 32 GB RAM i 12 GB grafičke memorije (za 3D, render i CAD). Memoriju grafike procenjujemo po modelu kartice kad je naziv ne navodi. Prvo stvarna sniženja, pa najviše za novac.'},
  mktBest:'najniža na tržištu',noWatch:'Nema artikala za praćenje u ovom krugu.',
- storesT:'Prodavnice',storesS:'Koliko artikala pratimo i kako se istaknuti popusti odnose prema najnižoj ceni iz poslednjih 30 dana.',st:{n:'Artikala',promos:'Akcija od 3.000 din.',real:'Potvrđeni',fake:'Nisu niži',raised:'Iznad minimuma',avg:'Prosečan navedeni popust'},
+ storesT:'Prodavnice',storesS:'Koliko artikala pratimo i kako se istaknuti popusti odnose prema najnižoj ceni iz 30 dana pre sniženja.',st:{n:'Artikala',promos:'Akcija od 3.000 din.',real:'Potvrđeni',fake:'Nisu niži',raised:'Iznad minimuma',avg:'Prosečan navedeni popust'},
  reportS:'Isti tekst koji stiže u jutarnjem obaveštenju (na engleskom).',
- foot:{h:'Kako ocenjujemo popuste',p1:'Uz sniženje prodavnice navode najnižu cenu iz prethodnog perioda (najmanje 30 dana). Mi automatski poredimo tu, javno objavljenu cenu sa današnjom: ako je današnja bar 5% niža, sniženje je potvrđeno; ako je ista, cena nije niža od 30-dnevnog minimuma; ako je viša, cena je iznad 30-dnevnog minimuma. Ocene su samo poređenje objavljenih cena, ne tvrdnja o namerama prodavca niti pravna ocena. Podaci mogu kasniti ili sadržati greške – pre kupovine proverite cenu kod prodavca.',
+ foot:{h:'Kako ocenjujemo popuste',p1:'Uz sniženje prodavnice navode najnižu cenu iz prethodnog perioda (najmanje 30 dana). Mi automatski poredimo tu, javno objavljenu cenu sa današnjom: ako je današnja bar 5% niža, sniženje je potvrđeno; ako je ista, cena nije niža od 30-dnevnog minimuma; ako je viša, cena je iznad 30-dnevnog minimuma. Kada prodavnica tu cenu ne objavljuje (ili je očigledno pogrešna), koristimo našu istoriju cena iz vremena pre sniženja. Ocene su samo poređenje objavljenih cena, ne tvrdnja o namerama prodavca niti pravna ocena. Podaci mogu kasniti ili sadržati greške – pre kupovine proverite cenu kod prodavca.',
   p2:'Cene sa drugim prodavnicama poredimo preko pametno.rs i po šifri modela. Podaci se osvežavaju četiri puta dnevno.',h2:'Podaci',p3:'Gigatron, WinWin, Big Bang, PC Practic, Eurotehna, Tehnomedia i Ananas (sa svim prodavcima). Sajt nije povezan ni sa jednom prodavnicom.'},
  adm:{title:'Kategorije za detaljnu pretragu',intro:'Štikliraj šta ulazi u punu pretragu. Dugme ispod kopira novu listu i otvara GitHub – tamo nalepi (Cmd/Ctrl+A, pa Cmd/Ctrl+V) i klikni „Commit changes". Samo vlasnik repozitorijuma može da sačuva izmenu. Važi od sledećeg pokretanja.',
   filter:'Pronađi kategoriju',all:'Uključi sve',none:'Isključi sve',save:'Kopiraj i otvori GitHub',copied:'Kopirano. Nalepi u GitHub editor i klikni „Commit changes".',excluded:n=>`${n} isključeno`,
@@ -241,24 +241,24 @@ en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',fav:'Saved',watch:'W
       raised:(c,p,l)=>`A ${c} discount is advertised, and the price is ${p} above the lowest price the store states for the last 30 days (${l}).`,
       fake:(c,l)=>`A ${c} discount is advertised, and according to the store's own data the same price (${l}) was also its lowest in the last 30 days.`,
       nochange:l=>`The price is practically the same as the 30-day low (${l}).`,
-      store:'according to the store',rec:'according to our price history',ours:'Here the lowest price before the reduction comes from our own price history: before the current price began we recorded a lower price than the store states, or the store does not publish one.',plain:'No rating: the store is not advertising a discount on this product, so there is nothing to check. We track the price and show its history.',unrated:'No rating yet: the store does not publish a 30-day low and our own price history is shorter than 7 days.',nolow:"This store doesn't publish its 30-day lowest price, so we compare the discount with other stores.",title:'Why this verdict'},
+      store:'according to the store',rec:'according to our price history',ours:'Here the lowest price before the reduction comes from our own price history: before the current price began we recorded a lower price than the store states, or the store does not publish one.',plain:'No rating: the store is not advertising a discount on this product, so there is nothing to check. We track the price and show its history.',unrated:'No rating yet: the store does not publish a 30-day low and our own price history is shorter than 7 days.',nolow:"The store doesn't publish its lowest price of the 30 days before the reduction, and our price history does not yet show the price before this discount – so we don't rate it yet. Compare the price with other stores below.",title:'Why this verdict'},
  MV:{'BUY-WORTHY':'Best offer','BEST IN MARKET':'Cheapest in market','GOOD':'Good price','OK':'Average price','SKIP':'Cheaper elsewhere','SINGLE SELLER':'Only one seller','NOT ON PAMETNO':'Not on pametno.rs','NOT CHECKED':'Not checked','LISTED, NO CURRENT OFFERS':'No other offers','MODEL VARIANT DIFFERS':'Other variant','STORAGE DIFFERS':'Other storage','UNCERTAIN MATCH':'Uncertain match','LOOKUP FAILED':'Check failed'},
- crossed:'Crossed-out',low30:'30-day low',mkt:'Market low',since:d=>`This price applies since ${d}.`,seen:d=>` Last seen ${d}.`,
+ crossed:'Crossed-out',low30:'30-day low',mkt:'Market low',since:(d,a)=>a?`This price has applied at least since ${d} (when we started tracking it).`:`This price applies since ${d}.`,seen:d=>` Last seen ${d}.`,
  open:'Open in store',hist:'Price history',noHist:'History is still building up – it grows with every refresh.',same:'Same model at other stores',
- deals:{both:'Best offers',bothS:'A confirmed reduction and the lowest price in the market.',real:'Confirmed reductions',realS:'Below the lowest price of the last 30 days.',
+ deals:{both:'Best offers',bothS:'A confirmed reduction and the lowest price in the market.',real:'Confirmed reductions',realS:'At least 5% below the lowest price of the 30 days before the reduction.',
         raised:'Above 30-day low',raisedS:'A discount is advertised, but the price is above the lowest price of the last 30 days.',fake:'Not below 30-day low',fakeS:'A discount is advertised, but the price equals the lowest price of the last 30 days.',
         pre:'Raised, then cut',preS:'A discount is advertised, but in the last 30 days the price was first raised – the “sale” price is not below the price before the increase.',
-        up:'Got dearer',upS:'Today’s price is at least 10% above the lowest price of the last 14 days.'},
+        up:'Got dearer',upS:'Today’s price is at least 10% above the lowest price of the last 14 days – sometimes because a sale ended, sometimes because the price was raised.'},
  adv:{cheaper:(s,p,d)=>`The same model is cheaper at ${s}: ${p} RSD (${d} RSD less).`,raised:(lo,pk,p)=>`Wait: the price was recently raised (${lo} → ${pk} RSD) and then “cut” to ${p} RSD.`,
       up:p=>`The price is rising: up ${p} in 14 days. Wait if you can.`,real:'Good buy: the discount is real.',realMin:'Good buy: the discount is real and this is the lowest price we have recorded.',
-      min:'The lowest price we have recorded for this product.',fake:'The discount is not real – the price is not lower than before, no need to hurry.',best:n=>`The lowest price among the stores that sell this model (compared with ${n} more).`,tagRaised:'Raised, then cut',tagUp:p=>`Up ${p}`},
+      min:'The lowest price we have recorded for this product.',fake:'The discount is not real – the price is not lower than before, no need to hurry.',ended:(lo,p)=>`The sale has ended: it was ${lo} RSD on sale, now it is back at ${p} RSD.`,tagEnded:'Sale ended',err:'This price looks like a shop error (the same or a similar item costs many times less elsewhere). Check the price before buying.',best:n=>`The lowest price among the stores that sell this model (compared with ${n} more).`,tagRaised:'Raised, then cut',tagUp:p=>`Up ${p}`},
  more:n=>`Showing the first ${n}. Narrow it down with filters.`,
  drops:'Cheaper since yesterday',dropsS:'Products from 3,000 RSD whose price fell at least 3%.',
  G:{G1:'Xiaomi G20 Max',G1s:'Stick vacuum – where it is cheapest right now.',G2:'Tablets with a SIM card',G2s:'The cheapest LTE or 5G tablets.',G3:'Work tablet: 8 GB+ RAM and SIM',G3s:'Good specs for the money. Real price cuts first.',G4:'Laptop for an architecture student',G4s:'At least 32 GB RAM and 12 GB of graphics memory (for 3D, rendering and CAD). Graphics memory is inferred from the GPU model when the name doesn\'t state it. Real price cuts first, then best value.'},
  mktBest:'market low',noWatch:'No watched products in this run.',
  storesT:'Stores',storesS:'How many products we track and how advertised discounts compare with the lowest price of the last 30 days.',st:{n:'Products',promos:'Deals from 3,000 RSD',real:'Confirmed',fake:'Not lower',raised:'Above low',avg:'Avg claimed discount'},
  reportS:'The same text as the morning notification.',
- foot:{h:'How we judge discounts',p1:'With a discount, stores state the lowest price of the preceding period (at least 30 days). We automatically compare that published price with today\'s: at least 5% lower means a confirmed reduction; the same means not below the 30-day low; higher means above the 30-day low. Ratings only compare published prices – they are not a claim about a store\'s intentions or a legal assessment. Data can be delayed or contain errors; check the price with the store before buying.',
+ foot:{h:'How we judge discounts',p1:'With a discount, stores state the lowest price of the preceding period (at least 30 days). We automatically compare that published price with today\'s: at least 5% lower means a confirmed reduction; the same means not below the 30-day low; higher means above the 30-day low. When a store does not publish that price (or it is obviously wrong), we use our own price history from before the reduction. Ratings only compare published prices – they are not a claim about a store\'s intentions or a legal assessment. Data can be delayed or contain errors; check the price with the store before buying.',
   p2:'We compare with other stores through pametno.rs and by model number. Data refreshes four times a day.',h2:'Data',p3:'Gigatron, WinWin, Big Bang, PC Practic, Eurotehna, Tehnomedia and Ananas (all sellers). This site is not affiliated with any store.'},
  adm:{title:'Categories in the detailed crawl',intro:'Tick what goes into the full crawl. The button copies the new list and opens GitHub – paste it there (Cmd/Ctrl+A, then Cmd/Ctrl+V) and click "Commit changes". Only the repository owner can save it. Takes effect from the next run.',
   filter:'Find a category',all:'Include all',none:'Exclude all',save:'Copy & open GitHub',copied:'Copied. Paste into the GitHub editor and click "Commit changes".',excluded:n=>`${n} excluded`,
@@ -299,13 +299,16 @@ const uniq=a=>[...new Set(a)].filter(Boolean).sort((x,y)=>x.localeCompare(y,'sr'
 const opt=(vals,sel,all,lab)=>`<option value="">${all}</option>`+vals.map(v=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(lab?lab(v):v)}</option>`).join('');
 const fold=s=>String(s||'').toLowerCase().replace(/đ/g,'d').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const catN=c=>{ c=String(c||'').replace(/\.html$/,'').replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase(); return c?c.charAt(0).toUpperCase()+c.slice(1):''; };
-const X=R.map((r,i)=>{ const h=r[C.hist]||[]; return {i,r,brand:(r[2].split(/\s+/)[0]||'').toUpperCase().replace(/[^A-Z0-9-]/g,''),
+// date the CURRENT PRICE began (the stored date also moves when only the crossed-out price or the stated 30-day low changes)
+const priceSince=(r,h)=>{ if(!h.length) return [r[C.since]||'',0]; let i=h.length; while(i>0&&h[i-1][1]===r[3]) i--; if(i===h.length) return [r[C.since]||'',0]; return [h[i][0], i===0?1:0]; };
+const X=R.map((r,i)=>{ const h=r[C.hist]||[]; const ps=priceSince(r,h); return {i,r,atLeast:ps[1],brand:(r[2].split(/\s+/)[0]||'').toUpperCase().replace(/[^A-Z0-9-]/g,''),
   claimed:r[4]>r[3]?1-r[3]/r[4]:0, real:r[5]?1-r[3]/r[5]:null, vg:VG(r[6]), xs:(r[10]&&r[10]<r[3])?r[10]:0,
-  save:r[5]&&r[5]>r[3]?r[5]-r[3]:0, trend:h.length>1?h[h.length-1][1]/h[0][1]-1:null, since:r[C.since]||'', low:fold(r[0]+' '+r[1]+' '+r[2]), cat:catN(r[1].split(' · seller')[0])}; });
+  save:r[5]&&r[5]>r[3]?r[5]-r[3]:0, trend:h.length>1?h[h.length-1][1]/h[0][1]-1:null, since:ps[0], low:fold(r[0]+' '+r[1]+' '+r[2]), cat:catN(r[1].split(' · seller')[0])}; });
 // one name per category across stores: 'Robot usisivaci' and 'Robot usisivači' are the same filter
 { const best={}; for(const x of X){ const k=fold(x.cat); if(!best[k]||(fold(best[k])===best[k].toLowerCase()&&fold(x.cat)!==x.cat.toLowerCase())) best[k]=x.cat; } for(const x of X) x.cat=best[fold(x.cat)]; }
 // stable id of an article (for links and the saved list)
 const hid=r=>{ const s=r[0]+'|'+(r[0]==='Big Bang'?'':r[C.url])+'|'+r[2]; let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return h.toString(36); };
+for(const x of X) if(x.xs&&x.xs<x.r[3]*0.98&&/BEST IN MARKET|BUY-WORTHY|GOOD|At market/.test(x.r[7]||'')) x.r[7]='SKIP';
 const MG={}; if(C.mg!=null) for(const x of X){ const g=x.r[C.mg]; if(g) (MG[g]=MG[g]||[]).push(x); }
 let HID=null; const byId=id=>{ if(!HID){ HID={}; for(const x of X) HID[hid(x.r)]=x; } return HID[id]; };
 const FAV=(()=>{ let m={}; try{ m=JSON.parse(localStorage.getItem('fav')||'{}')||{}; }catch(e){} const save=()=>{ try{ localStorage.setItem('fav',JSON.stringify(m)); }catch(e){} };
@@ -377,18 +380,23 @@ function favItem(k){ const x=X[k], id=hid(x.r); if(FAV.has(id)) FAV.del(id); els
 const DAY=d=>{ const [m,dd]=d.split('-').map(Number); const t=new Date(D.date); let y=t.getFullYear(); if(m>t.getMonth()+1) y--; return Date.UTC(y,m-1,dd)/864e5; };
 const TD=Date.UTC(+D.date.slice(0,4),+D.date.slice(5,7)-1,+D.date.slice(8,10))/864e5;
 function sig(x){ if(x.sg) return x.sg; const r=x.r, P=r[3]; const h=[]; for(const [d,p] of (r[C.hist]||[])){ if(h.length&&h[h.length-1][0]===d) h[h.length-1]=[d,p]; else h.push([d,p]); }
-  const pts=h.map(([d,p])=>[TD-DAY(d),p]);                  // [days ago, price]
+  let pts=h.map(([d,p])=>[TD-DAY(d),p]);                    // [days ago, price]
+  pts=pts.filter((z,i)=>!(i>0&&i<pts.length-1&&pts[i-1][1]===pts[i+1][1]&&z[1]!==pts[i-1][1]));   // a one-day blip between two equal prices is noise
   const o={};
   // rising: today at least 10% above the lowest price of the last 14 days (shops that raise prices ahead of Black Friday)
-  const w14=pts.filter(z=>z[0]<=14&&z[0]>0).map(z=>z[1]); if(w14.length){ const lo=Math.min(...w14); if(P>=lo*1.10) o.up=P/lo-1; }
+  const w14=pts.filter(z=>z[0]<=14&&z[0]>0); if(w14.length){ const lo=Math.min(...w14.map(z=>z[1])); if(P>=lo*1.10){ o.up=P/lo-1;
+      const iLo=pts.findIndex(z=>z[1]===lo&&z[0]<=14&&z[0]>0); if(pts.slice(0,iLo).some(z=>z[0]<=45&&z[1]>=P*0.98)) o.ended=lo; } }   // back to an earlier price: the sale ended
   // raised before the sale: a discount is shown, and in the last 30 days the price went up >= 8% from a low and the "sale" price is not really below that low
   if(r[4]>P){ let lo=Infinity, peak=0; for(const [a,p] of pts.filter(z=>z[0]<=30)){ if(p<lo){ lo=p; peak=0; } else if(p>peak) peak=p; }
     if(isFinite(lo)&&peak>=lo*1.08&&P>=lo*0.97) o.raised={lo,peak}; }
   const hp=pts.map(z=>z[1]); if(hp.length>=3&&P<=Math.min(...hp)&&Math.max(...hp)>P) o.atMin=1;
   return x.sg=o; }
 function advice(x){ const r=x.r, P=r[3], s=sig(x), g=x.vg;
+  const others=C.mg!=null&&r[C.mg]?(MG[r[C.mg]]||[]).filter(y=>y!==x).map(y=>y.r[3]):[];
+  if((r[8]&&P>r[8]*20)||(others.length&&P>Math.min(...others)*20)) return ['warn',t('adv.err')];   // e.g. Big Bang: HEPA filter at 822.299 din
   if(x.xs&&x.xs<P*0.98) return ['warn',t('adv.cheaper')(r[11],nf(x.xs),nf(P-x.xs))];
   if(s.raised) return ['bad',t('adv.raised')(nf(s.raised.lo),nf(s.raised.peak),nf(P))];
+  if(s.up&&s.ended) return ['warn',t('adv.ended')(nf(s.ended),nf(P))];
   if(s.up) return ['bad',t('adv.up')(pct(s.up))];
   if(g==='real') return ['good',t(s.atMin?'adv.realMin':'adv.real')];
   if(s.atMin) return ['good',t('adv.min')];
@@ -397,7 +405,7 @@ function advice(x){ const r=x.r, P=r[3], s=sig(x), g=x.vg;
   if(grp.length&&grp.every(y=>y.r[3]>=P)) return ['good',t('adv.best')(grp.length)];
   return null; }
 const bro=x=>/^b-roba\b/i.test(x.r[2])?`<span class="tag neu" title="${esc(t('fb.broT'))}">B-roba</span>`:'';
-const advTag=x=>{ const s=sig(x); return bro(x)+(s.raised?`<span class="tag bad">${esc(t('adv.tagRaised'))}</span>`:s.up?`<span class="tag bad">${esc(t('adv.tagUp')(pct(s.up)))}</span>`:''); };
+const advTag=x=>{ const s=sig(x); return bro(x)+(s.raised?`<span class="tag bad">${esc(t('adv.tagRaised'))}</span>`:s.up?(s.ended?`<span class="tag warn">${esc(t('adv.tagEnded'))}</span>`:`<span class="tag bad">${esc(t('adv.tagUp')(pct(s.up)))}</span>`):''); };
 // ---- "report a mistake" / suggestion (anonymous: only the message, the article and the session id for rate limiting)
 // ---- "add to home screen" (only when the browser offers it)
 let INST=null; addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); INST=e; showInstall(); });
@@ -419,10 +427,10 @@ function why(x){ const r=x.r, g=x.vg, l=r[5]?nf(r[5])+' din':'';
 function openItem(k){ const x=X[k], r=x.r; const ks=keyset(r[2]); const hp=(r[C.hist]||[]).map(p=>p[1]).concat([r[3]]); const minH=Math.min(...hp), atMin=hp.length>=3&&r[3]<=minH&&Math.max(...hp)>r[3];
   setHash.a=hid(r); setHash();
   const g=C.mg!=null?r[C.mg]:0;   // match group from the site build (same brand + model code)
-  const same=g?(MG[g]||[]).filter(y=>y!==x).sort((a,b)=>a.r[3]-b.r[3]).slice(0,8):[];
+  const same=g?(MG[g]||[]).filter(y=>y!==x&&y.r[3]>=r[3]*0.35&&y.r[3]<=r[3]*2.9).sort((a,b)=>a.r[3]-b.r[3]).slice(0,8):[];
   sheet.innerHTML=`<div class="sh"><div><div class="meta" style="margin:0 0 6px">${st(r[0])} &nbsp; ${esc(x.cat)}</div><h2>${esc(r[2])}</h2></div><button class="x" onclick="closeS()" aria-label="Zatvori">${IC.x}</button></div>
   <div class="big"><span class="pr num">${money(r[3])}</span>${r[4]?`<span class="was num">${nf(r[4])}</span> <span class="pct bad">−${pct(x.claimed)}</span>`:''} ${vtag(r[6])} ${mtag(r[7])} ${bro(x)} ${atMin?`<span class="tag good">${t('fv.atMin')}</span>`:''}</div>
-  <div class="meta">${x.since?esc(t('since')(dm(x.since))):''}${r[C.seen]&&r[C.seen]!==TODAY?esc(t('seen')(dm(r[C.seen]))):''}</div>
+  <div class="meta">${x.since?esc(t('since')(dm(x.since),x.atLeast)):''}${r[C.seen]&&r[C.seen]!==TODAY?esc(t('seen')(dm(r[C.seen]))):''}</div>
   ${(a=>a?`<div class="adv ${a[0]}">${esc(a[1])}</div>`:'')(advice(x))}
   ${why(x)}
   <dl class="kv num"><div><dt>${t('crossed')}</dt><dd>${f(r[4])||'–'}</dd></div><div><dt>${t('low30')}</dt><dd>${f(r[5])||'–'}</dd></div><div><dt>${t('mkt')}</dt><dd>${f(r[8])||'–'}</dd></div><div><dt>${t('fv.minH')}</dt><dd>${hp.length>1?f(minH):'–'}</dd></div></dl>
@@ -661,11 +669,16 @@ function watch(){ const g={}; D.watch.forEach(w=>(g[w[0].slice(0,2)]=g[w[0].slic
     ${w[8]?`<span class="meta" style="margin:0">${t('mktBest')}: ${nf(w[8])} (${esc(w[9])})</span>`:''}</div></div>`).join('')}</div></section>`).join('')||`<div class="list empty">${t('noWatch')}</div>`;
   mbar.style.display='none'; }
 function stores(){ const cnt={}; R.forEach(r=>cnt[r[0]]=(cnt[r[0]]||0)+1); const mx=Math.max(...Object.values(cnt));
-  const sm=Object.fromEntries(D.summary.map(s=>[s[0],s]));
+  const sm={}; for(const x of X){ const s=x.r[0], m=sm[s]=sm[s]||[s,0,0,0,0,0,0,0]; if(x.r[4]>x.r[3]&&x.r[3]>=3000){ m[1]++; m[7]+=x.claimed; }
+    if(x.vg==='real') m[4]++; else if(x.vg==='fake') m[5]++; else if(x.vg==='raised') m[6]++; }
+  for(const m of Object.values(sm)) m[2]=m[1]?m[7]/m[1]:'';   // same numbers as the deals tab
   const th=(x,c)=>`<th class="${c||''}" style="cursor:default">${x}</th>`;
   main.innerHTML=`<h2>${t('storesT')}</h2><p class="sub">${t('storesS')}</p><div class="list"><table><thead><tr>${th(t('c.store'))}${th(t('st.n'),'r')}${th('','hm')}${th(t('st.promos'),'r')}${th(t('st.real'),'r')}${th(t('st.fake'),'r')}${th(t('st.raised'),'r')}${th(t('st.avg'),'r hm')}</tr></thead><tbody>
    ${Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([s,n])=>{ const m=sm[s]||[]; return `<tr style="cursor:default"><td>${st(s)}</td><td class="r num"><b>${nf(n)}</b></td><td class="hm"><div class="bar"><i style="width:${n/mx*100}%"></i></div></td>
     <td class="r num">${m[1]??''}</td><td class="r num" style="color:var(--good);font-weight:700">${m[4]??''}</td><td class="r num">${m[5]??''}</td><td class="r num" style="color:var(--danger);font-weight:700">${m[6]??''}</td><td class="r hm num">${m[2]!==''&&m[2]!=null?pct(m[2]):''}</td></tr>`; }).join('')}</tbody></table></div>`;
+  if(isM()) main.querySelector('.list').outerHTML=`<div class="list m">${Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([s,n])=>{ const m=sm[s]||[];
+    return `<div class="it" style="cursor:default"><div class="top"><div class="nm">${st(s)}</div><div class="r"><b class="num">${nf(n)}</b> <span class="meta">${esc(t('st.n').toLowerCase())}</span></div></div>
+     <div class="meta">${esc(t('st.promos'))}: <b class="num">${nf(m[1]||0)}</b> · <span style="color:var(--good);font-weight:700">${esc(t('st.real'))}: ${nf(m[4]||0)}</span> · ${esc(t('st.fake'))}: ${nf(m[5]||0)} · <span style="color:var(--danger);font-weight:700">${esc(t('st.raised'))}: ${nf(m[6]||0)}</span></div></div>`; }).join('')}</div>`;
   mbar.style.display='none'; }
 function report(){ main.innerHTML=`<h2>${t('tabs.report')}</h2><p class="sub">${t('reportS')}</p><pre>${esc(D.report||'–')}</pre>`; mbar.style.display='none'; }
 const AD={store:Object.keys(CATS.found)[0]||'',q:'',ex:JSON.parse(JSON.stringify(CATS.exclude||{})),open:{}};

@@ -451,6 +451,7 @@ def analyse(items, pm):
         c = match_check(it, r)
         it["mcheck"] = c
         it["r"] = r if (r and not r.get("e")) else None
+        if c == "OK" and r.get("b") and r["b"] < P * 0.3 and P < r["b"] * 20: c = "UNCERTAIN MATCH"   # e.g. a small Wacom for a 58k one
         if c == "OK":
             it["mkt"] = r["b"]; it["mv"] = market_verdict(P, r)
         elif it.get("xs"):          # no pametno result -> cheapest same model at the other crawled stores
@@ -938,7 +939,7 @@ def assemble(raw):
     #      (WinWin once published "Najniža web cena u prethodnih 30 dana 319.999,00" for a 3.999 din charger with MP price 4.705)
     for x in all_items + items:
         l, p, o = x.get("l"), x.get("p"), x.get("o")
-        if l and p and ((o and l > o * 1.05) or l > p * 3): x["l"] = None
+        if l and p and ((o and l > o * 1.05) or l > p * 3 or l < p * 0.3): x["l"] = None
     # ---- own price history (SQLite) + price drops vs last run
     import catalog
     hist_db = catalog.History(HERE / "history.sqlite")

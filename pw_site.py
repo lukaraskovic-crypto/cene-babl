@@ -39,7 +39,8 @@ def _codes(n):     # model codes: letters + digits, at least 6 characters; "/" s
     out = set()
     for t in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-.+]*", n):
         c = re.sub(r"[^A-Za-z0-9]", "", t).upper()
-        if len(c) >= 6 and re.search(r"[A-Z]", c) and len(re.findall(r"\d", c)) >= 2 and not CODE_JUNK.match(c): out.add(c)
+        if len(c) >= 6 and re.search(r"[A-Z]", c) and len(re.findall(r"\d", c)) >= 2 and not CODE_JUNK.match(c) \
+                and not re.match(r"^\d+[A-Z]{1,4}$", c): out.add(c)          # "300TWS" (Wave/Live 300TWS), "55UHD": series words, not models
     return out
 
 def match_groups(allit):
@@ -81,7 +82,7 @@ def match_groups(allit):
         g = mg[i]; best = None
         for j in by.get(g, ()):
             b = allit[j]
-            if b["store"] != a["store"] and b["p"] and (best is None or b["p"] < best[0]): best = (b["p"], b["store"])
+            if b["store"] != a["store"] and b["p"] and b["p"] >= a["p"] * 0.35 and (best is None or b["p"] < best[0]): best = (b["p"], b["store"])   # 3x cheaper = another product
         cheaper.append(best if best and best[0] < a["p"] else None)
     return mg, cheaper
 
@@ -103,6 +104,7 @@ def build(run_dir, date):
     rows = []
     for n_, a in enumerate(allit):
         i = promo.get(ik(a), {})
+        if i and i.get("p") != a["p"]: i = {}
         cheapest = cheaper[n_]
         key = f"{a['store']}|{a.get('u','')}|{a['name']}"
         h = hist.get(key, [])

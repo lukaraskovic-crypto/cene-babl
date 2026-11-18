@@ -206,7 +206,7 @@ def build(site, log=print):
         same = [b for b in cats.get(ck, []) if b is not a and b.get("path")][:8] if ck in cats else []
         w = why(a)
         tag = f'<span class="tag {VCLS[a["g"]]}">{VNAME[a["g"]]}</span>' if a["g"] in VNAME else ""
-        fig = [("Precrtana cena", nf(a["old"]) + " din" if a["old"] > a["price"] else "–"), ("Najniža u 30 dana (prodavnica)", nf(a["low30"]) + " din" if a["low30"] else "–"),
+        fig = [("Precrtana cena", nf(a["old"]) + " din" if a["old"] > a["price"] else "–"), ("Najniža cena pre sniženja", nf(a["low30"]) + " din" if a["low30"] else "–"),
                ("Najniža zabeležena", nf(min(hp)) + " din" if len(hp) > 1 else "–"), ("Najjeftinije drugde", f"{nf(a['xs'])} din ({e(a['xss'])})" if a["xs"] else "–")]
         spec = "".join(f"<tr><th>{e(k)}</th><td>{e(v)}</td></tr>" for k, v in list(a["specs"].items())[:12])
         tbl = "".join(f"<tr><td>{d.day}. {MON[d.month - 1]} {d.year}.</td><td>{nf(p)} din</td></tr>" for d, p in reversed(hist[-12:]))
