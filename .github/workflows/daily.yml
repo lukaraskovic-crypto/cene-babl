@@ -130,6 +130,25 @@ jobs:
         if: always() && env.MODE != 'site'
         uses: actions/cache/save@v6
         with: { path: state, key: "state-${{ github.run_id }}" }
+      # Top 10 share images (site/share/top10-story.png, top10-square.png, caption.txt) + optional Telegram post.
+      # Never blocks publishing: every step here may fail without stopping the deploy.
+      - name: Restore Playwright browser
+        if: always() && hashFiles('site/top10.json') != ''
+        id: pwcache
+        continue-on-error: true
+        uses: actions/cache@v6
+        with: { path: ~/.cache/ms-playwright, key: "pw-chromium-${{ runner.os }}-${{ hashFiles('requirements.txt') }}" }
+      - name: Share images of the Top 10
+        if: always() && hashFiles('site/top10.json') != ''
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}   # optional: post the story once a day to a Telegram channel
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}       # e.g. @cene_babl or -100…
+        run: |
+          python -c "import playwright" 2>/dev/null || pip install playwright
+          if [ "${{ steps.pwcache.outputs.cache-hit }}" = "true" ]; then python -m playwright install-deps chromium; else python -m playwright install --with-deps chromium; fi
+          python share_top10.py site
       - name: Check the website before publishing
         id: sitecheck
         if: always()
