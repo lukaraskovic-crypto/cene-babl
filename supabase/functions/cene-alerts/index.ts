@@ -2,6 +2,7 @@
 // Caller proves itself with the price-watch project's service key (checked against that project), so no extra secret is needed.
 //   POST {action:"list"}                         → {users:[{user_id,email,lang,alerts,weekly,items:[{id,store,name,url,ref}]}]}
 //   POST {action:"mark", updates:[{user_id,id,price}]} → {ok:n}
+//   POST {action:"stats", day:"YYYY-MM-DD"}      → {total,new_day,active_day,cene_users,alerts,weekly,users:[{email,created,last,provider,saved,alerts,weekly}]}
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const CENE = "https://hxtdrtsqigvuvhaszxna.supabase.co";
@@ -50,6 +51,29 @@ Deno.serve(async (req) => {
       if (!error) n++;
     }
     return json({ ok: n });
+  }
+  if (body.action === "stats") {
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(body.day || "") ? body.day : new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+    const all: any[] = [];
+    for (let page = 1; page < 50; page++) {
+      const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error || !data?.users?.length) break;
+      all.push(...data.users);
+      if (data.users.length < 1000) break;
+    }
+    const { data: saved } = await admin.from("cene_saved").select("user_id");
+    const { data: prefs } = await admin.from("cene_prefs").select("user_id,price_alerts,weekly");
+    const sc: Record<string, number> = {};
+    for (const s of saved || []) sc[s.user_id] = (sc[s.user_id] || 0) + 1;
+    const pf: Record<string, any> = {};
+    for (const p of prefs || []) pf[p.user_id] = p;
+    const d = (x?: string | null) => (x || "").slice(0, 10);
+    const users = all.map((u) => ({ email: u.email || "", created: d(u.created_at), last: d(u.last_sign_in_at),
+      provider: u.app_metadata?.provider || "", saved: sc[u.id] || 0, alerts: !!pf[u.id]?.price_alerts, weekly: !!pf[u.id]?.weekly, cene: !!(sc[u.id] || pf[u.id]) }))
+      .sort((a, b) => (b.last || "").localeCompare(a.last || ""));
+    return json({ day, total: users.length, new_day: users.filter((u) => u.created === day).length,
+      active_day: users.filter((u) => u.last === day).length, cene_users: users.filter((u) => u.cene).length,
+      alerts: users.filter((u) => u.alerts).length, weekly: users.filter((u) => u.weekly).length, users: users.slice(0, 200) });
   }
   return json({ error: "unknown action" }, 400);
 });
