@@ -10,7 +10,7 @@ Every page is plain HTML (readable without JavaScript) and links to the live sit
     python seo.py site        # rebuild the pages from site/data*.js
 
 Languages: Serbian (Latin) at the root, every other language under /<code>/ (en, cir = Serbian Cyrillic, hu, ru, uk, sk, ro, rue, sq, bs, hr,
-bg, mk, rom, zh, tr, ar, fa). Texts come from i18n/<code>.json (machine-translated except sr/en; cir is transliterated from sr).
+bg, mk, rom, zh, tr, ar, fa, es). Texts come from i18n/<code>.json (machine-translated except sr/en; cir is transliterated from sr).
 Other languages get the hub pages, all store pages, the biggest categories and the top articles (config: seo_pages_other, seo_cats_other).
 """
 import json, re, os, sys, html, unicodedata, datetime as dt
@@ -45,13 +45,13 @@ def VG(v):
 
 # ------------------------------------------------------------------ languages
 HERE = Path(__file__).resolve().parent
-LANGS = ["sr", "en", "cir", "hu", "ru", "uk", "sk", "ro", "rue", "sq", "bs", "hr", "bg", "mk", "rom", "zh", "tr", "ar", "fa"]
+LANGS = ["sr", "en", "cir", "hu", "ru", "uk", "sk", "ro", "rue", "sq", "bs", "hr", "bg", "mk", "rom", "zh", "tr", "ar", "fa", "es"]
 NATIVE = {"sr": "Srpski", "en": "English", "cir": "Ћирилица", "hu": "Magyar", "ru": "Русский", "uk": "Українська", "sk": "Slovenčina", "ro": "Română",
           "rue": "Руски", "sq": "Shqip", "bs": "Bosanski", "hr": "Hrvatski", "bg": "Български", "mk": "Македонски", "rom": "Romani", "zh": "中文",
-          "tr": "Türkçe", "ar": "العربية", "fa": "فارسی"}
+          "tr": "Türkçe", "ar": "العربية", "fa": "فارسی", "es": "Español"}
 HREFLANG = {"sr": "sr-Latn", "cir": "sr-Cyrl"}
 OGLOC = {"sr": "sr_RS", "cir": "sr_RS", "en": "en_GB", "hu": "hu_HU", "ru": "ru_RU", "uk": "uk_UA", "sk": "sk_SK", "ro": "ro_RO", "sq": "sq_AL", "bs": "bs_BA",
-         "hr": "hr_HR", "bg": "bg_BG", "mk": "mk_MK", "zh": "zh_CN", "tr": "tr_TR", "ar": "ar_AR", "fa": "fa_IR"}
+         "hr": "hr_HR", "bg": "bg_BG", "mk": "mk_MK", "zh": "zh_CN", "tr": "tr_TR", "ar": "ar_AR", "fa": "fa_IR", "es": "es_ES"}
 RTL = {"ar", "fa"}
 
 _C1 = dict(zip("abvgdđežzijklmnoprstćufhcčšABVGDĐEŽZIJKLMNOPRSTĆUFHCČŠ", "абвгдђежзијклмнопрстћуфхцчшАБВГДЂЕЖЗИЈКЛМНОПРСТЋУФХЦЧШ"))

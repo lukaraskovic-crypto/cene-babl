@@ -94,7 +94,8 @@ The daily e-mail adds these from the `usage_extra(day)` RPC (service role only).
 ## Languages
 SR and EN are the main languages (buttons in the header); the 🌐 menu adds Serbian Cyrillic (ćirilica, transliterated automatically from SR),
 the minority languages Hungarian, Slovak, Romanian, Rusyn, Albanian, Bosnian, Croatian, Bulgarian, Macedonian, Romani, and the migrant languages
-Russian, Ukrainian, Chinese, Turkish, Arabic and Persian (right-to-left). The first visit picks the browser's language; `?lang=ru` forces one.
+Russian, Ukrainian, Chinese, Turkish, Arabic and Persian (right-to-left), plus Spanish. Every first visit opens in Serbian; a visitor's own choice
+is remembered in the browser, and `?lang=ru` (or any code) opens a language directly.
 Texts: `i18n/<code>.js` (website, loaded only when chosen) and `i18n/<code>.json` (search-engine pages and e-mails). They are machine-translated
 from the Serbian original – every page says so. Check a file after editing with `node i18n/validate.js <code>`.
 Search-engine pages: Serbian at the root, the other languages under `/<code>/` (all hub and store pages, the biggest `seo_cats_other` categories

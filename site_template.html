@@ -325,7 +325,7 @@ en:{tabs:{search:'Search',deals:'Deals',drops:'Price drops',fav:'Saved',watch:'W
   filter:'Find a category',all:'Include all',none:'Exclude all',save:'Copy & open GitHub',copied:'Copied. Paste into the GitHub editor and click "Commit changes".',excluded:n=>`${n} excluded`,
   noData:'The list appears after the first full run.',json:'New content of categories.json',notCrawled:'not crawled'}}};
 // ---- languages: SR and EN are built in; the others load from /i18n/<code>.js (machine-translated, English as fallback); Cyrillic is transliterated from SR
-const LANGS={sr:['Srpski','sr-Latn-RS'],en:['English','en-GB'],cir:['Ћирилица','sr-Cyrl-RS'],hu:['Magyar','hu-HU'],ru:['Русский','ru-RU'],uk:['Українська','uk-UA'],sk:['Slovenčina','sk-SK'],ro:['Română','ro-RO'],rue:['Руски','rue'],sq:['Shqip','sq-AL'],bs:['Bosanski','bs-BA'],hr:['Hrvatski','hr-HR'],bg:['Български','bg-BG'],mk:['Македонски','mk-MK'],rom:['Romani','rom'],zh:['中文','zh-CN'],tr:['Türkçe','tr-TR'],ar:['العربية','ar'],fa:['فارسی','fa-IR']};
+const LANGS={sr:['Srpski','sr-Latn-RS'],en:['English','en-GB'],cir:['Ћирилица','sr-Cyrl-RS'],hu:['Magyar','hu-HU'],ru:['Русский','ru-RU'],uk:['Українська','uk-UA'],sk:['Slovenčina','sk-SK'],ro:['Română','ro-RO'],rue:['Руски','rue'],sq:['Shqip','sq-AL'],bs:['Bosanski','bs-BA'],hr:['Hrvatski','hr-HR'],bg:['Български','bg-BG'],mk:['Македонски','mk-MK'],rom:['Romani','rom'],zh:['中文','zh-CN'],tr:['Türkçe','tr-TR'],ar:['العربية','ar'],fa:['فارسی','fa-IR'],es:['Español','es-ES']};
 const RTL=['ar','fa'];
 const CYR=(()=>{ const m={'lj':'љ','nj':'њ','dž':'џ','Lj':'Љ','Nj':'Њ','Dž':'Џ','LJ':'Љ','NJ':'Њ','DŽ':'Џ'}, a='abvgdđežzijklmnoprstćufhcčšABVGDĐEŽZIJKLMNOPRSTĆUFHCČŠ', b='абвгдђежзијклмнопрстћуфхцчшАБВГДЂЕЖЗИЈКЛМНОПРСТЋУФХЦЧШ';
   const KEEP=/^(babl|cene\.babl\.cc|pametno\.rs|Gigatron|WinWin|Big|Bang|Ananas|PC|Practic|Eurotehna|Tehnomedia|Tehnomanija|Google|Instagram|Viber|GitHub|Cmd|Ctrl|iPad|Air|Max|Xiaomi|OLED\w*|B-roba|e-mail|email|Commit|changes|categories\.json|Leaflet|OpenStreetMap)$/i;
@@ -341,8 +341,7 @@ function needLang(code){ return new Promise(res=>{ if(L[code]||addLang(code)) re
   sc.onload=()=>res(addLang(code)); sc.onerror=()=>res(false); document.head.appendChild(sc); }); }
 let lang='sr'; try{ lang=localStorage.getItem('lang')||''; }catch(e){}
 { const q=new URLSearchParams(location.search).get('lang')||new URLSearchParams(location.hash.slice(1)).get('l'); if(q&&LANGS[q]) lang=q;
-  if(!lang){ const nav=(navigator.languages||[navigator.language||'']).map(x=>String(x).toLowerCase()); lang='sr';
-    for(const n of nav){ const b=n.split('-')[0]; if(b==='sr'||b==='sh'){ lang=/cyrl/.test(n)?'cir':'sr'; break; } const c={hu:'hu',ru:'ru',uk:'uk',sk:'sk',ro:'ro',sq:'sq',bs:'bs',hr:'hr',bg:'bg',mk:'mk',zh:'zh',tr:'tr',ar:'ar',fa:'fa',rom:'rom',rue:'rue'}[b]; if(c){ lang=c; break; } } }
+  if(!lang) lang='sr';   // Serbian for every first visit; other languages only by choice or ?lang= link
   if(!LANGS[lang]) lang='sr'; }
 const t=k=>{ const v=k.split('.').reduce((o,p)=>o&&o[p],L[lang]||L.sr); return v==null?(k.split('.').reduce((o,p)=>o&&o[p],L.en)??k):v; };
 const loc=()=>(LANGS[lang]||LANGS.sr)[1];
