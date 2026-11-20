@@ -5,6 +5,8 @@ Daily share images of the Top 10 real reductions (no AI involved), rendered afte
 
 Reads site/top10.json (written by seo.py) and the date in site/data.js, and writes into site/share/:
   top10-story.png            1080x1920 (Instagram / Viber story; text kept out of the top 250 px and bottom 300 px)
+  top10-story.jpg            same story as JPEG (the Instagram API only takes JPEG)
+  stories/<id>.jpg           fixed highlight stories from social/stories.html (Top 10, Zakon, Jezici, Pristupačnost)
   top10-story-YYYY-MM-DD.png dated copy of the story
   top10-square.png           1080x1350 (feed / LinkedIn)
   caption.txt                ready-to-paste Serbian caption with the top 3 and the link
@@ -101,9 +103,35 @@ def render(out_png, doc, W, H):
             pg.evaluate("document.fonts.ready.then(()=>1)")
             over = pg.evaluate("""() => [...document.querySelectorAll('.safe,.list,.it,.mid,h1,.ft')].filter(e => e.scrollHeight > e.clientHeight + 2 || e.scrollWidth > e.clientWidth + 2).length""")
             if over: print(f"share_top10: warning, {over} element(s) overflow in {out_png.name}")
-            pg.screenshot(path=str(out_png), clip={"x": 0, "y": 0, "width": W, "height": H})
+            kw = dict(type="jpeg", quality=88) if out_png.suffix == ".jpg" else {}
+            pg.screenshot(path=str(out_png), clip={"x": 0, "y": 0, "width": W, "height": H}, **kw)
         finally:
             b.close()
+
+
+def stories(share):
+    """Fixed Instagram highlight stories from social/stories.html (one 1080x1920 div.s per story) -> share/stories/<id>.jpg.
+    JPEG because the Instagram API only accepts JPEG; the files are public, so a posting tool can use their URLs."""
+    src = Path(__file__).resolve().parent / "social" / "stories.html"
+    if not src.exists(): return
+    out = share / "stories"; out.mkdir(parents=True, exist_ok=True)
+    from playwright.sync_api import sync_playwright
+    try:
+        with sync_playwright() as p:
+            b = p.chromium.launch()
+            try:
+                pg = b.new_page(viewport={"width": 1100, "height": 2000}, device_scale_factor=1)
+                try: pg.set_content(src.read_text(encoding="utf-8"), wait_until="networkidle", timeout=30000)
+                except Exception: pg.set_content(src.read_text(encoding="utf-8"), wait_until="load", timeout=20000)
+                pg.evaluate("document.fonts.ready.then(()=>1)")
+                ids = pg.evaluate("() => [...document.querySelectorAll('div.s[id]')].map(e => e.id)")
+                for i in ids:
+                    pg.locator("#" + i).screenshot(path=str(out / f"{i}.jpg"), type="jpeg", quality=88)
+                print(f"share_top10: wrote {len(ids)} highlight stories to {out}")
+            finally:
+                b.close()
+    except Exception as e:
+        print(f"share_top10: stories failed: {type(e).__name__}: {e}")
 
 
 def caption(top, day):
@@ -158,6 +186,7 @@ def telegram(share, png, cap, day):
 
 def main():
     site = Path(sys.argv[1] if len(sys.argv) > 1 else "site")
+    stories(site / "share")
     try: top = json.loads((site / "top10.json").read_text(encoding="utf-8"))
     except Exception: top = []
     top = [a for a in top if a.get("price") and a.get("low30") and a["low30"] > a["price"]]
@@ -172,6 +201,8 @@ def main():
         render(story, page(top[:5], day, 1080, 1920, 250, 300,
                            dict(wm=56, h1=58, h1m=28, gap=22, pad=18, nw=68, nf=34, nm=36, st=24, pr=42, pc=40, ft=24)), 1080, 1920)
         shutil.copy(story, share / f"top10-story-{day.isoformat()}.png")
+        render(share / "top10-story.jpg", page(top[:5], day, 1080, 1920, 250, 300,
+                                               dict(wm=56, h1=58, h1m=28, gap=22, pad=18, nw=68, nf=34, nm=36, st=24, pr=42, pc=40, ft=24)), 1080, 1920)
         render(share / "top10-square.png", page(top[:5], day, 1080, 1350, 64, 56,
                                                 dict(wm=46, h1=58, h1m=22, gap=16, pad=16, nw=60, nf=30, nm=33, st=23, pr=38, pc=36, ft=25)), 1080, 1350)
         print(f"share_top10: wrote {share}/top10-story.png, top10-square.png, caption.txt ({day})")
