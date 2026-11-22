@@ -81,7 +81,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    environment: { name: github-pages, url: "${{ steps.deploy.outputs.page_url }}" }
+    environment: { name: github-pages, url: "${{ steps.deploy.outputs.page_url || steps.deploy2.outputs.page_url }}" }
     env:
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}           # daily back-office e-mail (optional)
@@ -162,6 +162,13 @@ jobs:
         with: { path: site }
       - id: deploy
         if: always() && steps.sitecheck.outcome == 'success'
+        continue-on-error: true   # GitHub sometimes fails to find the artifact for a moment; retried below
+        uses: actions/deploy-pages@v5
+      - name: Wait before retrying the publish
+        if: always() && steps.sitecheck.outcome == 'success' && steps.deploy.outcome == 'failure'
+        run: sleep 90
+      - id: deploy2
+        if: always() && steps.sitecheck.outcome == 'success' && steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v5
       - name: Keep run files
         if: always()
