@@ -210,7 +210,7 @@ def raised_before(a, today):
 
 def top_deals(arts, today, n):
     seen, out = set(), []
-    for a in sorted([a for a in arts if a["g"] == "real" and a["low30"] and a["price"] >= 5000 and not (a["xs"] and a["xs"] < a["price"] * 0.98)
+    for a in sorted([a for a in arts if a["g"] == "real" and a["low30"] and a["price"] >= 5000 and a["low30"] <= a["price"] * 2.5 and not (a["xs"] and a["xs"] < a["price"] * 0.98)
                      and not raised_before(a, today)], key=lambda a: -(a["low30"] - a["price"])):
         k = re.sub(r"[^a-z0-9]", "", fold(a["name"]))[:40]
         if k in seen: continue

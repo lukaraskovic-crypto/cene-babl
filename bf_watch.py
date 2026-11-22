@@ -459,6 +459,10 @@ def analyse(items, pm):
                                              else f"CROSS-STORE: cheaper at {it['xs_store']}")
         else:
             it["mkt"] = None; it["mv"] = c
+        # A single wild price in our own record (e.g. a listing parsed from the wrong product card) must not create a
+        # "real cut": distrust our record when it is far above today's price or above the market (store-stated lows are kept).
+        if it["own_src"] == "our record" and own and (own > P * 2.5 or (it["mkt"] and own > it["mkt"] * 1.6)):
+            own = None; it["l_used"] = None; it["real"] = None; it["own_src"] = "store"; it["glitch"] = True
         v = own_verdict(P, it["claimed"], own, it["mkt"])
         if own and it["own_src"] == "our record": v += " (vs our own 30-day record)"
         it["v"] = v
