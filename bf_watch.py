@@ -699,6 +699,8 @@ def main():
         if not a.refresh:
             try: db.import_sheets(log=log)      # one-time copy of the old Google Sheets; does nothing once done
             except Exception as e: log("Google Sheets import failed:", e)
+    if WARNINGS:
+        report = "ℹ NOTE:\n" + "\n".join("• " + x for x in WARNINGS) + "\n\n" + report
     if problems:
         report = "⚠ PROBLEMS – check the run log:\n" + "\n".join("• " + x for x in problems) + "\n\n" + report
     (OUT / "report.txt").write_text(report, encoding="utf-8")
@@ -729,10 +731,17 @@ def main():
     log("done" + (f" with {len(problems)} problem(s): " + "; ".join(problems) if problems else ""))
     if problems: sys.exit(1)      # a failed GitHub run → GitHub e-mails the owner
 
+WARNINGS = []      # reported in the e-mail/report, but do not fail the run
+
 def health_check(counts, light_counts, fails, refresh=False):
     """Problems worth an alert: a store with no articles, a big drop in a store's article count, a crashed job."""
     skip = [x.lower().replace(" ", "") for x in CFG.get("skip_stores", [])]
     active = {k: st for k, st in STORE_NAME.items() if k not in skip and k in STORE_KEYS}
+    blocked = {st for st in active.values() if any(f.startswith(f"{st} blocked by bot protection") for f in fails)}
+    for st in sorted(blocked):   # the shop itself blocks automated visits – nothing to repair on our side, so no failed run
+        WARNINGS.append(f"{st}: the shop's website blocks automated visits (bot protection) – no {st} prices this run; retried every run")
+        log("WARNING:", WARNINGS[-1])
+    active = {k: st for k, st in active.items() if st not in blocked}
     out = []
     if refresh and light_counts is not None:
         for k, st in active.items():
@@ -829,6 +838,13 @@ def crawl(br, raw, fails, only=None, light=False):
                 its, f, ci = fn(ex, known_lows(sk)); fails += f; raw["cats_" + sk] = ci
             except Exception as e:
                 its = []; fails.append(f"{key} crashed: {e}"); log(key, "crashed:", e)
+            if not its:      # nothing at all: is the shop showing a bot-protection page (e.g. Cloudflare "Just a moment...")?
+                try:
+                    stt, wall = br.js("""async()=>{ try{ const r=await fetch('/',{cache:'no-store'}); const t=await r.text();
+                        return [r.status, /Just a moment|cf-chl|challenge-platform|cf_chl_|Attention Required/i.test(t)]; }catch(e){ return [0,false]; } }""")
+                    if wall: fails.append(f"{st} blocked by bot protection (HTTP {stt})"); log(f"{st}: the shop shows a bot-protection page (HTTP {stt}) – no prices this run, retrying next run")
+                except Exception as e:
+                    log(f"{st}: bot-protection check failed:", str(e).splitlines()[0])
             raw[key] = its; save("raw.json", raw)
             # specifications from product pages – only for articles not read before (kept permanently in state/specs.json)
             if not light and sk in CFG.get("spec_stores", ["gigatron", "winwin", "ananas", "eurotehna", "tehnomedia"]) and its:
