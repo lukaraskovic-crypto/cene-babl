@@ -884,19 +884,23 @@ def combine_parts(dirs, fails, refresh=False):
             if k.replace("full_", "").replace("_all", "") not in skipped: fails.append(f"{k}: no data from its job")
     for k in ["gigatron_search", "winwin_search", "tehnomanija_search", "bigbang_search", "ananas_search"]: raw.setdefault(k, {})
     raw.setdefault("emmezeta", "")
-    if not catalog_state(raw, refresh):
+    if not catalog_state(raw, refresh, fails):
         fails.append("refresh without a morning catalogue – no full run since the update; website left as it was (no data from its job)")
         raw["_partial"] = True
     save("raw.json", raw)
     return raw, pm_fresh, light_counts
 
-def catalog_state(raw, refresh):
+def catalog_state(raw, refresh, fails=()):
     """Full run: keep the whole catalogue in state/catalog.json.gz. Refresh: the light crawls (first pages of every category)
     are laid over that morning catalogue, so the website still lists every article, with today's newest prices."""
     import gzip
     p = STATE / "catalog.json.gz"
     try: base = json.loads(gzip.decompress(p.read_bytes()).decode("utf-8")) if p.exists() else {}
     except Exception: base = {}
+    # a shop that blocks automated visits: drop its old catalogue, so yesterday's prices are never shown as today's
+    blocked = {k for k in FULL_KEYS if any(f.startswith(f"{STORE_NAME.get(k.replace('full_', ''), '?')} blocked by bot protection") for f in fails)}
+    for k in blocked:
+        if base.pop(k, None): log(f"{k}: shop blocks automated visits – its older catalogue is no longer shown")
     if not refresh:
         for k in FULL_KEYS:
             if raw.get(k): base[k] = raw[k]
