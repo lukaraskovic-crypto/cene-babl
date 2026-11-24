@@ -326,7 +326,7 @@ async (terms) => {
    const m=pick.match(/^\/([^\/]+)\/(.*)-(\d+)$/)||['','','',''];
    return {u:'https://www.pametno.rs/'+m[1]+'/p-'+m[3], cat:m[1], slug:m[2], t:((d.querySelector('h1')||{}).textContent||'').trim().replace(/\s+/g,' '),
            n:arr.length, b:ps[0]||null, bs:arr[0]?arr[0][0]:'', s2:ps[1]||null, md:med, hi:ps[ps.length-1]||null,
-           nx:arr.slice(1,3).map(x=>x[0]+' '+x[1]).join(', ')}; }
+           nx:arr.slice(1,3).map(x=>x[0]+' '+x[1]).join(', '), of:Object.fromEntries(arr)}; }
  const res=new Array(terms.length).fill(null); let next=0;
  await Promise.all([0,1].map(async w=>{ await sleep(w*2700); while(next<terms.length){ const i=next++; try{ res[i]=await job(terms[i]); }catch(e){ res[i]={e:'ERR'}; } __done++; } }));
  return res; }
@@ -651,6 +651,11 @@ def main():
     if db.enabled() and not (HERE / "history.sqlite").exists():
         try: db.restore_history(HERE / "history.sqlite", log=log)
         except Exception as e: problems.append(f"history restore from the database failed: {e}")
+    for k_, st_ in STORE_NAME.items():   # a shop that blocks automated visits: its prices as listed on pametno.rs today
+        if raw.get("full_" + k_) or not any(f.startswith(f"{st_} blocked by bot protection") for f in fails): continue
+        pmc = dict(sload("pametno_cache.json", {}) or {}); pmc.update(pm_fresh if a.combine else {})
+        raw["full_" + k_] = pametno_store_items(st_, pmc)
+        log(f"{st_}: {len(raw['full_' + k_])} prices taken from pametno.rs (today's lookups) while the shop blocks automated visits")
     items, all_items, drops, counts, all_full = assemble(raw)
     problems += health_check(counts, light_counts, fails, refresh=a.refresh)
     watch = build_watch_candidates(raw, all_items)
@@ -1058,6 +1063,17 @@ def pametno_terms(items, all_items, watch):
                 t_ = term_for(x["name"])
                 if t_ not in terms: terms.append(t_)
     return list(dict.fromkeys(wterms + terms[: CFG.get("pametno_max_terms", 1500)]))
+
+def pametno_store_items(store, cache):
+    """One shop's prices as listed on pametno.rs product pages looked up today (offer 'of' per store). Only today's lookups,
+    so an old price is never shown as current; the link goes to the pametno.rs page, where the shop's offer is listed."""
+    key = re.sub(r"[^a-z0-9]", "", store.lower()); out, seen = [], set()
+    for r in cache.values():
+        if not r or r.get("e") or r.get("d") != TODAY or not isinstance(r.get("of"), dict): continue
+        p = next((v for s_, v in r["of"].items() if re.sub(r"[^a-z0-9]", "", s_.lower()) == key), None)
+        if not p or not r.get("t") or r.get("u") in seen: continue
+        seen.add(r.get("u")); out.append(dict(store=store, n=r["t"], p=int(p), u=r.get("u", ""), cat=r.get("cat", ""), src="pametno"))
+    return out
 
 def pametno_job(a):
     """Parallel job: refresh pametno.rs results for yesterday's term list (stale or missing ones first), within a time limit."""
