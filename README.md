@@ -133,3 +133,12 @@ Pages source GitHub Actions; secret `SUPABASE_SERVICE_KEY`; optional secret `NTF
 DNS CNAME `cene` → `lukaraskovic-crypto.github.io`.
 
 Tehnomanija, DOTmarket and Bazzar show GitHub's servers a Cloudflare bot check, so they are skipped (crawlers kept in catalog.py; their prices still appear in the pametno.rs market comparison).
+
+## WinWin full specifications (private database)
+
+`winwin_specs.py` (workflow **WinWin specifications**, daily 06:17 UTC + manual) reads every live WinWin product page
+and stores its full specification table in Supabase table `winwin_specs`. Query everything through the view
+`winwin_db` (name, category, price, old price, 30-day low, discount %, brand, SKU, EAN, availability, all specs as JSON, URL).
+Both are closed to the website's public key; open them in the Supabase dashboard or with the service key.
+First runs fill the table (~9,000 pages); afterwards only new articles and pages older than 30 days are re-read.
+Manual run with **probe = 5** prints five pages without writing anything — use it if WinWin changes its page layout.

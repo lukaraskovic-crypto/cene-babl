@@ -1,0 +1,37 @@
+name: WinWin specifications
+# Reads every WinWin product page for its full specification table and saves it to Supabase (table winwin_specs,
+# view winwin_db = prices + specs). First runs fill the table; afterwards each run only reads new articles and
+# pages older than 30 days. Runs after the 03:00 UTC full price crawl so the article list is fresh.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Time budget in minutes"
+        default: "100"
+      probe:
+        description: "Probe: read this many pages and print them, write nothing (0 = normal run)"
+        default: "0"
+permissions:
+  contents: read
+concurrency: { group: winwin-specs, cancel-in-progress: false }
+env:
+  TZ: Europe/Belgrade
+  PYTHONUNBUFFERED: "1"
+jobs:
+  specs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: { python-version: "3.12", cache: pip }
+      - name: Install
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Read WinWin specifications
+        run: python winwin_specs.py --minutes "${{ inputs.minutes || '100' }}" --probe "${{ inputs.probe || '0' }}"
