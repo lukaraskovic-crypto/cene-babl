@@ -654,9 +654,11 @@ def main():
     for k_, st_ in STORE_NAME.items():   # a shop that blocks automated visits: its prices as listed on pametno.rs today
         if raw.get("full_" + k_) or not any(f.startswith(f"{st_} blocked by bot protection") for f in fails): continue
         pmc = dict(sload("pametno_cache.json", {}) or {}); pmc.update(pm_fresh if a.combine else {})
-        cur = pametno_store_items(st_, pmc); old = last_known_items(st_)
-        raw["full_" + k_] = cur + old
-        log(f"{st_}: shop blocks automated visits – {len(cur)} prices from pametno.rs today + {len(old)} last-known prices (shown with their date)")
+        ext = external_items(st_); have = {x["u"] for x in ext}
+        cur = [x for x in pametno_store_items(st_, pmc) if x["u"] not in have]
+        old = [x for x in last_known_items(st_) if x["u"] not in have]
+        raw["full_" + k_] = ext + cur + old
+        log(f"{st_}: shop blocks automated visits – {len(ext)} prices from the external source + {len(cur)} from pametno.rs today + {len(old)} last-known prices (shown with their date)")
     items, all_items, drops, counts, all_full = assemble(raw)
     problems += health_check(counts, light_counts, fails, refresh=a.refresh)
     watch = build_watch_candidates(raw, all_items)
@@ -1079,6 +1081,25 @@ def last_known_items(store, days=14):
         log(f"{store}: last-known prices could not be read:", str(e)[:200]); return []
     return [dict(store=store, n=r["name"], p=int(r["price"]), o=r.get("old"), l=r.get("low30"), u=r.get("url") or "", cat=r.get("cat") or "",
                  asof=r["last_seen"]) for r in rows if r.get("price")]
+
+def external_items(store):
+    """Today's prices for one shop from the `external_prices` table – filled by anything outside this crawler (a shop's own
+    feed, hand checks, a separate import job). Columns: store, url, name, cat, price, old, date, source. Only rows dated
+    today count as current; each item keeps its 'source' so the website can say where the price came from."""
+    import db, urllib.parse
+    if not db.enabled(): return []
+    try:
+        rows = db.select("external_prices", "select=url,name,cat,price,old,source&store=eq." + urllib.parse.quote(store) + f"&date=eq.{TODAY}")
+    except Exception as e:
+        log(f"{store}: external prices could not be read:", str(e)[:200]); return []
+    out = []
+    for r in rows:
+        try: p = int(r["price"])
+        except (TypeError, ValueError, KeyError): continue
+        if p <= 0 or not r.get("url") or not r.get("name"): continue
+        o = r.get("old"); o = int(o) if o and int(o) > p else None
+        out.append(dict(store=store, n=r["name"], p=p, o=o, u=r["url"], cat=r.get("cat") or "", src=r.get("source") or "external"))
+    return out
 
 def pametno_store_items(store, cache):
     """One shop's prices as listed on pametno.rs product pages looked up today (offer 'of' per store). Only today's lookups,
