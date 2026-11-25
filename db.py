@@ -96,6 +96,7 @@ def push_articles(all_items, date, full, hist_sqlite=None, specs=None, log=print
     specs = specs or {}
     rows = []
     for a in all_items:
+        if a.get("asof"): continue                               # a blocked shop's last-known price: not seen today
         if not full and a.get("since") != date: continue        # refresh: only articles whose price changed today
         k = (a["store"], a.get("u") or "", a["name"])
         r = dict(store=k[0], url=k[1], name=k[2], cat=a.get("cat", "")[:200], first_seen=first.get(k, date), last_seen=date,

@@ -210,7 +210,7 @@ def raised_before(a, today):
 
 def top_deals(arts, today, n):
     seen, out = set(), []
-    for a in sorted([a for a in arts if a["g"] == "real" and a["low30"] and a["price"] >= 5000 and a["low30"] <= a["price"] * 2.5 and not (a["xs"] and a["xs"] < a["price"] * 0.98)
+    for a in sorted([a for a in arts if a["g"] == "real" and a["low30"] and a["price"] >= 5000 and a["low30"] <= a["price"] * 2.5 and a.get("seen", "") in ("", today.strftime("%m-%d")) and not (a["xs"] and a["xs"] < a["price"] * 0.98)
                      and not raised_before(a, today)], key=lambda a: -(a["low30"] - a["price"])):
         k = re.sub(r"[^a-z0-9]", "", fold(a["name"]))[:40]
         if k in seen: continue
@@ -232,7 +232,7 @@ def build(site, log=print):
         if not r[C["price"]]: continue
         a = dict(store=r[C["store"]], name=r[C["name"]], price=r[C["price"]], old=r[C["old"]] or 0, low30=r[C["low30"]] or 0, url=r[C["url"]] or "",
                  g=VG(r[C["verdict"]]), cat=cat_name(r[C["cat"]]), xs=r[C["xs_price"]] or 0, xss=r[C["xs_store"]] or "", hist=r[C["hist"]] or [],
-                 specs=r[C["specs"]] if isinstance(r[C["specs"]], dict) else {})
+                 specs=r[C["specs"]] if isinstance(r[C["specs"]], dict) else {}, seen=r[C["seen"]] if "seen" in C else "")
         a["id"] = hid(a["store"], a["url"], a["name"])
         a["claimed"] = 1 - a["price"] / a["old"] if a["old"] > a["price"] else 0
         hp = [p for _, p in a["hist"]]

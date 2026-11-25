@@ -654,8 +654,9 @@ def main():
     for k_, st_ in STORE_NAME.items():   # a shop that blocks automated visits: its prices as listed on pametno.rs today
         if raw.get("full_" + k_) or not any(f.startswith(f"{st_} blocked by bot protection") for f in fails): continue
         pmc = dict(sload("pametno_cache.json", {}) or {}); pmc.update(pm_fresh if a.combine else {})
-        raw["full_" + k_] = pametno_store_items(st_, pmc)
-        log(f"{st_}: {len(raw['full_' + k_])} prices taken from pametno.rs (today's lookups) while the shop blocks automated visits")
+        cur = pametno_store_items(st_, pmc); old = last_known_items(st_)
+        raw["full_" + k_] = cur + old
+        log(f"{st_}: shop blocks automated visits – {len(cur)} prices from pametno.rs today + {len(old)} last-known prices (shown with their date)")
     items, all_items, drops, counts, all_full = assemble(raw)
     problems += health_check(counts, light_counts, fails, refresh=a.refresh)
     watch = build_watch_candidates(raw, all_items)
@@ -728,7 +729,7 @@ def main():
         try: db.send_daily_report(TODAY, dt.datetime.now(TZ).hour, log=log)
         except Exception as e: log("daily report e-mail failed:", e); problems.append(f"daily report e-mail failed: {str(e)[:200]}")
         if not raw.get("_partial"):
-            try: db.send_price_alerts(all_full, log=log)
+            try: db.send_price_alerts([x for x in all_full if not x.get("asof")], log=log)
             except Exception as e: log("price alerts failed:", e); problems.append(f"price alerts failed: {str(e)[:200]}")
             if dt.datetime.now(TZ).hour >= 6:
                 try: db.send_weekly(TODAY, log=log)
@@ -951,7 +952,8 @@ def assemble(raw):
     for key in ["full_gigatron", "full_winwin", "full_tehnomanija", "full_bigbang", "full_ananas"] + FULL_ONLY:
         for x in raw.get(key, []):
             if not x.get("p") or x["p"] >= 3_000_000: continue
-            all_items.append(dict(store=x["store"], cat=x.get("cat", ""), cp=x.get("cp", ""), name=x["n"], p=int(x["p"]), o=x.get("o"), l=x.get("l"), u=x.get("u", "")))
+            all_items.append(dict(store=x["store"], cat=x.get("cat", ""), cp=x.get("cp", ""), name=x["n"], p=int(x["p"]), o=x.get("o"), l=x.get("l"), u=x.get("u", ""),
+                                  **({"asof": x["asof"]} if x.get("asof") else {})))
     known = {ikey(i) for i in items}
     for a_ in all_items:
         if ikey(a_) in known: continue
@@ -976,14 +978,14 @@ def assemble(raw):
     for a_ in all_items:
         lo, last, n = hist_db.observed(TODAY, a_["store"], a_.get("u", ""), a_["name"])
         a_["l_obs"], a_["obs_days"] = lo, n
-        if last and last * CFG.get("drops_max_fall", 0.5) <= a_["p"] < last * 0.97 and a_["p"] >= CFG.get("drops_min_price", MIN_PRICE):
+        if not a_.get("asof") and last and last * CFG.get("drops_max_fall", 0.5) <= a_["p"] < last * 0.97 and a_["p"] >= CFG.get("drops_min_price", MIN_PRICE):
             drops.append(dict(a_, last=last))
     obs = {ikey(a_): (a_["l_obs"], a_["obs_days"]) for a_ in all_items}
     for it in items:
         it["l_obs"], it["obs_days"] = obs.get(ikey(it), (None, 0))
         it["pre_low"], it["run_days"] = hist_db.pre_run(TODAY, it["store"], it.get("u", ""), it["name"], it["p"])
         if not it.get("term"): it["term"] = term_for(it["name"])
-    hist_db.save(TODAY, all_items)          # history is kept per listing (URL), before duplicates are merged
+    hist_db.save(TODAY, [a_ for a_ in all_items if not a_.get("asof")])   # history per listing (URL); last-known prices are not today's
     for a_ in all_items:
         lst = hist_db._last.get((a_["store"], a_.get("u", ""), a_["name"])); a_["since"] = lst[0] if lst else TODAY
     counts = Counter(a_["store"] for a_ in all_items)
@@ -1063,6 +1065,20 @@ def pametno_terms(items, all_items, watch):
                 t_ = term_for(x["name"])
                 if t_ not in terms: terms.append(t_)
     return list(dict.fromkeys(wterms + terms[: CFG.get("pametno_max_terms", 1500)]))
+
+def last_known_items(store, days=14):
+    """A blocked shop's articles as last crawled (from the database), each with 'asof' = the day it was last seen. They are
+    shown with that date on the website, but never counted as today's price (history, drops, Top 10, alerts)."""
+    import db, urllib.parse
+    if not db.enabled(): return []
+    since = (dt.date.fromisoformat(TODAY) - dt.timedelta(days=days)).isoformat()
+    try:
+        rows = db.select("articles", "select=url,name,cat,price,old,low30,last_seen&store=eq." + urllib.parse.quote(store) +
+                         f"&last_seen=gte.{since}&last_seen=lt.{TODAY}")
+    except Exception as e:
+        log(f"{store}: last-known prices could not be read:", str(e)[:200]); return []
+    return [dict(store=store, n=r["name"], p=int(r["price"]), o=r.get("old"), l=r.get("low30"), u=r.get("url") or "", cat=r.get("cat") or "",
+                 asof=r["last_seen"]) for r in rows if r.get("price")]
 
 def pametno_store_items(store, cache):
     """One shop's prices as listed on pametno.rs product pages looked up today (offer 'of' per store). Only today's lookups,
