@@ -205,6 +205,8 @@ def main():
                                                dict(wm=56, h1=58, h1m=28, gap=22, pad=18, nw=68, nf=34, nm=36, st=24, pr=42, pc=40, ft=24)), 1080, 1920)
         render(share / "top10-square.png", page(top[:5], day, 1080, 1350, 64, 56,
                                                 dict(wm=46, h1=58, h1m=22, gap=16, pad=16, nw=60, nf=30, nm=33, st=23, pr=38, pc=36, ft=25)), 1080, 1350)
+        render(share / "top10-square.jpg", page(top[:5], day, 1080, 1350, 64, 56,      # feed post as JPEG (Instagram API)
+                                                dict(wm=46, h1=58, h1m=22, gap=16, pad=16, nw=60, nf=30, nm=33, st=23, pr=38, pc=36, ft=25)), 1080, 1350)
         print(f"share_top10: wrote {share}/top10-story.png, top10-square.png, caption.txt ({day})")
     except Exception as e:
         print(f"share_top10: rendering failed: {type(e).__name__}: {e}")
