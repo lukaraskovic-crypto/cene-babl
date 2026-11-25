@@ -19,7 +19,7 @@ import seo
 MIN_PRICE = 3000
 TOP_CATS = 15
 LANGS = ("sr", "en")
-STORES = ["Gigatron", "WinWin", "Big Bang", "Ananas", "PC Practic", "Eurotehna", "Tehnomedia"]
+STORES = ["Gigatron", "WinWin", "Big Bang", "Ananas", "PC Practic", "Eurotehna", "Tehnomedia", "Inelektronik"]
 KEYS = ("confirmed", "not_lower", "above_low", "near_low", "unverified")
 
 

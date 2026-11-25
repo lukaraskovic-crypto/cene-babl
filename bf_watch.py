@@ -56,10 +56,10 @@ STATE = HERE / "state"; STATE.mkdir(exist_ok=True)
 STORE_KEYS = {"gigatron": ["gigatron", "full_gigatron", "emmezeta"], "winwin": ["winwin", "full_winwin"],
               "tehnomanija": ["tehnomanija", "full_tehnomanija"], "bigbang": ["bigbang", "full_bigbang"], "ananas": ["ananas", "full_ananas"],
               "dotmarket": ["full_dotmarket"], "bazzar": ["full_bazzar"], "pcpractic": ["full_pcpractic"], "eurotehna": ["full_eurotehna"],
-              "tehnomedia": ["full_tehnomedia"]}
+              "tehnomedia": ["full_tehnomedia"], "inelektronik": ["full_inelektronik"]}
 STORE_NAME = {"gigatron": "Gigatron", "winwin": "WinWin", "tehnomanija": "Tehnomanija", "bigbang": "Big Bang", "ananas": "Ananas",
-              "dotmarket": "DOTmarket", "bazzar": "Bazzar", "pcpractic": "PC Practic", "eurotehna": "Eurotehna", "tehnomedia": "Tehnomedia"}
-FULL_ONLY = ["full_dotmarket", "full_bazzar", "full_pcpractic", "full_eurotehna", "full_tehnomedia"]   # shops crawled only as full catalogues
+              "dotmarket": "DOTmarket", "bazzar": "Bazzar", "pcpractic": "PC Practic", "eurotehna": "Eurotehna", "tehnomedia": "Tehnomedia", "inelektronik": "Inelektronik"}
+FULL_ONLY = ["full_dotmarket", "full_bazzar", "full_pcpractic", "full_eurotehna", "full_tehnomedia", "full_inelektronik"]   # shops crawled only as full catalogues
 LOW_DAYS = CFG.get("low30_cache_days", 5)       # re-read a product page's 30-day low at least this often
 PM_DAYS = CFG.get("pametno_cache_days", 8)      # pametno.rs results are reused for this many days
 PM_RECHECK = CFG.get("pametno_recheck_days", 7)  # …and looked up again after this many days, or sooner when our price moved >3%
@@ -617,7 +617,7 @@ def main():
     ap.add_argument("--no-pametno", action="store_true")
     ap.add_argument("--dry-run", action="store_true", help="don't write the online database")
     ap.add_argument("--show", action="store_true", help="show the browser window")
-    ap.add_argument("--only", help="crawl just one store (gigatron|winwin|bigbang|ananas|pcpractic|eurotehna) or 'pametno', then stop")
+    ap.add_argument("--only", help="crawl just one store (gigatron|winwin|bigbang|ananas|pcpractic|eurotehna|tehnomedia|inelektronik) or 'pametno', then stop")
     ap.add_argument("--light", action="store_true", help="light intraday crawl: first pages of every category, no product pages")
     ap.add_argument("--combine", nargs="+", help="folders with the parallel jobs' results to merge and analyse")
     ap.add_argument("--refresh", action="store_true", help="intraday update: merge light crawls into the morning catalogue; website + history")
@@ -835,6 +835,7 @@ def crawl(br, raw, fails, only=None, light=False):
                             ("full_eurotehna", "Eurotehna", lambda ex, kn: catalog.full_opencart(br, "Eurotehna", "https://eurotehna.rs", log, exclude=ex, known=kn)),
                             ("full_bazzar", "Bazzar", lambda ex, kn: catalog.full_bazzar(br, log, exclude=ex, known=kn)),
                             ("full_tehnomedia", "Tehnomedia", lambda ex, kn: catalog.full_tehnomedia(br, log, exclude=ex)),
+                            ("full_inelektronik", "Inelektronik", lambda ex, kn: catalog.full_inelektronik(br, log, exclude=ex)),
                             ("full_pcpractic", "PC Practic", lambda ex, kn: catalog.full_magento(br, "PC Practic", "https://pcpractic.rs", log, exclude=ex, known=kn, top=catalog.PCP_TOP, conc=6))]:
             if not want(raw, key, only): continue
             sk = key.replace("full_", "")
@@ -1199,7 +1200,7 @@ def build_watch_candidates(raw, all_items=()):
     return W
 
 def write_outputs(items, watch, raw, pm, fails, all_items=(), drops=(), prev=frozenset()):
-    STORES = ["Gigatron", "WinWin", "Tehnomanija", "Big Bang", "Ananas", "DOTmarket", "Bazzar", "PC Practic", "Eurotehna", "Tehnomedia", "Emmezeta"]
+    STORES = ["Gigatron", "WinWin", "Tehnomanija", "Big Bang", "Ananas", "DOTmarket", "Bazzar", "PC Practic", "Eurotehna", "Tehnomedia", "Inelektronik", "Emmezeta"]
     def r12(i):
         r = i.get("r")
         return [i["v"], i["store"], i["cat"], i["name"], i["p"], i["o"], i["claimed"], (i.get("l_used") or "") if i.get("own_src") != "our record" else f'{i["l_used"]} (our record)', "" if i["real"] is None else i["real"],

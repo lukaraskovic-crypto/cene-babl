@@ -230,6 +230,33 @@ def full_tehnomedia(br, log, max_pages=60, exclude=(), known=None):
     log(f"Tehnomedia full: {len(res['items'])} articles from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))
     return [dict(store="Tehnomedia", **x) for x in res["items"]], [f"Tehnomedia {f}" for f in res["fails"]], _catinfo(res)
 
+# ------------------------------------------------------------------ Inelektronik (own platform; white goods and small appliances)
+# Categories from /xmls/categorySitemap.xml, pages /category/<slug>/<id>/<n>/ (30 per page). Each card has a wishlist button with
+# data-price (price shown), data-oldprice ("Stara cena" on the product page while an "Akcija" runs; 0 = none) and data-category.
+# robots.txt allows /category/ and /product/ (only search, sort and brand filters are disallowed – not used here).
+def full_inelektronik(br, log, max_pages=40, exclude=(), known=None):
+    max_pages = PAGES or max_pages
+    br.go("https://www.inelektronik.rs")
+    res = _run(br, r"""async ([maxPages,ex])=>{
+      const fails=[]; const slug=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'dj').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+      const parseIE=html=>{ const d=new DOMParser().parseFromString(html,'text/html');
+        return [...d.querySelectorAll('.category-product-card')].map(c=>{ const w=c.querySelector('[data-price]'), a=c.querySelector('.product-title a')||c.querySelector('a[href*="/product/"]');
+          if(!w||!a) return null; let p=+w.dataset.price||null, o=+w.dataset.oldprice||null; if(o&&p&&o<=p) o=null;
+          if(!p){ const pr=c.querySelector('.product-price'); p=pr?pN(pr.textContent):null; }
+          return {id:w.dataset.id, n:(w.dataset.naziv||a.textContent).trim().replace(/\s+/g,' '), u:new URL(a.getAttribute('href'),location.origin).href.split('?')[0], p, o, cat:slug(w.dataset.category)}; }).filter(x=>x&&x.u&&x.p&&x.n); };
+      const x=await ft2('/xmls/categorySitemap.xml'); let cats=x?locs(x).map(u=>{ try{ return new URL(u).pathname.replace(/\/$/,''); }catch(e){ return null; } }).filter(p=>p&&/^\/category\/[^/]+\/\d+$/.test(p)):[];
+      if(!cats.length) fails.push('no categories – sitemap: status '+window.__st+', '+(x?x.length:0)+' bytes');
+      const allCats=cats.slice(); cats=cats.filter(p=>notExcluded(p,ex));
+      const items={}; const cnt={};
+      await pool(cats,3,async c=>{ for(let p=1;p<=maxPages;p++){ if(window.__deadline && Date.now()>window.__deadline) break;
+          const t=await ft2(p===1?c+'/':c+'/'+p+'/'); if(!t){ fails.push(c+' p'+p); break; }
+          const arr=parseIE(t); if(!arr.length) break; cnt[c]=(cnt[c]||0)+arr.length;
+          let added=0; arr.forEach(x=>{ if(!items[x.u]){ x.cp=c; items[x.u]=x; added++; } });
+          if(!added||arr.length<30) break; await sleep(250);} },400);
+      return {items:Object.values(items).map(({id,...r})=>r), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [max_pages, list(exclude)])
+    log(f"Inelektronik full: {len(res['items'])} articles from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))
+    return [dict(store="Inelektronik", **x) for x in res["items"]], [f"Inelektronik {f}" for f in res["fails"]], _catinfo(res)
+
 # ------------------------------------------------------------------ Big Bang
 BB_SKIP = r"^/(prijava|signup|kontakt|poslovnice|textovi|outlet|promocije|proizvodi-|korpa|cart|lista-zelja|search|pretraga|nalog|blog|brend|brands)"
 BB_ELECTRO = r"(televiz|projekt|audio|zvucn|video|tv-|laptop|tablet|racunar|monitor|bela-tehnika|frizider|ves-mas|sporet|sudov|susenje|zamrziv|aspirat|bojler|ugradn|mikrotalas|vitrin|klima|grejan|radijator|usisiv|aparati-za-kafu|kafe|mobilni|telefon|satov|gaming|konzol|kamer|foto|dron|stampac|mali-kucni|kuhinjsk|friteze|preciscivac|ovlazivac|odvlazivac|pegl|blender|mikser|soundbar|slusalic)"
