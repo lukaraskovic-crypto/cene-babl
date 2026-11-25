@@ -56,7 +56,7 @@ RTL = {"ar", "fa"}
 
 _C1 = dict(zip("abvgdđežzijklmnoprstćufhcčšABVGDĐEŽZIJKLMNOPRSTĆUFHCČŠ", "абвгдђежзијклмнопрстћуфхцчшАБВГДЂЕЖЗИЈКЛМНОПРСТЋУФХЦЧШ"))
 _C2 = {"lj": "љ", "nj": "њ", "dž": "џ", "Lj": "Љ", "Nj": "Њ", "Dž": "Џ", "LJ": "Љ", "NJ": "Њ", "DŽ": "Џ"}
-_KEEP = re.compile(r"^(babl|cene\.babl\.cc|pametno\.rs|Gigatron|WinWin|Big|Bang|Ananas|PC|Practic|Eurotehna|Tehnomedia|Inelektronik|Tehnomanija|Google|Instagram|Viber|iPad|Air|Max|Xiaomi|OLED\w*|e-mail|email|Top)$", re.I)
+_KEEP = re.compile(r"^(babl|cene\.babl\.cc|pametno\.rs|Gigatron|WinWin|Big|Bang|Ananas|PC|Practic|Eurotehna|Tehnomedia|Inelektronik|Dr|Techno|CT|Shop|Jakov|iSTYLE|Tehnomanija|Google|Instagram|Viber|iPad|Air|Max|Xiaomi|OLED\w*|e-mail|email|Top)$", re.I)
 def _cw(w):
     if _KEEP.match(w) or re.search(r"\d", w) or re.search(r"[qwxy]", w, re.I) or (len(w) > 1 and w == w.upper()): return w
     o, i = "", 0

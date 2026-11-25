@@ -257,6 +257,124 @@ def full_inelektronik(br, log, max_pages=40, exclude=(), known=None):
     log(f"Inelektronik full: {len(res['items'])} articles from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))
     return [dict(store="Inelektronik", **x) for x in res["items"]], [f"Inelektronik {f}" for f in res["fails"]], _catinfo(res)
 
+# ------------------------------------------------------------------ Dr Techno (Magento 2 with the Hyvä theme)
+# Cards are form.product-item: final price in [data-price-type=finalPrice] data-price-amount; the crossed-out "MP cena" is the
+# number in the span's x-html="'MP cena: ' + hyva.formatPrice(…)" (what the visitor sees), used only on "Posebna cena" cards. Pages ?p=N (32 per page).
+# robots.txt: ordinary crawlers allowed; only /*/limit-, /*/sort- and filter paths are disallowed (not used here).
+DT_TOP = r"^/(bela-tehnika|mali-kucni-aparati|klimatizacija-i-grejanje|tv-audio-video|tv-audio-video-foto|racunari-i-komponente|it-uredaji-i-gaming|mobilni-telefoni-i-oprema|telefoni-tableti-i-pametni-satovi|konzole-i-igrice|fotoaparati-i-kamere)(/[a-z0-9-]+){0,3}\.html$"
+
+def full_drtechno(br, log, max_pages=60, exclude=(), known=None):
+    max_pages = PAGES or max_pages
+    br.go("https://drtechno.rs")
+    res = _run(br, r"""async ([top,maxPages,ex])=>{
+      const re=new RegExp(top); const fails=[]; const num=s=>{ const v=parseFloat(s); return isFinite(v)&&v>0?Math.round(v):null; };
+      const parseDT=html=>{ const d=new DOMParser().parseFromString(html,'text/html');
+        return [...d.querySelectorAll('form.product-item')].map(f=>{ const a=f.querySelector('a.product-item-link'); if(!a) return null;
+          const fp=f.querySelector('[data-price-type="finalPrice"]'); const p=fp?num(fp.getAttribute('data-price-amount')):null;
+          const mp=[...f.querySelectorAll('span.price')].find(e=>/MP cena/.test((e.getAttribute('x-html')||'')+e.textContent));
+          let o=null; if(mp){ const m=(mp.getAttribute('x-html')||'').match(/formatPrice\(([\d.]+)\)/); o=m?num(m[1]):num((mp.textContent.match(/([\d.]+)/)||[])[1]); }
+          if(!/Posebna cena/.test(f.textContent)) o=null;   // "MP cena" is shown on every card (plain grey, not struck through); only a "Posebna cena" card claims a reduction
+          if(o&&p&&o<=p) o=null;
+          return {n:a.textContent.trim().replace(/\s+/g,' '), u:new URL(a.getAttribute('href'),location.origin).href.split('?')[0], p, o}; }).filter(x=>x&&x.u&&x.p&&x.n); };
+      const h=await ft2('/'); let cats=h?linksOf(h,re):[];
+      if(!cats.length) fails.push('no categories – homepage: status '+window.__st+', '+(h?h.length:0)+' bytes');
+      const allCats=cats.slice();
+      cats=cats.filter(p=>notExcluded(p,ex) && !/manufacturer-/.test(p)).sort((a,b)=>b.split('/').length-a.split('/').length);   // brand filter pages are not categories
+      const items={}; const cnt={};
+      await pool(cats,3,async c=>{ for(let p=1;p<=maxPages;p++){ if(window.__deadline && Date.now()>window.__deadline) break;
+          const t=await ft2(p===1?c:c+'?p='+p); if(!t){ fails.push(c+' p'+p); break; }
+          if(p===1 && !/toolbar-amount|toolbar-products/.test(t)) break;     // not a product list (e.g. a product page linked from the menu)
+          const arr=parseDT(t); if(!arr.length) break; cnt[c]=(cnt[c]||0)+arr.length;
+          let added=0; arr.forEach(x=>{ if(!items[x.u]){ x.cat=c.split('/').pop().replace(/\.html$/,''); x.cp=c; items[x.u]=x; added++; } });
+          if(!added) break; await sleep(300);} },400);
+      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [DT_TOP, max_pages, list(exclude)])
+    log(f"Dr Techno full: {len(res['items'])} articles from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))
+    return [dict(store="Dr Techno", **x) for x in res["items"]], [f"Dr Techno {f}" for f in res["fails"]], _catinfo(res)
+
+# ------------------------------------------------------------------ CT Shop (Comtrade; own platform)
+# Categories are one-segment paths linked from the homepage menu, product URLs /<category>/<slug>.html, pages ?page=N (24 per page).
+# A card (article.pc-card) shows the "Redovna cena" (regular, in shops) and the "Cena za online" (what an online buyer pays). That is a
+# second price list, not a reduction, so the online price is the price and no crossed-out price is taken unless the card has one (del/s).
+# robots.txt: only cart, checkout, search and the sort/filter/view parameters are disallowed (not used here).
+CT_SKIP = r"^/(auth|checkout|kontakt|o-nama|blog|akcij|brend|brands|pomoc|uslovi|politika|reklamacij|isporuk|nacin|placanj|prodavnic|karijer|newsletter|kolacic|faq|servis|garancij|poklon|vauceri)"
+
+def full_ctshop(br, log, max_pages=60, exclude=(), known=None):
+    max_pages = PAGES or max_pages
+    br.go("https://www.ctshop.rs")
+    res = _run(br, r"""async ([skip,maxPages,ex])=>{
+      const sk=new RegExp(skip); const fails=[];
+      const parseCT=html=>{ const d=new DOMParser().parseFromString(html,'text/html');
+        return [...d.querySelectorAll('article.pc-card')].map(c=>{ const a=c.querySelector('.pc-title a')||c.querySelector('a[href$=".html"]'); if(!a) return null;
+          const on=c.querySelector('.pc-online-price'), mp=c.querySelector('.pc-price-mp .num'), od=c.querySelector('del, s, .pc-old-price');
+          const p=on?pN(on.textContent):(mp?pN(mp.textContent):null); let o=od?pN(od.textContent):null; if(o&&p&&o<=p) o=null;
+          const u=new URL(a.getAttribute('href'),location.origin).href.split('?')[0];
+          return {n:a.textContent.trim().replace(/\s+/g,' '), u, p, o, cat:new URL(u).pathname.split('/')[1]||''}; }).filter(x=>x&&x.u&&x.p&&x.n); };
+      const h=await ft2('/'); let cats=h?linksOf(h,/^\/[a-z0-9-]+$/):[];
+      if(!cats.length) fails.push('no categories – homepage: status '+window.__st+', '+(h?h.length:0)+' bytes'+(/Just a moment|cf-chl/i.test(h||'')?' (bot protection page)':''));
+      const allCats=cats.slice(); cats=cats.filter(p=>!sk.test(p) && notExcluded(p,ex));
+      const items={}; const cnt={};
+      await pool(cats,3,async c=>{ for(let p=1;p<=maxPages;p++){ if(window.__deadline && Date.now()>window.__deadline) break;
+          const t=await ft2(p===1?c:c+'?page='+p); if(!t){ fails.push(c+' p'+p); break; }
+          const arr=parseCT(t); if(!arr.length) break; cnt[c]=(cnt[c]||0)+arr.length;
+          let added=0; arr.forEach(x=>{ if(!items[x.u]){ x.cp=c; items[x.u]=x; added++; } });
+          if(!added||arr.length<24) break; await sleep(300);} },400);
+      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [CT_SKIP, max_pages, list(exclude)])
+    log(f"CT Shop full: {len(res['items'])} articles from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))
+    return [dict(store="CT Shop", **x) for x in res["items"]], [f"CT Shop {f}" for f in res["fails"]], _catinfo(res)
+
+# ------------------------------------------------------------------ Jakov (jakov.rs; Next.js)
+# Categories from /sitemap_categories.xml (flat /kategorije/<slug>; landing pages without products are skipped after one fetch),
+# pages ?page=N (36 per page). A card is the link to /kategorije/<cat>/proizvodi/<slug>: name in the image alt, crossed-out price in
+# span.line-through, price in the large span. robots.txt allows all of this (only cart, account, search, sort and "paginate" are disallowed).
+JK_SKIP = r"(kacig|merdevin|igrack|igracke|pet-shop|ljubimc|obuc|odec|sport|auto-i-moto|moto-|alat|basta|bastensk|kancelarij|skolsk|namestaj|stolic|bicikl|kamp|ribolov|kozmetik|parfem|nakit|torb|rancev|posud|dekor|lego|lutk|drustvene-igre|nameštaj)"
+
+def full_jakov(br, log, max_pages=40, exclude=(), known=None):
+    max_pages = PAGES or max_pages
+    br.go("https://jakov.rs")
+    res = _run(br, r"""async ([skip,maxPages,ex])=>{
+      const sk=new RegExp(skip); const fails=[];
+      const parseJK=html=>{ const d=new DOMParser().parseFromString(html,'text/html'); const out={};
+        d.querySelectorAll('a[href*="/proizvodi/"]').forEach(a=>{ const img=a.querySelector('img'); if(!img) return;
+          const u=new URL(a.getAttribute('href'),location.origin).href.split('?')[0]; if(out[u]) return;
+          const od=a.querySelector('span.line-through'), pe=[...a.querySelectorAll('span')].find(s=>/text-xl/.test(s.className)&&/RSD/.test(s.textContent));
+          const p=pe?pN(pe.textContent):null; let o=od?pN(od.textContent):null; if(o&&p&&o<=p) o=null;
+          out[u]={n:(img.getAttribute('alt')||img.getAttribute('title')||'').trim().replace(/\s+/g,' '), u, p, o, cat:(u.split('/kategorije/')[1]||'').split('/')[0]}; });
+        return Object.values(out).filter(x=>x.p&&x.n); };
+      const x=await ft2('/sitemap_categories.xml'); let cats=x?locs(x).map(u=>{ try{ return new URL(u).pathname.replace(/\/$/,''); }catch(e){ return null; } }).filter(p=>p&&/^\/kategorije\/[^/]+$/.test(p)):[];
+      if(!cats.length) fails.push('no categories – sitemap: status '+window.__st+', '+(x?x.length:0)+' bytes');
+      const allCats=cats.slice(); cats=cats.filter(p=>!sk.test(p) && notExcluded(p,ex));
+      const items={}; const cnt={};
+      await pool(cats,4,async c=>{ for(let p=1;p<=maxPages;p++){ if(window.__deadline && Date.now()>window.__deadline) break;
+          const t=await ft2(p===1?c:c+'?page='+p); if(!t){ fails.push(c+' p'+p); break; }
+          const arr=parseJK(t).filter(y=>y.cat===c.split('/').pop()); if(!arr.length) break; cnt[c]=(cnt[c]||0)+arr.length;
+          let added=0; arr.forEach(y=>{ if(!items[y.u]){ y.cp=c; items[y.u]=y; added++; } });
+          if(!added) break; await sleep(250);} },300);
+      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [JK_SKIP, max_pages, list(exclude)])
+    log(f"Jakov full: {len(res['items'])} articles from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))
+    return [dict(store="Jakov", **x) for x in res["items"]], [f"Jakov {f}" for f in res["fails"]], _catinfo(res)
+
+# ------------------------------------------------------------------ iSTYLE (istyle.rs; Shopify, Apple reseller)
+# Shopify's public /products.json (250 per page): price and compare_at_price per variant. Each product here is one configuration,
+# so the first variant in stock is taken; sold-out products and built-to-order (CTO) Macs are skipped. robots.txt does not disallow /products.json.
+def full_istyle(br, log, max_pages=40, exclude=(), known=None):
+    max_pages = PAGES or max_pages
+    br.go("https://istyle.rs")
+    res = _run(br, r"""async ([maxPages,ex])=>{
+      const fails=[]; const items={}; const cnt={}; const slug=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'dj').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+      for(let pg=1; pg<=maxPages; pg++){ if(window.__deadline && Date.now()>window.__deadline) break;
+        const t=await ft2('/products.json?limit=250&page='+pg); if(!t){ fails.push('products.json p'+pg+' status '+window.__st); break; }
+        let arr; try{ arr=JSON.parse(t).products||[]; }catch(e){ fails.push('products.json p'+pg+' not JSON'+(/Just a moment|cf-chl/i.test(t)?' (bot protection page)':'')); break; }
+        if(!arr.length) break;
+        for(const pr of arr){ if(/\bCTO\b/.test(pr.title||'')) continue;   // built-to-order Mac configurations (thousands of them) – standard models only
+          const v=(pr.variants||[]).find(v=>v.available); if(!v) continue;
+          const p=Math.round(+v.price)||null; let o=v.compare_at_price?Math.round(+v.compare_at_price):null; if(o&&p&&o<=p) o=null;
+          const cat=slug(pr.product_type)||'apple'; if(ex.includes('/'+cat)) continue;
+          const u=location.origin+'/products/'+pr.handle; if(p && !items[u]){ items[u]={n:pr.title.trim().replace(/\s+/g,' '), u, p, o, cat, cp:'/'+cat}; cnt['/'+cat]=(cnt['/'+cat]||0)+1; } }
+        await sleep(500); }
+      return {items:Object.values(items), fails, cats:Object.keys(cnt).length, cnt, allCats:Object.keys(cnt)}; }""", [max_pages, list(exclude)])
+    log(f"iSTYLE full: {len(res['items'])} articles in stock" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))
+    return [dict(store="iSTYLE", **x) for x in res["items"]], [f"iSTYLE {f}" for f in res["fails"]], _catinfo(res)
+
 # ------------------------------------------------------------------ Big Bang
 BB_SKIP = r"^/(prijava|signup|kontakt|poslovnice|textovi|outlet|promocije|proizvodi-|korpa|cart|lista-zelja|search|pretraga|nalog|blog|brend|brands)"
 BB_ELECTRO = r"(televiz|projekt|audio|zvucn|video|tv-|laptop|tablet|racunar|monitor|bela-tehnika|frizider|ves-mas|sporet|sudov|susenje|zamrziv|aspirat|bojler|ugradn|mikrotalas|vitrin|klima|grejan|radijator|usisiv|aparati-za-kafu|kafe|mobilni|telefon|satov|gaming|konzol|kamer|foto|dron|stampac|mali-kucni|kuhinjsk|friteze|preciscivac|ovlazivac|odvlazivac|pegl|blender|mikser|soundbar|slusalic)"
