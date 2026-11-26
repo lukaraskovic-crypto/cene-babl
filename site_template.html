@@ -473,9 +473,15 @@ function sig(x){ if(x.sg) return x.sg; const r=x.r, P=r[3]; const h=[]; for(cons
     if(isFinite(lo)&&peak>=lo*1.08&&P>=lo*0.97) o.raised={lo,peak}; }
   const hp=pts.map(z=>z[1]); if(hp.length>=3&&P<=Math.min(...hp)&&Math.max(...hp)>P) o.atMin=1;
   return x.sg=o; }
+// a shop's price error: >=3x its own lowest price of the last 30 days (e.g. Big Bang prices growing 25% a day since 10 Nov),
+// >=8x the cheapest other shop with the same model, or >20x the stated 30-day low. Shown with a warning, kept out of the lists.
+function isErr(x){ if(x.er!==undefined) return x.er; const r=x.r, P=r[3];
+  const h=(r[C.hist]||[]).filter(([d])=>{ const a=TD-DAY(d); return a>0&&a<=30; }).map(z=>z[1]); const lo=h.length?Math.min(...h):0;
+  const others=C.mg!=null&&r[C.mg]?(MG[r[C.mg]]||[]).filter(y=>y!==x).map(y=>y.r[3]):[];
+  return x.er=!!((lo&&P>=lo*3)||(others.length&&P>=Math.min(...others)*8)||(r[8]&&P>r[8]*20)); }
 function advice(x){ const r=x.r, P=r[3], s=sig(x), g=x.vg;
   const others=C.mg!=null&&r[C.mg]?(MG[r[C.mg]]||[]).filter(y=>y!==x).map(y=>y.r[3]):[];
-  if((r[8]&&P>r[8]*20)||(others.length&&P>Math.min(...others)*20)) return ['warn',t('adv.err')];   // e.g. Big Bang: HEPA filter at 822.299 din
+  if(isErr(x)) return ['warn',t('adv.err')];   // e.g. Big Bang: HEPA filter at 822.299 din
   if(x.xs&&x.xs<P*0.98) return ['warn',t('adv.cheaper')(r[11],nf(x.xs),nf(P-x.xs))];
   if(s.raised) return ['bad',t('adv.raised')(nf(s.raised.lo),nf(s.raised.peak),nf(P))];
   if(s.up&&s.ended) return ['warn',t('adv.ended')(nf(s.ended),nf(P))];
@@ -487,7 +493,7 @@ function advice(x){ const r=x.r, P=r[3], s=sig(x), g=x.vg;
   if(grp.length&&grp.every(y=>y.r[3]>=P)) return ['good',t('adv.best')(grp.length)];
   return null; }
 const bro=x=>/^b-roba\b/i.test(x.r[2])?`<span class="tag neu" title="${esc(t('fb.broT'))}">B-roba</span>`:'';
-const advTag=x=>{ const s=sig(x); return bro(x)+(s.raised?`<span class="tag bad">${esc(t('adv.tagRaised'))}</span>`:s.up?(s.ended?`<span class="tag warn">${esc(t('adv.tagEnded'))}</span>`:`<span class="tag bad">${esc(t('adv.tagUp')(pct(s.up)))}</span>`):''); };
+const advTag=x=>{ if(isErr(x)) return bro(x); const s=sig(x); return bro(x)+(s.raised?`<span class="tag bad">${esc(t('adv.tagRaised'))}</span>`:s.up?(s.ended?`<span class="tag warn">${esc(t('adv.tagEnded'))}</span>`:`<span class="tag bad">${esc(t('adv.tagUp')(pct(s.up)))}</span>`):''); };
 // ---- "report a mistake" / suggestion (anonymous: only the message, the article and the session id for rate limiting)
 // ---- "add to home screen" (only when the browser offers it)
 let INST=null; addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); INST=e; showInstall(); });
@@ -722,7 +728,7 @@ function openF(mode){ closePop(); fs.style.display='flex'; document.body.style.o
 function closeF(){ if(fs.style.display!=='flex') return; fs.style.display='none'; document.body.style.overflow=''; if(cur==='search') refreshTool(); }
 mbf.onclick=()=>openF('filters'); mbs.onclick=()=>openF('sort');
 const DS={tab:'both',store:''}; const DL={both:{sort:'save',dir:-1},real:{sort:'save',dir:-1},raised:{sort:'claimed',dir:-1},fake:{sort:'claimed',dir:-1},up:{sort:'trend',dir:-1},pre:{sort:'claimed',dir:-1}};
-function deals(){ const base=X.filter(x=>!DS.store||x.r[0]===DS.store);
+function deals(){ const base=X.filter(x=>(!DS.store||x.r[0]===DS.store)&&!isErr(x));
   const sets={both:base.filter(x=>x.vg==='real'&&/BUY-WORTHY|BEST IN MARKET/.test(x.r[7])),real:base.filter(x=>x.vg==='real'),raised:base.filter(x=>x.vg==='raised'),fake:base.filter(x=>x.vg==='fake'),
     pre:base.filter(x=>x.r[3]>=3000&&sig(x).raised),up:base.filter(x=>x.r[3]>=3000&&sig(x).up)};
   if(!DS.picked){ DS.picked=1; DS.tab=Object.keys(sets).find(k=>sets[k].length)||'both'; }
