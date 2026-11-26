@@ -1217,7 +1217,7 @@ def write_outputs(items, watch, raw, pm, fails, all_items=(), drops=(), prev=fro
     summ = []
     for s in STORES:
         it = [i for i in items if i["store"] == s]
-        w = [i for i in it if i.get("l")]
+        w = [i for i in it if i.get("l") and i.get("real") is not None]   # an article whose low was set aside (glitch guard) has no verdict
         summ.append([s, len(it), round(sum(i["claimed"] for i in it) / len(it), 4) if it else "", len(w),
                      sum(1 for i in w if i["real"] >= .05), sum(1 for i in w if i["real"] < .05 and i["p"] <= i["l"] * 1.02),
                      sum(1 for i in w if i["p"] > i["l"] * 1.02), round(sum(i["real"] for i in w) / len(w), 4) if w else ""])
