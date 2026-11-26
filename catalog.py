@@ -326,13 +326,14 @@ def full_ctshop(br, log, max_pages=60, exclude=(), known=None):
 # Categories from /sitemap_categories.xml (flat /kategorije/<slug>; landing pages without products are skipped after one fetch),
 # pages ?page=N (36 per page). A card is the link to /kategorije/<cat>/proizvodi/<slug>: name in the image alt, crossed-out price in
 # span.line-through, price in the large span. robots.txt allows all of this (only cart, account, search, sort and "paginate" are disallowed).
+JK_KEEP = r"/kategorije/(laptop|desktop-racunari|brand-racunari|all-in-one|mini-pc|intel-konfiguracije|amd-konfiguracije|konfiguracije-sa-os|ugd-racunari|monitori$|gaming-monitori|tablet|televizori|tv-$|projektor|mobilni-telefoni|smart-satovi|slusalice|bluetooth-zvucnici|zvucnici|soundbar|bubice|konzole|playstation|xbox|nintendo|procesori|intel-procesori|amd-procesori|graficke-karte|pci-express|maticne-ploce|ssd|hard-diskovi|memorije|napajanja|kucista|stampaci|skeneri|ruteri|fotoaparati|kamere|dronovi|klima-uredaji|inverter-klime|frizideri|zamrzivaci|ves-masine|masine-za-pranje|masine-za-susenje|sporeti|ugradne-rerne|ugradne-ploce|mikrotalasne|bojleri|aspiratori|usisivaci$|robot-usisivaci|stapni-usisivaci|aparati-za-kafu|espresso|friteze|blenderi|mikseri|pegle|preciscivaci-vazduha|grejalice|radijatori|uljni-radijatori|el-sporeti|kuhinjski-roboti|multicookeri|tosteri|ketleri|fenovi|aparati-za-brijanje|trimeri|e-trotineti|elektricni-trotineti)"
 JK_SKIP = r"(kacig|merdevin|igrack|igracke|pet-shop|ljubimc|obuc|odec|sport|auto-i-moto|moto-|alat|basta|bastensk|kancelarij|skolsk|namestaj|stolic|bicikl|kamp|ribolov|kozmetik|parfem|nakit|torb|rancev|posud|dekor|lego|lutk|drustvene-igre|nameštaj)"
 
 def full_jakov(br, log, max_pages=40, exclude=(), known=None):
     max_pages = PAGES or max_pages
     br.go("https://jakov.rs")
-    res = _run(br, r"""async ([skip,maxPages,ex])=>{
-      const sk=new RegExp(skip); const fails=[];
+    res = _run(br, r"""async ([keep,skip,maxPages,ex])=>{
+      const kp=new RegExp(keep), sk=new RegExp(skip); const fails=[];
       const parseJK=html=>{ const d=new DOMParser().parseFromString(html,'text/html'); const out={};
         d.querySelectorAll('a[href*="/proizvodi/"]').forEach(a=>{ const img=a.querySelector('img'); if(!img) return;
           const u=new URL(a.getAttribute('href'),location.origin).href.split('?')[0]; if(out[u]) return;
@@ -342,14 +343,14 @@ def full_jakov(br, log, max_pages=40, exclude=(), known=None):
         return Object.values(out).filter(x=>x.p&&x.n); };
       const x=await ft2('/sitemap_categories.xml'); let cats=x?locs(x).map(u=>{ try{ return new URL(u).pathname.replace(/\/$/,''); }catch(e){ return null; } }).filter(p=>p&&/^\/kategorije\/[^/]+$/.test(p)):[];
       if(!cats.length) fails.push('no categories – sitemap: status '+window.__st+', '+(x?x.length:0)+' bytes');
-      const allCats=cats.slice(); cats=cats.filter(p=>!sk.test(p) && notExcluded(p,ex));
+      const allCats=cats.slice(); cats=cats.filter(p=>kp.test(p) && !sk.test(p) && notExcluded(p,ex));   // jakov.rs is a general marketplace – electronics only
       const items={}; const cnt={};
       await pool(cats,4,async c=>{ for(let p=1;p<=maxPages;p++){ if(window.__deadline && Date.now()>window.__deadline) break;
           const t=await ft2(p===1?c:c+'?page='+p); if(!t){ fails.push(c+' p'+p); break; }
           const arr=parseJK(t).filter(y=>y.cat===c.split('/').pop()); if(!arr.length) break; cnt[c]=(cnt[c]||0)+arr.length;
           let added=0; arr.forEach(y=>{ if(!items[y.u]){ y.cp=c; items[y.u]=y; added++; } });
           if(!added) break; await sleep(250);} },300);
-      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [JK_SKIP, max_pages, list(exclude)])
+      return {items:Object.values(items), fails:fails.slice(0,20), cats:cats.length, cnt, allCats}; }""", [JK_KEEP, JK_SKIP, max_pages, list(exclude)])
     log(f"Jakov full: {len(res['items'])} articles from {res['cats']} categories" + (f" | problems: {res['fails'][:3]}" if res["fails"] else ""))
     return [dict(store="Jakov", **x) for x in res["items"]], [f"Jakov {f}" for f in res["fails"]], _catinfo(res)
 
