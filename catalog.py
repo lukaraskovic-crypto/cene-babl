@@ -394,7 +394,11 @@ def full_bigbang(br, log, max_pages=40, exclude=(), known=None):
         for(const param of ['page','p']){ let added2=0;
           for(let p=1;p<=maxPages;p++){ const t=await ft2(c+'?'+param+'='+p);
             if(!t){ fails.push(c); break; } const arr=parseBB(t); let added=0; cnt[c]=(cnt[c]||0)+arr.length;
-            arr.forEach(x=>{ if(x.id && x.p && !items[x.id]){ items[x.id]={n:x.n, u:location.origin+c, p:Math.round(x.p), o:x.d>0?Math.round(x.p+x.d):null, l:null, cat:x.c||c.slice(1), cp:c}; added++; } });
+            // product links: each card is <a class="product" href=".../<slug>-<id>">; the id matches the data layer's item_id
+            const L={}; new DOMParser().parseFromString(t,'text/html').querySelectorAll('a.product[href]').forEach(a=>{ const m=a.getAttribute('href').match(/-(\d+)\/?$/); if(m) L[m[1]]=new URL(a.getAttribute('href'),location.origin).href; });
+            // Big Bang shows no crossed-out price (only the price and a VIP-club price); the data layer's "discount" is an internal
+            // marketing figure that visitors never see, so it is NOT taken as a claimed old price
+            arr.forEach(x=>{ if(x.id && x.p && !items[x.id]){ items[x.id]={n:x.n, u:L[x.id]||location.origin+c, p:Math.round(x.p), o:null, l:null, cat:x.c||c.slice(1), cp:c}; added++; } });
             if(p===2) added2=added; if(!added) break; await sleep(200); }
           if(added2>0) break; }
       },300);

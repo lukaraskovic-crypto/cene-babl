@@ -943,9 +943,9 @@ def assemble(raw):
         items.append(dict(store="Gigatron", cat=x.get("cat", ""), name=x["n"], p=x["p"], o=x.get("o"), l=x.get("l"), u=x["u"]))
     for key, st in [("winwin", "WinWin"), ("tehnomanija", "Tehnomanija")]:
         for x in raw.get(key) or []: items.append(dict(store=st, cat=x.get("cat", ""), name=x["n"], p=x["p"], o=x.get("o"), l=x.get("l"), u=x["u"]))
-    for x in raw["bigbang"]:
-        if x["p"] >= 3_000_000: continue   # data glitch guard (e.g. 10,000,000 RSD fridge)
-        items.append(dict(store="Big Bang", cat=x.get("c") or "", name=x["n"], p=int(x["p"]), o=int(round(x["p"] + x["d"])), l=None, u=""))
+    # Big Bang: not part of the claimed-discount check – its pages show no crossed-out price (only the price and a VIP-club price);
+    # the data layer's "discount" is an internal marketing figure visitors never see. Its prices still count in the full catalogue,
+    # price history, drops and the Top 10 (real cuts measured against our own record).
     for x in raw.get("ananas_all") or []:
         if x.get("o") and x.get("p") and x["o"] > x["p"]:
             items.append(dict(store="Ananas", cat=f"{x['cat']} · seller {x['s']}", name=x["n"], p=x["p"], o=x["o"], l=x.get("l"), u=x["u"]))
@@ -1182,8 +1182,8 @@ def build_watch_candidates(raw, all_items=()):
     for q, res in (raw.get("bigbang_search") or {}).items():
         for x in res or []:
             grp = "G1" if "G20" in q else "G2"
-            add(grp, "Big Bang", x["n"], x["p"], int(x["p"] + x["d"]) if x.get("d") else None, None, "")
-            if grp == "G2": add("G3", "Big Bang", x["n"], x["p"], int(x["p"] + x["d"]) if x.get("d") else None, None, "")
+            add(grp, "Big Bang", x["n"], x["p"], None, None, "")          # no crossed-out price shown at Big Bang
+            if grp == "G2": add("G3", "Big Bang", x["n"], x["p"], None, None, "")
     for x in raw.get("ananas_all", []):
         if x["cat"] == "tableti":
             add("G2", f"Ananas ({x['s']})", x["n"], x["p"], x.get("o"), x.get("l"), x["u"])
